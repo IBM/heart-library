@@ -1,0 +1,122 @@
+[tool.poetry]
+name = "heart-library"
+version = "0.3.0"
+description = "Hardened Extension of the Adversarial Robustness Toolbox (HEART) supports assessment of adversarial AI vulnerabilities in Test & Evaluation workflows."
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/IBM/heart-library"
+packages = [{include = "heart_library", from = "src" }]
+keywords = [
+    "machine learning",
+    "adversarial ai",
+    "evasion",
+]
+
+authors = ["Mark Baker, Jordan Fischer, Kieran Fraser, Jackson Lee, Adam Lockwood"]
+
+
+[tool.poetry.dependencies]
+# HEART Required Dependences
+python = ">=3.9, <3.11"
+adversarial-robustness-toolbox = ">=1.17.1"
+maite = ">=0.4.0,<0.5.0"
+numpy = ">=1.18.5, <2"
+scikit-learn = ">=0.22.2"
+six = "*"
+setuptools = "*"
+tqdm = "*"
+
+# HEART Optional Dependencies
+datasets = { version = "*", optional = true }
+gradio = { version = ">=4.13.0,<4.24.0", optional = true }
+jupyter = { version = "*", optional = true}
+matplotlib = { version = "*", optional = true }
+multiprocess = { version = "*", optional = true }
+numba = { version = "*", optional = true }
+pandas = { version = "*", optional = true }
+Pillow = { version = "*", optional = true }
+torch = { version = "*", optional = true }
+torchvision = { version = "*", optional = true }
+yolov5 = { version = "*", optional = true }
+
+
+[tool.poetry.extras]
+# All Optional Dependencies
+all = [
+    "datasets",
+    "jupyter",
+    "matplotlib",
+    "multiprocess",
+    "numba",
+    "pandas",
+    "Pillow",
+    "torch",
+    "torchvision",
+    "yolov5",
+]
+
+# Optional Individual Framework Dependencies
+pytorch = ["torch", "torchvision"]
+yolov5 = ["yolov5"]
+
+# Optional Non-Framework Dependencies
+non_framework = [
+    "datasets",
+    "jupyter",
+    "matplotlib",
+    "multiprocess",
+    "numba",
+    "pandas",
+    "Pillow",
+]
+
+# Optional Image Classification Dependencies
+image_classification = [
+    "torch",
+    "torchvision",
+]
+
+# Optional Object Detection Dependencies
+object_detection = [
+    "yolov5",
+]
+
+# Optional Jupyter Notebook Dependencies
+notebooks = [
+    "jupyter",
+    "matplotlib",
+    "pandas",
+]
+
+# Optional Gradio App Dependencies
+gradio = [
+    "datasets",
+    "gradio",
+    "matplotlib",
+    "pandas",
+]
+
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+isort = "*"
+mypy = "*"
+nbmake = "*"
+pylint = "==2.12.2"
+pytest = "*"
+pytest-flake8 = "*"
+pytest-mock = "*"
+pytest-cov = "*"
+
+
+[tool.black]
+line-length=120
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
