@@ -97,9 +97,13 @@ class JaticPyTorchYolo(PyTorchYolo):  # pylint: disable=R0901
 
     metadata: HeartObjectDetectionMetadata
 
-    def __init__(self, labels: Sequence[str], **kwargs: Any):
+    def __init__(self, labels: Sequence[str], model_path: str = "yolov5s.pt", **kwargs: Any):
+        model = None
+        try:
+            model = yolov5.load(model_path)
+        except Exception as load_exception:
+            raise Exception("Yolov5 model was not successful loaded.") from load_exception
 
-        model = yolov5.load("yolov5s.pt")
         model = Yolo(model, kwargs["device_type"])
         super().__init__(model=model, **kwargs)
 

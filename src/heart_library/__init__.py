@@ -6,7 +6,7 @@ import logging.config
 # Project Imports
 
 # Semantic Version
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 # pylint: disable=C0103
 
