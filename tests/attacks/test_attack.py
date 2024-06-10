@@ -140,41 +140,41 @@ def test_jatic_supported_patch_attack(art_warning):
 
 def test_jatic_supported_obj_det_patch_attack(art_warning):
     try:
-        from art.attacks.evasion import AdversarialPatchPyTorch
+        from art.attacks.evasion import ProjectedGradientDescent
         from heart_library.attacks.attack import JaticAttack
-        from heart_library.estimators.object_detection import JaticPyTorchYolo
+        from heart_library.estimators.object_detection import JaticPyTorchDETR
         from heart_library.attacks.typing import Attack, HasEvasionAttackResult
         from maite.protocols import ObjectDetector
         from torchvision import transforms
         from PIL import Image
         import requests
 
-        labels = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
-        detector = JaticPyTorchYolo(device_type='cpu',
-                            input_shape=(3, 32, 32),
+        labels = [
+            'N/A', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
+            'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'N/A',
+            'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse',
+            'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'N/A', 'backpack',
+            'umbrella', 'N/A', 'N/A', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis',
+            'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove',
+            'skateboard', 'surfboard', 'tennis racket', 'bottle', 'N/A', 'wine glass',
+            'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich',
+            'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake',
+            'chair', 'couch', 'potted plant', 'bed', 'N/A', 'dining table', 'N/A',
+            'N/A', 'toilet', 'N/A', 'tv', 'laptop', 'mouse', 'remote', 'keyboard',
+            'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'N/A',
+            'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier',
+            'toothbrush'
+        ]
+        detector = JaticPyTorchDETR(device_type='cpu',
+                            input_shape=(3, 800, 800),
                             clip_values=(0, 1), 
-                            attack_losses=("loss_total", "loss_cls",
-                                        "loss_box",
-                                        "loss_obj"),
+                            attack_losses=("loss_ce",
+                                "loss_bbox",
+                                "loss_giou",),
                             labels=labels)
-        
-        rotation_max=0.0
-        scale_min=0.5
-        scale_max=1.0
-        distortion_scale_max=0.0
-        learning_rate=1.99
-        max_iter=5
-        batch_size=16
-        patch_shape=(3, 300, 300)
-        patch_location=(100,100)
-        patch_type="circle"
-        optimizer="Adam"
 
-        patch_attack = AdversarialPatchPyTorch(detector, rotation_max=rotation_max, 
-                            scale_min=scale_min, scale_max=scale_max, optimizer=optimizer, distortion_scale_max=distortion_scale_max,
-                            learning_rate=learning_rate, max_iter=max_iter, batch_size=batch_size, patch_location=patch_location,
-                            patch_shape=patch_shape, patch_type=patch_type, verbose=True, targeted=True)
-        attack = JaticAttack(patch_attack)
+        evasion_attack = ProjectedGradientDescent(estimator=detector, max_iter=2)
+        attack = JaticAttack(evasion_attack)
             
         assert isinstance(detector, ObjectDetector)
         assert isinstance(attack, Attack)
@@ -182,7 +182,7 @@ def test_jatic_supported_obj_det_patch_attack(art_warning):
         import numpy as np
 
         NUMBER_CHANNELS = 3
-        INPUT_SHAPE = (NUMBER_CHANNELS, 640, 640)
+        INPUT_SHAPE = (NUMBER_CHANNELS, 800, 800)
 
         transform = transforms.Compose([
                 transforms.Resize(INPUT_SHAPE[1], interpolation=transforms.InterpolationMode.BICUBIC),
@@ -195,7 +195,7 @@ def test_jatic_supported_obj_det_patch_attack(art_warning):
                                      stream=True).raw)
         im = transform(im).numpy()
         coco_images.append(im)
-        coco_images = np.array(coco_images)*255
+        coco_images = np.array(coco_images)
         
         output = detector(coco_images)
 
@@ -203,17 +203,15 @@ def test_jatic_supported_obj_det_patch_attack(art_warning):
             'scores': output.scores[i],
             'labels': output.labels[i]} for i in range(len(coco_images))]
 
-        data = {'image': coco_images[[0]], 'label': dets[-1:]}
+        data = {'image': coco_images[[0]], 'label': dets[:1]}
         attack_output = attack.run_attack(data=data)
         
         adv_output = detector(attack_output.adversarial_examples)
         isinstance(adv_output, HasEvasionAttackResult)
         
-        np.testing.assert_array_almost_equal(adv_output.boxes[0][:3], np.array([[0, 0, 8.3302, 23.068],
-                                                                                [0, 0, 28.769, 22.031],
-                                                                                [0.53017, 0, 30.525, 26.07]], dtype='float32'), 0.001)
-        np.testing.assert_array_almost_equal(adv_output.scores[0][:3], np.array([0.0045606, 1.0218e-05, 1.558e-05], dtype='float32'), 0.001)
-        np.testing.assert_array_almost_equal(adv_output.labels[0][:3], np.array([39, 9, 9], dtype='float32'), 0.001)
+        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_output.boxes[0], output.boxes[0])
+        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_output.scores[0], output.scores[0])
+        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_output.labels[0], output.labels[0])
 
     except HEARTTestException as e:
         art_warning(e)

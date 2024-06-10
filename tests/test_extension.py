@@ -43,7 +43,7 @@ def test_import_heart(art_warning):
 
         import heart_library
 
-        assert heart_library.__version__ == "0.3.1"
+        assert heart_library.__version__ == "0.3.2"
 
     except HEARTTestException as e:
         art_warning(e)

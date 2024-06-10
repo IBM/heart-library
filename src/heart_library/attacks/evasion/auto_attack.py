@@ -75,7 +75,8 @@ def run_attack(
     # Check and update successful examples
     rel_acc = 1e-4
     order = np.inf if norm == "inf" else norm
-    assert isinstance(order, (int, float))
+    if not isinstance(order, (int, float)):
+        raise ValueError("Order should be of type 'int' or 'float'.")
     norm_is_smaller_eps = (1 - rel_acc) * np.linalg.norm(
         (x_robust_adv - x_robust).reshape((x_robust_adv.shape[0], -1)), axis=1, ord=order
     ) <= eps

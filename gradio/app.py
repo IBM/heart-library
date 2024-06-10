@@ -30,6 +30,25 @@ css = """
     margin: auto !important;
 } 
 """
+
+COCO_LABELS = [
+    'N/A', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
+    'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'N/A',
+    'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse',
+    'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'N/A', 'backpack',
+    'umbrella', 'N/A', 'N/A', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis',
+    'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove',
+    'skateboard', 'surfboard', 'tennis racket', 'bottle', 'N/A', 'wine glass',
+    'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich',
+    'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake',
+    'chair', 'couch', 'potted plant', 'bed', 'N/A', 'dining table', 'N/A',
+    'N/A', 'toilet', 'N/A', 'tv', 'laptop', 'mouse', 'remote', 'keyboard',
+    'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'N/A',
+    'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier',
+    'toothbrush'
+]
+
+
 def update_patch_sliders(*args):
     from maite.protocols import HasDataImage, is_typed_dict
     
@@ -244,17 +263,8 @@ def preview_patch_location(*args):
     return image
 
 def extract_predictions(predictions_, conf_thresh):
-    coco_labels = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
-        'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
-        'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-        'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard',
-        'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-        'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
-        'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 
-        'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 
-        'teddy bear', 'hair drier', 'toothbrush']
     # Get the predicted class
-    predictions_class = [coco_labels[i] for i in list(predictions_["labels"])]
+    predictions_class = [COCO_LABELS[i] for i in list(predictions_["labels"])]
     #  print("\npredicted classes:", predictions_class)
     if len(predictions_class) < 1:
         return [], [], []
@@ -284,6 +294,7 @@ def plot_image_with_boxes(img, boxes, pred_cls, title):
     text_size = 1
     text_th = 2
     rect_th = 1
+    img = img * 255
 
     sections = []
     for i in range(len(boxes)):
@@ -424,8 +435,12 @@ def det_evasion_evaluate(*args):
         from torchvision.transforms import transforms
         import requests
         from PIL import Image
+        
+        
+        MEAN = [0.485, 0.456, 0.406]
+        STD = [0.229, 0.224, 0.225]
         NUMBER_CHANNELS = 3
-        INPUT_SHAPE = (NUMBER_CHANNELS, 640, 640)
+        INPUT_SHAPE = (NUMBER_CHANNELS, 800, 800)
 
         transform = transforms.Compose([
                 transforms.Resize(INPUT_SHAPE[1], interpolation=transforms.InterpolationMode.BICUBIC),
@@ -444,26 +459,22 @@ def det_evasion_evaluate(*args):
             im = Image.open(requests.get(url, stream=True).raw)
             im = transform(im).numpy()
             coco_images.append(im)
-        image = np.array(coco_images)*255  
+        image = np.array(coco_images)  
         
-    if model_type == "YOLOv5":
-        from heart_library.estimators.object_detection.pytorch_yolo import JaticPyTorchYolo
-        coco_labels = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
-            'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
-            'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-            'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard',
-            'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-            'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
-            'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 
-            'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 
-            'teddy bear', 'hair drier', 'toothbrush']
-        detector = JaticPyTorchYolo(device_type='cpu',
-                            input_shape=(3, 640, 640),
-                            clip_values=(0, 255), 
-                            attack_losses=("loss_total", "loss_cls",
-                                        "loss_box",
-                                        "loss_obj"),
-                            labels=coco_labels)
+    if model_type == "DeTR":
+        from heart_library.estimators.object_detection import JaticPyTorchDETR
+        '''
+        Define the detector
+        '''
+        detector = JaticPyTorchDETR(device_type='cpu',
+                                    input_shape=INPUT_SHAPE,
+                                    clip_values=(0, 1), 
+                                    attack_losses=( "loss_ce",
+                                        "loss_bbox",
+                                        "loss_giou",),
+                                    labels=COCO_LABELS,
+                                    channels_first=True, 
+                                    preprocessing=(MEAN, STD))
     
     if attack=="PGD":
         
@@ -583,7 +594,7 @@ def det_evasion_evaluate(*args):
             adv_imgs.append(img.astype(np.uint8))
             
         patch, patch_mask = output.adversarial_patch
-        patch_image = ((patch) * patch_mask).transpose(1,2,0).astype(np.uint8)
+        patch_image = (((patch) * patch_mask).transpose(1,2,0).astype(np.uint8)) * 255
         return [image, adv_imgs, patch_image]
 
 def clf_evasion_evaluate(*args):
@@ -738,6 +749,12 @@ def clf_evasion_evaluate(*args):
         metric = AccuracyPerturbationMetric()
         metric.update(jptc, jptc.device, image, x_adv.adversarial_examples)
         clean_accuracy, robust_accuracy, perturbation_added = metric.compute()
+
+        # convert numpy.float64 to python float for gradio>=4.24.0 compatibility
+        clean_accuracy = float(clean_accuracy)
+        robust_accuracy = float(robust_accuracy)
+        perturbation_added = float(perturbation_added)
+
         metrics = pd.DataFrame([[clean_accuracy, robust_accuracy, perturbation_added]],
                                columns=['clean accuracy', 'robust accuracy', 'perturbation'])
 
@@ -811,6 +828,12 @@ def clf_evasion_evaluate(*args):
         metric = AccuracyPerturbationMetric()
         metric.update(jptc, jptc.device, image, attack_output.adversarial_examples)
         clean_accuracy, robust_accuracy, perturbation_added = metric.compute()
+
+        # convert numpy.float64 to python float for gradio>=4.24.0 compatibility
+        clean_accuracy = float(clean_accuracy)
+        robust_accuracy = float(robust_accuracy)
+        perturbation_added = float(perturbation_added)
+
         metrics = pd.DataFrame([[clean_accuracy, robust_accuracy, perturbation_added]],
                                columns=['clean accuracy', 'robust accuracy', 'perturbation'])
 
@@ -1113,8 +1136,8 @@ with gr.Blocks(css=css, theme='xiaobaiyuan/theme_brief') as demo:
         with gr.Row():
             # Model and Dataset type e.g. Torchvision, HuggingFace, local etc.
             with gr.Column():
-                model_type = gr.Radio(label="Model type", choices=["YOLOv5"],
-                                    value="YOLOv5")
+                model_type = gr.Radio(label="Model type", choices=["DeTR"],
+                                    value="DeTR")
                 dataset_type = gr.Radio(label="Dataset", choices=["COCO",],
                                     value="COCO")
             
@@ -1147,9 +1170,9 @@ with gr.Blocks(css=css, theme='xiaobaiyuan/theme_brief') as demo:
                             
                             with gr.Column(scale=1):
                                 attack = gr.Textbox(visible=True, value="PGD", label="Attack", interactive=False)
-                                max_iter = gr.Slider(minimum=1, maximum=10, label="Max iterations", value=4, step=1)
-                                eps = gr.Slider(minimum=8, maximum=255, label="Epslion", value=8, step=1) 
-                                eps_steps = gr.Slider(minimum=1, maximum=254, label="Epsilon steps", value=1, step=1) 
+                                max_iter = gr.Slider(minimum=1, maximum=10, label="Max iterations", value=2, step=1)
+                                eps = gr.Slider(minimum=0.01, maximum=1, label="Epslion", value=0.01, step=0.01)
+                                eps_steps = gr.Slider(minimum=0.001, maximum=0.9, label="Epsilon steps", value=0.001, step=0.001)
                                 targeted = gr.Textbox(placeholder="Target label (integer)", label="Target")
                                 det_threshold = gr.Slider(minimum=0.0, maximum=100, label="Detection threshold", value=0.2)
                                 eval_btn_pgd = gr.Button("Evaluate")

@@ -31,6 +31,7 @@ from maite.protocols import (ArrayLike, HasLogits, HasProbs, HasScores,
                              ImageClassifier, SupportsArray)
 from numpy.typing import NDArray
 
+from heart_library.attacks.attack import JaticAttack
 from heart_library.utils import process_inputs_for_art
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ class RobustnessBiasMetric:
     A metric which describes Robustness Bias for features
     of datasets. Currently supports only classification tasks.
     """
+
     def __init__(self):
         self._state = {}
 
@@ -82,9 +84,11 @@ class RobustnessBiasMetric:
                 y = labels
 
         if isinstance(x, Sequence):
-            assert x[0].shape == attack_out.shape
+            if not x[0].shape == attack_out.shape:
+                raise ValueError("Input image sequence shape required to match output attack shape.")
         else:
-            assert x.shape == attack_out.shape
+            if not x.shape == attack_out.shape:
+                raise ValueError("Input image shape required to match output attack shape.")
 
         if isinstance(y, np.ndarray) and len(y.shape) > 1:
             y = np.argmax(y, axis=1)
@@ -184,9 +188,11 @@ class AccuracyPerturbationMetric:
                 y = labels
 
         if isinstance(x, Sequence):
-            assert x[0].shape == attack_out.shape
+            if not x[0].shape == attack_out.shape:
+                raise ValueError("Input image sequence shape required to match output attack shape.")
         else:
-            assert x.shape == attack_out.shape
+            if not x.shape == attack_out.shape:
+                raise ValueError("Input image shape required to match output attack shape.")
 
         orig_result = classifier(x)
         attack_result = classifier(attack_out)
@@ -226,6 +232,68 @@ class AccuracyPerturbationMetric:
         """
         Returns the computed metric
         in Tuple (clean_accuracy, robust_accuracy, average_perturbation)
+        """
+        return self._state
+
+    def to(self, device: Any):  # pylint: disable=C0103,W0613
+        """Unused protocol"""
+        return self
+
+
+class BlackBoxAttackQualityMetric:
+    """
+    A metric for extracting the black box quality metrics.
+    """
+
+    def __init__(self):
+        self._state = (np.array([0.0]), np.array([0.0]), np.array([0.0]))
+
+    def reset(self):
+        """
+        Reset the metric to default values.
+        """
+        self._state = (np.array([0.0]), np.array([0.0]), np.array([0.0]))
+
+    def update(
+        self,
+        attack: JaticAttack,
+    ):
+        """
+        Updates the metric value. Takes as input:
+        :param attack: The black-box attack
+        :param device: The device on which to compute the metric
+        :param data: The clean sample data
+        :param attack_out: The adversarial sample data
+        :param labels: The classification labels
+        :param norm_type: The norm to use when calculating distance
+        :param acc_type: The type of accuracy to calculate. Choice of "adversarial" or "robust".
+            - Robust accuracy is the accuracy of the model on all samples
+            - Adversarial accuracy is the accuracy of the model only samples which were
+              correctly predicted in the non-adversarial scenario
+        """
+
+        total_queries = attack.attack.total_queries
+        adv_query_idx = attack.attack.adv_query_idx
+        adv_queries = [len(adv_query_idx[i]) for i, _ in enumerate(adv_query_idx)]
+        benign_queries = [total_queries[i] - n_adv for i, n_adv in enumerate(adv_queries)]
+        adv_perturb_total = attack.attack.perturbs
+        adv_perturb_iter = attack.attack.perturbs_iter
+        adv_confs_total = attack.attack.confs
+
+        self._state = {
+            "total_queries": total_queries,
+            "adv_queries": adv_queries,
+            "benign_queries": benign_queries,
+            "adv_query_idx": adv_query_idx,
+            "adv_perturb_total": adv_perturb_total,
+            "adv_perturb_iter": adv_perturb_iter,
+            "adv_confs_total": adv_confs_total,
+        }
+
+    def compute(self) -> dict:
+        """
+        Returns the computed metric
+        in dict
         """
         return self._state
 

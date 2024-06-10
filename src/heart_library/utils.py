@@ -24,7 +24,8 @@ from typing import Any, Optional, Sequence, Tuple, Union
 import numpy as np
 import torch as tr
 from maite._internals.interop.utils import is_pil_image
-from maite.protocols import ArrayLike, HasDataImage, HasDataLabel, is_list_of_type, is_typed_dict
+from maite.protocols import (ArrayLike, HasDataImage, HasDataLabel,
+                             is_list_of_type, is_typed_dict)
 from numpy.typing import NDArray
 
 
@@ -50,7 +51,8 @@ def process_inputs_for_art(
     # Extract any data out of a dictionary
     labels = None
     if isinstance(data, (dict, UserDict)):
-        assert is_typed_dict(data, HasDataImage), "Dictionary data must contain 'image' key."
+        if not is_typed_dict(data, HasDataImage):
+            raise ValueError("Dictionary data must contain 'image' key.")
         images = data["image"]
 
         if not isinstance(images, Sequence):
@@ -67,17 +69,20 @@ def process_inputs_for_art(
     else:
         images = data
 
-    assert isinstance(images, Sequence)
+    if not isinstance(images, Sequence):
+        raise ValueError("Images are required to be of type sequence.")
 
     # If list of PIL images, convert to tensor
     if is_pil_image(images[0]):
         images = [tr.as_tensor(np.array(image, np.float32) / 255).permute((2, 0, 1)).contiguous() for image in images]
 
         if isinstance(images, Sequence):
-            assert isinstance(images[0], tr.Tensor), f"Invalid type {type(images[0])}"
+            if not isinstance(images[0], tr.Tensor):
+                raise ValueError(f"Invalid type {type(images[0])}, required to be Tensor.")
             images = [tr.as_tensor(i).to(device) for i in images]
         else:
-            assert isinstance(images, tr.Tensor)
+            if not isinstance(images, tr.Tensor):
+                raise ValueError(f"Invalid type {type(images)}, required to be Tensor.")
             images = images.to(device)
 
     # If list of numpy arrays, convert to tensor
@@ -103,7 +108,8 @@ def process_inputs_for_art(
         if all(gen()):
             images = tr.stack(images)
 
-    assert is_list_of_type(images, tr.Tensor) or isinstance(images, tr.Tensor)
+    if not is_list_of_type(images, tr.Tensor) and not isinstance(images, tr.Tensor):
+        raise ValueError("Images required to be in format: List[Tensor] or Tensor.")
     if is_list_of_type(images, tr.Tensor):
         images = tr.cat(images).cpu().numpy()
     if isinstance(images, tr.Tensor):

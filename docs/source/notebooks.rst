@@ -71,7 +71,7 @@ HEART Library Notebooks can be found on `github <https://github.com/IBM/heart-li
 ``5_get_started_object_detection.ipynb``
 ----------------------------------------
 
-  **Description:** This notebook demonstrates how to perform object detection with YOLO v5 using HEART and MAITE
+  **Description:** This notebook demonstrates how to perform object detection with DeTR using HEART and MAITE
 
   **Intended Audience:** All T&E Users
 
@@ -80,7 +80,7 @@ HEART Library Notebooks can be found on `github <https://github.com/IBM/heart-li
 ``6_adversarial_patch_for_object_detection.ipynb``
 --------------------------------------------------
 
-  **Description:** This notebook demonstrates how to perform adversarial patch attacks on object detection models using HEART and MAITE. For the purposes of this demonstration, YOLO v5 we be the object detection model of choice and a variety of images from the COCO data set will be used for executing detection and attack.
+  **Description:** This notebook demonstrates how to perform adversarial patch attacks on object detection models using HEART and MAITE. For the purposes of this demonstration, DeTR will be the object detection model of choice and a variety of images from the COCO data set will be used for executing detection and attack.
 
   **Intended Audience:** Advanced T&E Users
 

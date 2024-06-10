@@ -2,7 +2,7 @@
 
 ![Static Badge](https://img.shields.io/badge/python-3.9%20--%203.10-blue "Python 3.9 - 3.10 version support.")
 
-HEART is a Python extension library for Machine Learning Security that builds on the popular Adversarial Robustness algorithms within the [Adversarial Robustness Toolbox (ART)](https://github.com/Trusted-AI/adversarial-robustness-toolbox). The extension library allows the user to leverage core ART algorithms while providing additional benefits to AI Test & Evaluation (T&E) engineers.
+HEART is a Python extension library for Machine Learning Security that builds on the popular Adversarial Robustness algorithms within the [Adversarial Robustness Toolbox (ART)](https://github.com/Trusted-AI/adversarial-robustness-toolbox). The extension library allows the user to leverage core ART algorithms while providing additional benefits to AI Test & Evaluation (T&E) engineers. HEART documentation can be found [here](https://heart-library.readthedocs.io/). 
 
 - Support for T&E of models for Department of Defense use cases 
 - Alignment to [MAITE](https://github.com/mit-ll-ai-technology/maite) protocols for seamless T&E workflows

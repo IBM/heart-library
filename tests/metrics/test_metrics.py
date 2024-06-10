@@ -105,3 +105,44 @@ def test_robustness_bias_metric(art_warning):
                                                 [0.6001482106218434, 1.0]]), 0.01)
     except HEARTTestException as e:
         art_warning(e)
+
+def test_bb_quality_metric(art_warning):
+    try:
+        from heart_library.attacks.evasion import HeartHopSkipJump
+        from heart_library.attacks.attack import JaticAttack
+        from heart_library.metrics.metrics import BlackBoxAttackQualityMetric
+        from maite.protocols import Metric
+        import numpy as np
+
+        jptc = get_cifar10_image_classifier_pt()
+        bb_attack = HeartHopSkipJump(classifier=jptc, max_iter=5, max_eval=10, init_eval=2, init_size=10, )
+        attack = JaticAttack(bb_attack)
+
+        (x_train, y_train), (_, _), _, _ = load_dataset("cifar10")
+
+        x_train = x_train.transpose(0, 3, 1, 2).astype("float32")
+
+        x_adv = attack.run_attack(data=x_train[[0]])
+        x_adv = x_adv.adversarial_examples
+
+        metric = BlackBoxAttackQualityMetric()
+        metric.update(attack)
+        metrics = metric.compute()
+        
+        assert isinstance(metric, Metric)
+        assert "total_queries" in metrics
+        assert metrics["total_queries"][0] == pytest.approx(100, 10)
+        
+        assert "adv_queries" in metrics
+        assert metrics["adv_queries"][0] == pytest.approx(40, 10)
+        
+        assert "benign_queries" in metrics
+        assert metrics["benign_queries"][0] == pytest.approx(60, 10)
+        
+        assert "adv_query_idx" in metrics
+        assert "adv_perturb_total" in metrics
+        assert "adv_confs_total" in metrics
+        
+    except HEARTTestException as e:
+        art_warning(e)
+

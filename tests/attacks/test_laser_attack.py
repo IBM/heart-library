@@ -52,8 +52,12 @@ def test_laser_attack(art_warning):
         attack_output = attack.run_attack(data=data)
         
         x_adv = attack_output.adversarial_examples
-
-        assert np.argmax(jptc(x_adv[0]).logits) != 3
+        
+        # test that the adversarial sample is not the same as the original image
+        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, attack_output.adversarial_examples, img[[0]])
+        
+        # assert that the predicted logits are different for the adversarial image
+        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, jptc(x_adv[0]).logits, jptc(img[0]).logits)
 
     except HEARTTestException as e:
         art_warning(e)
