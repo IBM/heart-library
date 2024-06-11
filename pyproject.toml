@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "heart-library"
-version = "0.3.2"
+version = "0.3.3"
 description = "Hardened Extension of the Adversarial Robustness Toolbox (HEART) supports assessment of adversarial AI vulnerabilities in Test & Evaluation workflows."
 readme = "README.md"
 license = "MIT"
@@ -23,7 +23,7 @@ maite = ">=0.4.0, <0.5.0"
 numpy = ">=1.18.5, <2"
 scikit-learn = ">=0.22.2"
 six = "*"
-setuptools = "*"
+setuptools = "<70.0.0"
 tqdm = "*"
 
 # HEART Optional Dependencies

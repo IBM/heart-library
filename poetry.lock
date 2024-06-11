@@ -5701,4 +5701,4 @@ pytorch = ["torch", "torchvision"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.11"
-content-hash = "e348e5e0cf1a25bc2c7194f37cf9d8e689924ad85a651e868c2884fc532d5214"
+content-hash = "01f734d3966f6313602e62a369ce8b811e06fb00345d88ab6acb8ff1e1014611"
