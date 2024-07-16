@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "heart-library"
-version = "0.3.3"
+version = "0.4.0"
 description = "Hardened Extension of the Adversarial Robustness Toolbox (HEART) supports assessment of adversarial AI vulnerabilities in Test & Evaluation workflows."
 readme = "README.md"
 license = "MIT"
@@ -19,11 +19,11 @@ authors = ["Mark Baker, Jordan Fischer, Kieran Fraser, Jackson Lee, Adam Lockwoo
 # HEART Required Dependences
 python = ">=3.9, <3.11"
 adversarial-robustness-toolbox = ">=1.17.1"
-maite = ">=0.4.0, <0.5.0"
+maite = ">=0.5.0"
 numpy = ">=1.18.5, <2"
 scikit-learn = ">=0.22.2"
 six = "*"
-setuptools = "<70.0.0"
+setuptools = "*"
 tqdm = "*"
 
 # HEART Optional Dependencies
@@ -35,11 +35,19 @@ multiprocess = { version = "*", optional = true }
 numba = { version = "*", optional = true }
 pandas = { version = "*", optional = true }
 Pillow = { version = "*", optional = true }
+pycocotools = { version = "*", optional = true }
 sphinx = { version = ">=4.2.0", optional = true }
 furo = { version = "*", optional = true }
 torch = { version = "*", optional = true }
 torchvision = { version = "*", optional = true }
+timm = { version = "*", optional = true }
 opencv-python = { version = "*", optional = true }
+transformers = { version = "*", optional = true }
+kornia = { version = "*", optional = true }
+torchmetrics = { version = "*", optional = true }
+memory-profiler = { version = "*", optional = true }
+pympler = { version = "*", optional = true }
+GPUtil = { version = "*", optional = true }
 
 
 [tool.poetry.extras]
@@ -52,13 +60,18 @@ all = [
     "numba",
     "pandas",
     "Pillow",
+    "pycocotools",
     "torch",
     "torchvision",
     "opencv-python",
+    "timm",
+    "transformers",
+    "kornia",
+    "torchmetrics",
 ]
 
 # Optional Individual Framework Dependencies
-pytorch = ["torch", "torchvision"]
+pytorch = ["torch", "torchvision", "torchmetrics"]
 
 # Optional Non-Framework Dependencies
 non_framework = [
@@ -69,19 +82,25 @@ non_framework = [
     "numba",
     "pandas",
     "Pillow",
+    "pycocotools",
     "opencv-python",
+    "timm",
+    "transformers",
+    "kornia",
 ]
 
 # Optional Image Classification Dependencies
 image_classification = [
     "torch",
     "torchvision",
+    "transformers",
 ]
 
 # Optional Object Detection Dependencies
 object_detection = [
     "torch",
     "opencv-python",
+    "pycocotools",
 ]
 
 # Optional Jupyter Notebook Dependencies
@@ -89,6 +108,7 @@ notebooks = [
     "jupyter",
     "matplotlib",
     "pandas",
+    "kornia",
 ]
 
 # Optional Gradio App Dependencies
@@ -97,6 +117,9 @@ gradio = [
     "gradio",
     "matplotlib",
     "pandas",
+    "timm",
+    "transformers",
+    "kornia",
 ]
 
 # Optional Sphinx Dependencies
@@ -105,6 +128,12 @@ docs = [
     "furo"
 ]
 
+# Optional Script Dependencies
+script = [
+    "memory-profiler",
+    "pympler",
+    "GPUtil",
+]
 
 [tool.poetry.group.dev]
 optional = true

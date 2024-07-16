@@ -6,7 +6,7 @@ import logging.config
 # Project Imports
 
 # Semantic Version
-__version__ = "0.3.3"
+__version__ = "0.4.0"
 
 # pylint: disable=C0103
 
@@ -30,7 +30,7 @@ LOGGING = {
         },
     },
     "loggers": {
-        "art": {"handlers": ["default"]},
+        "heart": {"handlers": ["default"]},
         "tests": {"handlers": ["test"], "level": "INFO", "propagate": True},
     },
 }

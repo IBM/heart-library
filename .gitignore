@@ -110,3 +110,6 @@ demo/pics/*
 # Exceptions for utils/
 !utils/**/*.npy
 !utils/**/*.pt
+
+# HEART script executions
+script_executions/

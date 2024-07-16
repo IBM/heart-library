@@ -184,14 +184,13 @@ def get_mnist_image_classifier_pt(from_logits=False, load_init=True, use_maxpool
 
     # Define the network
     model = Model()
-    labels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     # Define a loss function and optimizer
     loss_fn = torch.nn.CrossEntropyLoss(reduction="sum")
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
     # Get classifier
     ptc = JaticPyTorchClassifier(
-        model=model, loss=loss_fn, optimizer=optimizer, input_shape=(1, 28, 28), nb_classes=10, clip_values=(0, 1), labels=labels
+        model=model, loss=loss_fn, optimizer=optimizer, input_shape=(1, 28, 28), nb_classes=10, clip_values=(0, 1)
     )
 
     return ptc
@@ -213,8 +212,6 @@ def get_cifar10_image_classifier_pt(from_logits=False, is_jatic=True):
 
     from heart_library.estimators.classification.pytorch import JaticPyTorchClassifier
     from art.estimators.classification.pytorch import PyTorchClassifier
-
-    labels = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
 
     class Model(torch.nn.Module):
         """
@@ -298,7 +295,6 @@ def get_cifar10_image_classifier_pt(from_logits=False, is_jatic=True):
             input_shape=(3, 32, 32),
             nb_classes=10,
             clip_values=(0, 1),
-            labels=labels,
         )
     else:
         jptc = PyTorchClassifier(

@@ -92,3 +92,23 @@ HEART Library Notebooks can be found on `github <https://github.com/IBM/heart-li
   **Description:** This notebook demonstrates how to perform black-box attacks using HEART and MAITE
 
   **Intended Audience:** All T&E Users
+
+|
+
+``8_get_started_defenses.ipynb``
+--------------------------------
+
+  **Description:** This notebook demonstrates how to deploy defenses using HEART and MAITE
+
+  **Intended Audience:** All T&E Users
+
+|
+
+``9_get_started_maite_evaluate.ipynb``
+--------------------------------------
+
+  **Description:** This notebook demonstrates how to execute evaluations using HEART and MAITE's ```evaluate``` function
+
+  **Intended Audience:** All T&E Users
+
+|

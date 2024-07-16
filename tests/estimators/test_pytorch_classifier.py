@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (C) The Adversarial Robustness Toolbox (ART) Authors 2023
+# Copyright (C) The Adversarial Robustness Toolbox (HEART) Authors 2024
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
@@ -18,7 +18,6 @@
 
 import logging
 
-import pytest
 from tests.utils import HEARTTestException, get_cifar10_image_classifier_pt
 from art.utils import load_dataset
 
@@ -26,15 +25,13 @@ from art.utils import load_dataset
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip_framework("keras", "non_dl_frameworks", "mxnet", "kerastf", "tensorflow1", "tensorflow2v1")
-def test_jatic_support_classification(art_warning):
+def test_jatic_support_classification(heart_warning):
     try:
-        from maite.protocols import ImageClassifier, HasLogits, ModelMetadata
+        import maite.protocols.image_classification as ic
 
         jptc = get_cifar10_image_classifier_pt()
 
-        assert isinstance(jptc, ImageClassifier)
-        assert isinstance(jptc.metadata, ModelMetadata)
+        assert isinstance(jptc, ic.Model)
 
         import numpy as np
         
@@ -43,8 +40,7 @@ def test_jatic_support_classification(art_warning):
         img = x_train[[1]].transpose(0, 3, 1, 2).astype('float32')
         output = jptc(img)
         
-        assert isinstance(output, HasLogits)
-        assert jptc.get_labels()[np.argmax(output.logits)] == "truck"
+        assert np.argmax(output) == 9
 
     except HEARTTestException as e:
-        art_warning(e)
+        heart_warning(e)

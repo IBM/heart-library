@@ -26,13 +26,11 @@ from art.utils import load_dataset
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip_framework("keras", "non_dl_frameworks", "mxnet", "kerastf", "tensorflow1", "tensorflow2v1")
-def test_query_efficient_bb_attack(art_warning):
+def test_query_efficient_bb_attack(heart_warning):
     try:
         from heart_library.attacks.attack import JaticAttack
         from heart_library.attacks.evasion import HeartQueryEfficientBlackBoxAttack
-        from heart_library.attacks.typing import Attack, HasEvasionAttackResult
-        from maite.protocols import ImageClassifier
+        import maite.protocols.image_classification as ic
         import numpy as np
 
         ptc = get_cifar10_image_classifier_pt(from_logits=True)
@@ -40,20 +38,18 @@ def test_query_efficient_bb_attack(art_warning):
         query_attack = HeartQueryEfficientBlackBoxAttack(estimator=ptc, eps=0.2)
         attack = JaticAttack(query_attack)
 
-        assert isinstance(ptc, ImageClassifier)
-        assert isinstance(attack, Attack)
+        assert isinstance(ptc, ic.Model)
+        assert isinstance(attack, ic.Augmentation)
 
         (x_train, _), (_, _), _, _ = load_dataset('cifar10')
 
         img = x_train[[0]].transpose(0, 3, 1, 2).astype('float32')
 
-        data = {'image': img[0], 'label': 3}
+        data = {'images': img[:1], 'labels': [3]}
 
-        attack_output = attack.run_attack(data=data)
-        assert isinstance(attack_output, HasEvasionAttackResult)
-        x_adv = attack_output.adversarial_examples
+        x_adv, _, _ = attack(data=data)
 
-        assert np.argmax(ptc(x_adv[0]).logits) == 6
+        assert np.argmax(ptc(x_adv[0])) == 6
 
     except HEARTTestException as e:
-        art_warning(e)
+        heart_warning(e)

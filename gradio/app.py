@@ -14,6 +14,7 @@ import pandas as pd
 
 import gradio as gr
 import os
+from typing import Tuple, Dict, Any
 
 css = """
 .input-image { margin: auto !important }
@@ -31,6 +32,7 @@ css = """
 } 
 """
 
+REQUESTS_TIMEOUT = 300
 COCO_LABELS = [
     'N/A', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
     'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'N/A',
@@ -50,96 +52,152 @@ COCO_LABELS = [
 
 
 def update_patch_sliders(*args):
-    from maite.protocols import HasDataImage, is_typed_dict
     
     x_location, y_location, patch_dim, dataset_type, dataset_path, dataset_split, image = args
     
     if dataset_type == "Example XView":
-        from maite import load_dataset
-        import torchvision
-        jatic_dataset = load_dataset(
-            provider="huggingface",
-            dataset_name="CDAO/xview-subset-classification",
-            task="image-classification",
-            split="test",
-        )
+        from datasets import load_dataset
+        from heart_library.utils import process_inputs_for_art
+        from torchvision import transforms
+        
+        jatic_dataset = load_dataset("CDAO/xview-subset-classification", split="test[0:2]")
+        
         IMAGE_H, IMAGE_W = 224, 224
-        transform = torchvision.transforms.Compose(
-            [  
-                torchvision.transforms.Resize((IMAGE_H, IMAGE_W)),
-                torchvision.transforms.ToTensor(),
-            ]
-        )  
-        jatic_dataset.set_transform(lambda x: {"image": transform(x["image"]), "label": x["label"]})
-        image = {'image': [i['image'].numpy() for i in jatic_dataset],
-                'label': [i['label'] for i in jatic_dataset]}
-        image = (image['image'][0].transpose(1,2,0)*255).astype(np.uint8)
+
+        preprocess = transforms.Compose([
+            transforms.Resize((IMAGE_H, IMAGE_W)),
+            transforms.ToTensor()
+        ])
+
+        jatic_dataset = jatic_dataset.map(lambda x: {"image": preprocess(x["image"]), "label": x["label"]})
+        images, _, _ = process_inputs_for_art(jatic_dataset)
+        
+        # transform pixel value 0-255 for visual purpose
+        images = (images[0]*255).transpose(1,2,0).astype(np.uint8)
+        
     elif dataset_type=="huggingface":
-        from maite import load_dataset
-        jatic_dataset = load_dataset(
-            provider=dataset_type,
-            dataset_name=dataset_path,
-            task="image-classification",
-            split=dataset_split,
-            drop_labels=False
-        )
-        
-        image = {'image': [i['image'] for i in jatic_dataset],
-                'label': [i['label'] for i in jatic_dataset]}
+        pass
     elif dataset_type=="torchvision":
-        from maite import load_dataset
-        jatic_dataset = load_dataset(
-            provider=dataset_type,
-            dataset_name=dataset_path,
-            task="image-classification",
-            split=dataset_split,
-            root='./data/',
-            download=True
-        )
-        image = {'image': [i['image'] for i in jatic_dataset],
-                'label': [i['label'] for i in jatic_dataset]}  
+        pass  
     elif dataset_type=="Example CIFAR10":
-        from maite import load_dataset
-        jatic_dataset = load_dataset(
-            provider="torchvision",
-            dataset_name="CIFAR10",
-            task="image-classification",
-            split=dataset_split,
-            root='./data/',
-            download=True
-        )
-        image = np.array(jatic_dataset[0]['image'])
+        from datasets import load_dataset
+        from heart_library.utils import process_inputs_for_art
+        jatic_dataset = load_dataset("cifar10", split="test[0:10]") 
+        images, _, _ = process_inputs_for_art(jatic_dataset)
     elif dataset_type=="COCO":
+        from datasets import Dataset
+        from datasets import load_dataset
         from torchvision.transforms import transforms
+        from functools import partial
         import requests
-        from PIL import Image
-        NUMBER_CHANNELS = 3
-        INPUT_SHAPE = (NUMBER_CHANNELS, 640, 640)
+        from heart_library.estimators.object_detection import JaticPyTorchObjectDetectionOutput
+        from typing import Dict, Tuple, Any
+        from secrets import SystemRandom
+        from heart_library.utils import process_inputs_for_art
 
-        transform = transforms.Compose([
-                transforms.Resize(INPUT_SHAPE[1], interpolation=transforms.InterpolationMode.BICUBIC),
-                transforms.CenterCrop(INPUT_SHAPE[1]),
-                transforms.ToTensor()
-            ])
+        NUM_SAMPLES = 1
 
-        urls = ['http://images.cocodataset.org/val2017/000000039769.jpg']
-
-        coco_images = []
-        for url in urls:
-            im = Image.open(requests.get(url, stream=True).raw)
-            im = transform(im).numpy()
-            coco_images.append(im)
-        image = np.array(coco_images)*255
-        image = image[0].transpose(1,2,0).astype(np.uint8)
+        data = load_dataset("detection-datasets/coco", split="val", streaming=True)
+        sample_data = data.take(NUM_SAMPLES)
         
-    if is_typed_dict(image, HasDataImage):
-        image = image['image']
+        preprocess = transforms.Compose([
+            transforms.Resize((800, 800)),
+            transforms.ToTensor()
+        ])
+
+        def gen_from_iterable_dataset(iterable_ds):
+            yield from iterable_ds
+
+        def transform_bbox(object, width, height):
+            '''
+            Scale the bboxes in line with scaled images
+            '''
+            x_scale = 800 / width
+            y_scale = 800 / height
+            transformed_bbox = []
+            for bbox in object["bbox"]:
+                xmin, ymin, xmax, ymax = bbox
+                x1 = int(np.round(xmin * x_scale))
+                y1 = int(np.round(ymin * y_scale))
+                x2 = int(np.round(xmax * x_scale))
+                y2 = int(np.round(ymax * y_scale))
+                transformed_bbox.append([x1, y1, x2, y2])
+            object["bbox"] = transformed_bbox
+            return object
+
+
+        data = Dataset.from_generator(partial(gen_from_iterable_dataset, sample_data), features=sample_data.features)
+        data = data.map(lambda x: {"image": preprocess(x["image"]), "objects": transform_bbox(x["objects"], x["width"], x["height"])})
+        
+        class CocoDetectionDataset:
+            def __init__(self, images, boxes, scores, labels):
+                # COCO dataset labels
+                response = requests.get("https://raw.githubusercontent.com/amikelive/coco-labels/master/coco-labels-2014_2017.txt",
+                                        timeout=REQUESTS_TIMEOUT)
+                dataset_labels = response.text.split("\n")
+                self._images = images
+                self._boxes = boxes
+                self._scores = scores
+                self._labels = [[COCO_LABELS.index(dataset_labels[label]) for label in item] for item in labels]
+                
+            def __len__(self)->int:
+                return len(self._images)
+            
+            def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
+                image = self._images[ind]
+                detection = {"boxes": self._boxes[ind],
+                            "scores": self._scores[ind],
+                            "labels": self._labels[ind]}
+                detection = JaticPyTorchObjectDetectionOutput(detection)
+                return (image, detection, {})
+
+        labels = [item['objects']['category'] for item in data]
+        boxes = [np.array(item['objects']['bbox']) for item in data]
+        scores = [np.array([SystemRandom().uniform(0.8, 1) for _ in range(len(item['objects']['category']))]) for item in data]
+        images = [item['image'] for item in data]   
+
+        jatic_dataset = CocoDetectionDataset(images, boxes, scores, labels)
+        images, _, _ = process_inputs_for_art(jatic_dataset)
+        images = (images[0]*255).transpose(1,2,0).astype(np.uint8)
+        
+    elif dataset_type=="VisDrone":
+        from datasets import Dataset
+        from datasets import load_dataset
+        from torchvision.transforms import transforms
+        from functools import partial
+        import requests
+        from heart_library.estimators.object_detection import JaticPyTorchObjectDetectionOutput
+        from typing import Dict, Tuple, Any
+        from secrets import SystemRandom
+        from heart_library.utils import process_inputs_for_art
+        
+        NUM_SAMPLES = 5
+
+        data = load_dataset("Voxel51/VisDrone2019-DET", split="train", streaming=True)
+        sample_data = data.take(NUM_SAMPLES)
+
+        def gen_from_iterable_dataset(iterable_ds):
+            yield from iterable_ds
+
+        sample_data = Dataset.from_generator(partial(gen_from_iterable_dataset, sample_data), features=sample_data.features)
+        
+        IMAGE_H, IMAGE_W = 800, 800
+        preprocess = transforms.Compose([
+            transforms.Resize((IMAGE_H, IMAGE_W)),
+            transforms.ToTensor()
+        ])
+        sample_data = sample_data.map(lambda x: {"image": preprocess(x["image"]), "label": None})
+        images, _, _ = process_inputs_for_art(sample_data)
+        images = (images[0]*255).transpose(1,2,0).astype(np.uint8)
+        
+    if isinstance(images, Dict) and "image" in images:
+        images = images['image']
     
-    if isinstance(image, list):
-        image = image[0]
+    if isinstance(images, list):
+        images = images[0]
          
-    height = image.shape[0]
-    width = image.shape[1]
+    height = images.shape[0]
+    width = images.shape[1]
     
     max_patch = min(height, width)
     if patch_dim > max_patch:
@@ -163,7 +221,6 @@ def preview_patch_location(*args):
     Create a gallery of images with a sample patch applied
     '''
     import cv2
-    from maite.protocols import HasDataImage, is_typed_dict
 
     x_location, y_location, patch_dim = int(args[0]), int(args[1]), int(args[2])
 
@@ -173,106 +230,164 @@ def preview_patch_location(*args):
     image = args[-1]
 
     if dataset_type == "Example XView":
-        from maite import load_dataset
-        import torchvision
-        jatic_dataset = load_dataset(
-            provider="huggingface",
-            dataset_name="CDAO/xview-subset-classification",
-            task="image-classification",
-            split="test",
-        )
+        from datasets import load_dataset
+        from heart_library.utils import process_inputs_for_art
+        from torchvision import transforms
+        
+        jatic_dataset = load_dataset("CDAO/xview-subset-classification", split="test[0:2]")
+        
         IMAGE_H, IMAGE_W = 224, 224
-        transform = torchvision.transforms.Compose(
-            [  
-                torchvision.transforms.Resize((IMAGE_H, IMAGE_W)),
-                torchvision.transforms.ToTensor(),
-            ]
-        )  
-        jatic_dataset.set_transform(lambda x: {"image": transform(x["image"]), "label": x["label"]})
-        image = {'image': [i['image'].numpy() for i in jatic_dataset],
-                'label': [i['label'] for i in jatic_dataset]}
-        image = (image['image'][0].transpose(1,2,0)*255).astype(np.uint8)
+
+        preprocess = transforms.Compose([
+            transforms.Resize((IMAGE_H, IMAGE_W)),
+            transforms.ToTensor()
+        ])
+
+        jatic_dataset = jatic_dataset.map(lambda x: {"image": preprocess(x["image"]), "label": x["label"]})
+        images, _, _ = process_inputs_for_art(jatic_dataset) 
+        
+        # transform pixel value 0-255 for visual purpose
+        images = (images[0]*255).transpose(1,2,0).astype(np.uint8)
+        
     elif dataset_type=="huggingface":
-        from maite import load_dataset
-        jatic_dataset = load_dataset(
-            provider=dataset_type,
-            dataset_name=dataset_path,
-            task="image-classification",
-            split=dataset_split,
-            drop_labels=False
-        )
-        
-        image = {'image': [i['image'] for i in jatic_dataset],
-                'label': [i['label'] for i in jatic_dataset]}
+        pass
     elif dataset_type=="torchvision":
-        from maite import load_dataset
-        jatic_dataset = load_dataset(
-            provider=dataset_type,
-            dataset_name=dataset_path,
-            task="image-classification",
-            split=dataset_split,
-            root='./data/',
-            download=True
-        )
-        image = {'image': [i['image'] for i in jatic_dataset],
-                'label': [i['label'] for i in jatic_dataset]}  
+        pass
     elif dataset_type=="Example CIFAR10":
-        from maite import load_dataset
-        jatic_dataset = load_dataset(
-            provider="torchvision",
-            dataset_name="CIFAR10",
-            task="image-classification",
-            split=dataset_split,
-            root='./data/',
-            download=True
-        )
-        image = np.array(jatic_dataset[0]['image'])
+        from datasets import load_dataset
+        from heart_library.utils import process_inputs_for_art
+        jatic_dataset = load_dataset("cifar10", split="test[0:10]") 
+        images, _, _ = process_inputs_for_art(jatic_dataset)
     elif dataset_type=="COCO":
+        from datasets import Dataset
+        from datasets import load_dataset
         from torchvision.transforms import transforms
+        from functools import partial
         import requests
-        from PIL import Image
-        NUMBER_CHANNELS = 3
-        INPUT_SHAPE = (NUMBER_CHANNELS, 640, 640)
+        from heart_library.estimators.object_detection import JaticPyTorchObjectDetectionOutput
+        from typing import Dict, Tuple, Any
+        from secrets import SystemRandom
+        from heart_library.utils import process_inputs_for_art
 
-        transform = transforms.Compose([
-                transforms.Resize(INPUT_SHAPE[1], interpolation=transforms.InterpolationMode.BICUBIC),
-                transforms.CenterCrop(INPUT_SHAPE[1]),
-                transforms.ToTensor()
-            ])
+        NUM_SAMPLES = 1
 
-        urls = ['http://images.cocodataset.org/val2017/000000039769.jpg']
-
-        coco_images = []
-        for url in urls:
-            im = Image.open(requests.get(url, stream=True).raw)
-            im = transform(im).numpy()
-            coco_images.append(im)
-        image = np.array(coco_images)*255
-        image = image[0].transpose(1,2,0).astype(np.uint8)
+        data = load_dataset("detection-datasets/coco", split="val", streaming=True)
+        sample_data = data.take(NUM_SAMPLES)
         
-    if is_typed_dict(image, HasDataImage):
+        preprocess = transforms.Compose([
+            transforms.Resize((800, 800)),
+            transforms.ToTensor()
+        ])
+
+        def gen_from_iterable_dataset(iterable_ds):
+            yield from iterable_ds
+
+        def transform_bbox(object, width, height):
+            '''
+            Scale the bboxes in line with scaled images
+            '''
+            x_scale = 800 / width
+            y_scale = 800 / height
+            transformed_bbox = []
+            for bbox in object["bbox"]:
+                xmin, ymin, xmax, ymax = bbox
+                x1 = int(np.round(xmin * x_scale))
+                y1 = int(np.round(ymin * y_scale))
+                x2 = int(np.round(xmax * x_scale))
+                y2 = int(np.round(ymax * y_scale))
+                transformed_bbox.append([x1, y1, x2, y2])
+            object["bbox"] = transformed_bbox
+            return object
+
+
+        data = Dataset.from_generator(partial(gen_from_iterable_dataset, sample_data), features=sample_data.features)
+        data = data.map(lambda x: {"image": preprocess(x["image"]), "objects": transform_bbox(x["objects"], x["width"], x["height"])})
+        
+        class CocoDetectionDataset:
+            def __init__(self, images, boxes, scores, labels):
+                # COCO dataset labels
+                response = requests.get("https://raw.githubusercontent.com/amikelive/coco-labels/master/coco-labels-2014_2017.txt",
+                                        timeout=REQUESTS_TIMEOUT)
+                dataset_labels = response.text.split("\n")
+                self._images = images
+                self._boxes = boxes
+                self._scores = scores
+                self._labels = [[COCO_LABELS.index(dataset_labels[label]) for label in item] for item in labels]
+                
+            def __len__(self)->int:
+                return len(self._images)
+            
+            def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
+                image = self._images[ind]
+                detection = {"boxes": self._boxes[ind],
+                            "scores": self._scores[ind],
+                            "labels": self._labels[ind]}
+                detection = JaticPyTorchObjectDetectionOutput(detection)
+                return (image, detection, {})
+
+        labels = [item['objects']['category'] for item in data]
+        boxes = [np.array(item['objects']['bbox']) for item in data]
+        scores = [np.array([SystemRandom().uniform(0.8, 1) for _ in range(len(item['objects']['category']))]) for item in data]
+        images = [item['image'] for item in data]   
+
+        jatic_dataset = CocoDetectionDataset(images, boxes, scores, labels)
+        images, _, _ = process_inputs_for_art(jatic_dataset)
+        images = (images[0]*255).transpose(1,2,0).astype(np.uint8)
+        
+    elif dataset_type=="VisDrone":
+        from datasets import Dataset
+        from datasets import load_dataset
+        from torchvision.transforms import transforms
+        from functools import partial
+        import requests
+        from heart_library.estimators.object_detection import JaticPyTorchObjectDetectionOutput
+        from typing import Dict, Tuple, Any
+        from secrets import SystemRandom
+        from heart_library.utils import process_inputs_for_art
+        
+        NUM_SAMPLES = 5
+
+        data = load_dataset("Voxel51/VisDrone2019-DET", split="train", streaming=True)
+        sample_data = data.take(NUM_SAMPLES)
+
+        def gen_from_iterable_dataset(iterable_ds):
+            yield from iterable_ds
+
+        sample_data = Dataset.from_generator(partial(gen_from_iterable_dataset, sample_data), features=sample_data.features)
+        
+        IMAGE_H, IMAGE_W = 800, 800
+        preprocess = transforms.Compose([
+            transforms.Resize((IMAGE_H, IMAGE_W)),
+            transforms.ToTensor()
+        ])
+        sample_data = sample_data.map(lambda x: {"image": preprocess(x["image"]), "label": None})
+        images, _, _ = process_inputs_for_art(sample_data)
+        images = (images[0]*255).transpose(1,2,0).astype(np.uint8)
+        
+    if isinstance(images, Dict) and "image" in images:
         image = image['image']
     
-    if isinstance(image, list):
-        image = image[0]
+    if isinstance(images, list):
+        images = images[0]
 
     p0 = x_location, y_location
     p1 =  x_location + (patch_dim-1), y_location + (patch_dim-1)
-    image = cv2.rectangle(cv2.UMat(image), p0, p1, (255,165,0), cv2.FILLED).get()
     
-    return image
+    images = cv2.rectangle(cv2.UMat(images), p0, p1, (255,165,0), cv2.FILLED).get()
+    
+    return images
 
 def extract_predictions(predictions_, conf_thresh):
     # Get the predicted class
-    predictions_class = [COCO_LABELS[i] for i in list(predictions_["labels"])]
+    predictions_class = [COCO_LABELS[i] for i in list(predictions_.labels)]
     #  print("\npredicted classes:", predictions_class)
     if len(predictions_class) < 1:
         return [], [], []
     # Get the predicted bounding boxes
-    predictions_boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(predictions_["boxes"])]
+    predictions_boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(predictions_.boxes)]
 
     # Get the predicted prediction score
-    predictions_score = list(predictions_["scores"])
+    predictions_score = list(predictions_.scores)
     # print("predicted score:", predictions_score)
 
     # Get a list of index with score greater than threshold
@@ -415,7 +530,8 @@ def basic_cifar10_model():
 
     # Get classifier
     jptc = JaticPyTorchClassifier(
-        model=model, loss=loss_fn, optimizer=optimizer, input_shape=(3, 32, 32), nb_classes=10, clip_values=(0, 1), labels=labels
+        model=model, loss=loss_fn, optimizer=optimizer, input_shape=(3, 32, 32), nb_classes=10, clip_values=(0, 255),
+        preprocessing=(0.0, 255)
     )
     return jptc
 
@@ -432,37 +548,120 @@ def det_evasion_evaluate(*args):
     image = args[-1]
     
     if dataset_type == "COCO":
+        from datasets import Dataset
+        from datasets import load_dataset
         from torchvision.transforms import transforms
+        from functools import partial
         import requests
-        from PIL import Image
+        from heart_library.estimators.object_detection import JaticPyTorchObjectDetectionOutput
+        from typing import Dict, Tuple, Any
+        from secrets import SystemRandom
+        from heart_library.utils import process_inputs_for_art
+
+        NUM_SAMPLES = 5
+
+        data = load_dataset("detection-datasets/coco", split="val", streaming=True)
+        sample_data = data.take(NUM_SAMPLES)
         
+        preprocess = transforms.Compose([
+            transforms.Resize((800, 800)),
+            # transforms.CenterCrop(800),
+            transforms.ToTensor()
+        ])
+
+        def gen_from_iterable_dataset(iterable_ds):
+            yield from iterable_ds
+
+        def transform_bbox(object, width, height):
+            '''
+            Scale the bboxes in line with scaled images
+            '''
+            x_scale = 800 / width
+            y_scale = 800 / height
+            transformed_bbox = []
+            for bbox in object["bbox"]:
+                xmin, ymin, xmax, ymax = bbox
+                x1 = int(np.round(xmin * x_scale))
+                y1 = int(np.round(ymin * y_scale))
+                x2 = int(np.round(xmax * x_scale))
+                y2 = int(np.round(ymax * y_scale))
+                transformed_bbox.append([x1, y1, x2, y2])
+            object["bbox"] = transformed_bbox
+            return object
+
+
+        data = Dataset.from_generator(partial(gen_from_iterable_dataset, sample_data), features=sample_data.features)
+        data = data.map(lambda x: {"image": preprocess(x["image"]), "objects": transform_bbox(x["objects"], x["width"], x["height"])})
+        
+        class CocoDetectionDataset:
+            def __init__(self, images, boxes, scores, labels):
+                # COCO dataset labels
+                response = requests.get("https://raw.githubusercontent.com/amikelive/coco-labels/master/coco-labels-2014_2017.txt",
+                                        timeout=REQUESTS_TIMEOUT)
+                dataset_labels = response.text.split("\n")
+                self._images = images
+                self._boxes = boxes
+                self._scores = scores
+                self._labels = [[COCO_LABELS.index(dataset_labels[label]) for label in item] for item in labels]
+                
+            def __len__(self)->int:
+                return len(self._images)
+            
+            def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
+                image = self._images[ind]
+                detection = {"boxes": self._boxes[ind],
+                            "scores": self._scores[ind],
+                            "labels": self._labels[ind]}
+                detection = JaticPyTorchObjectDetectionOutput(detection)
+                return (image, detection, {})
+
+        labels = [item['objects']['category'] for item in data]
+        boxes = [np.array(item['objects']['bbox']) for item in data]
+        scores = [np.array([SystemRandom().uniform(0.8, 1) for _ in range(len(item['objects']['category']))]) for item in data]
+        images = [item['image'] for item in data]   
+
+        jatic_dataset = CocoDetectionDataset(images, boxes, scores, labels)
+        images, _, _ = process_inputs_for_art(jatic_dataset)
+        groundtruth_detections = [item[1] for item in jatic_dataset]
+        
+    elif dataset_type == "VisDrone":
+        from datasets import Dataset
+        from datasets import load_dataset
+        from torchvision.transforms import transforms
+        from functools import partial
+        import requests
+        from heart_library.estimators.object_detection import JaticPyTorchObjectDetectionOutput
+        from typing import Dict, Tuple, Any
+        from secrets import SystemRandom
+        from heart_library.utils import process_inputs_for_art
+        
+        NUM_SAMPLES = 5
+
+        data = load_dataset("Voxel51/VisDrone2019-DET", split="train", streaming=True)
+        sample_data = data.take(NUM_SAMPLES)
+
+        def gen_from_iterable_dataset(iterable_ds):
+            yield from iterable_ds
+
+        sample_data = Dataset.from_generator(partial(gen_from_iterable_dataset, sample_data), features=sample_data.features)
+        
+        IMAGE_H, IMAGE_W = 800, 800
+        preprocess = transforms.Compose([
+            transforms.Resize((IMAGE_H, IMAGE_W)),
+            transforms.ToTensor()
+        ])
+        sample_data = sample_data.map(lambda x: {"image": preprocess(x["image"]), "label": None})
+        images, _, _ = process_inputs_for_art(sample_data)
+        groundtruth_detections = []
+        
+    if model_type == "DeTR":
+        from heart_library.estimators.object_detection import JaticPyTorchDETR
         
         MEAN = [0.485, 0.456, 0.406]
         STD = [0.229, 0.224, 0.225]
         NUMBER_CHANNELS = 3
         INPUT_SHAPE = (NUMBER_CHANNELS, 800, 800)
 
-        transform = transforms.Compose([
-                transforms.Resize(INPUT_SHAPE[1], interpolation=transforms.InterpolationMode.BICUBIC),
-                transforms.CenterCrop(INPUT_SHAPE[1]),
-                transforms.ToTensor()
-            ])
-
-        urls = ['http://images.cocodataset.org/val2017/000000039769.jpg',
-        'http://images.cocodataset.org/val2017/000000397133.jpg',
-        'http://images.cocodataset.org/val2017/000000037777.jpg',
-        'http://images.cocodataset.org/val2017/000000454661.jpg',
-        'http://images.cocodataset.org/val2017/000000094852.jpg']
-
-        coco_images = []
-        for url in urls:
-            im = Image.open(requests.get(url, stream=True).raw)
-            im = transform(im).numpy()
-            coco_images.append(im)
-        image = np.array(coco_images)  
-        
-    if model_type == "DeTR":
-        from heart_library.estimators.object_detection import JaticPyTorchDETR
         '''
         Define the detector
         '''
@@ -472,7 +671,6 @@ def det_evasion_evaluate(*args):
                                     attack_losses=( "loss_ce",
                                         "loss_bbox",
                                         "loss_giou",),
-                                    labels=COCO_LABELS,
                                     channels_first=True, 
                                     preprocessing=(MEAN, STD))
     
@@ -480,63 +678,99 @@ def det_evasion_evaluate(*args):
         
         from art.attacks.evasion import ProjectedGradientDescent
         from heart_library.attacks.attack import JaticAttack
-        from heart_library.metrics import AccuracyPerturbationMetric
-        from torch.nn.functional import softmax
-        from maite.protocols import HasDataImage, is_typed_dict
+        from heart_library.metrics import HeartMAPMetric
+        from copy import deepcopy
         
         pgd_attack = ProjectedGradientDescent(estimator=detector, max_iter=args[7], eps=args[8],
                                                  eps_step=args[9], targeted=args[10]!="")
-        attack = JaticAttack(pgd_attack)
+        attack = JaticAttack(pgd_attack, norm=2)
         
-        benign_output = detector(image)
+        benign_detections = detector(images)
         
-        dets = [{'boxes': benign_output.boxes[i],
-            'scores': benign_output.scores[i],
-            'labels': benign_output.labels[i]} for i in range(len(image))]
-
-        y = [filter_boxes([t], 0.8)[0] for t in dets]
-        if args[10]!="":
-            data = {'image': image[[0]], 'label': y[-1:]}
-        else:
-            data = image
+        # for Visdrone dataset which does not contain targets
+        if len(groundtruth_detections) == 0:
+            groundtruth_detections = benign_detections
+            
+            class ImageDataset:
+                def __init__(self, images, groundtruth, threshold=0.8):
+                    self.images = images
+                    self.groundtruth = groundtruth
+                    self.threshold = threshold
+                    
+                def __len__(self)->int:
+                    return len(self.images)
+                
+                def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
+                    image = self.images[ind]
+                    filtered_detection = self.groundtruth[ind]
+                    filtered_detection.boxes = filtered_detection.boxes[filtered_detection.scores>self.threshold]
+                    filtered_detection.labels = filtered_detection.labels[filtered_detection.scores>self.threshold]
+                    filtered_detection.scores = filtered_detection.scores[filtered_detection.scores>self.threshold]
+                    return image, filtered_detection, {}
+                
+            jatic_dataset = ImageDataset(images, deepcopy(benign_detections), threshold=0.9)
+            
+        map_metric = HeartMAPMetric()
+        map_metric.update(benign_detections, groundtruth_detections)
+        benign_map = map_metric.compute()
+        benign_map_50 = benign_map["map_50"].item()
+        
+        if args[-4]!="":
+            class TargetedImageDataset:
+                def __init__(self, images, groundtruth, target_label):
+                    self.images = images
+                    self.groundtruth = groundtruth
+                    self.target_label = target_label
+                    
+                def __len__(self)->int:
+                    return len(self.images)
+                
+                def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
+                    image = self.images[ind]
+                    targeted_detection = self.groundtruth[ind]
+                    targeted_detection.labels = [self.target_label]*len(targeted_detection.labels)
+                    return image, targeted_detection, {}
+                
+            jatic_dataset = TargetedImageDataset(images, deepcopy(groundtruth_detections), args[-4])
         
         
-        output = attack.run_attack(data=data)
-        adv_output = detector(output.adversarial_examples)
+        adv_x, _, metadata = attack(jatic_dataset)
+        adv_detections = detector(adv_x)
+        map_metric.update(adv_detections, groundtruth_detections)
+        adv_map = map_metric.compute()
+        adv_map_50 = adv_map["map_50"].item()
+        
+        mean_delta = np.array([item['delta'] for item in metadata]).mean()
+        
         out_imgs = []
-        for i in range(len(output.adversarial_examples)):
-            pred = {'boxes': adv_output.boxes[i],
-                    'scores': adv_output.scores[i],
-                    'labels': adv_output.labels[i]}
-            preds_orig = extract_predictions(pred, box_thresh)
-            out_img = plot_image_with_boxes(img=output.adversarial_examples[i].transpose(1,2,0).copy(),
+        for i in range(len(adv_detections)):
+            preds_orig = extract_predictions(adv_detections[i], box_thresh)
+            out_img = plot_image_with_boxes(img=adv_x[i].transpose(1,2,0).copy(),
                                         boxes=preds_orig[1], pred_cls=preds_orig[0], title="Detections")
+            if out_img.max() > 1:
+                out_img = out_img.astype(np.uint8)
+            else:
+                out_img = out_img.astype(np.float32)
             out_imgs.append(out_img)
     
         out_imgs_benign = []
-        for i in range(len(image)):
-            pred = {'boxes': benign_output.boxes[i],
-                    'scores': benign_output.scores[i],
-                    'labels': benign_output.labels[i]}
-            preds_benign = extract_predictions(pred, box_thresh)
-            out_img = plot_image_with_boxes(img=image[i].transpose(1,2,0).copy(),
+        for i in range(len(benign_detections)):
+            preds_benign = extract_predictions(benign_detections[i], box_thresh)
+            out_img = plot_image_with_boxes(img=images[i].transpose(1,2,0).copy(),
                                         boxes=preds_benign[1], pred_cls=preds_benign[0], title="Detections")
+            if out_img.max() > 1:
+                out_img = out_img.astype(np.uint8)
+            else:
+                out_img = out_img.astype(np.float32)
             out_imgs_benign.append(out_img)
         
-        
-        image = []
-        for i, img in enumerate(out_imgs_benign):
-            image.append(img.astype(np.uint8))
-        
-        adv_imgs = []
-        for i, img in enumerate(out_imgs):
-            adv_imgs.append(img.astype(np.uint8))
-        
-        return [image, adv_imgs]
+        return [out_imgs_benign, out_imgs, benign_map_50, adv_map_50, mean_delta]
 
     elif attack=="Adversarial Patch":
         from art.attacks.evasion.adversarial_patch.adversarial_patch_pytorch import AdversarialPatchPyTorch
         from heart_library.attacks.attack import JaticAttack
+        from heart_library.metrics import HeartMAPMetric
+        from copy import deepcopy
 
         batch_size = 16
         scale_min = 0.3
@@ -547,55 +781,99 @@ def det_evasion_evaluate(*args):
         patch_attack = AdversarialPatchPyTorch(estimator=detector, rotation_max=rotation_max, patch_location=(args[8], args[9]),
                             scale_min=scale_min, scale_max=scale_max, patch_type='square',
                             learning_rate=learning_rate, max_iter=args[7], batch_size=batch_size,
-                            patch_shape=(3, args[10], args[10]), verbose=False, targeted=args[-4]=="Yes")
+                            patch_shape=(3, args[10], args[10]), verbose=True, targeted=args[-4]!="")
         
-        attack = JaticAttack(patch_attack)
+        attack = JaticAttack(patch_attack, norm=2)
         
-        benign_output = detector(image)
+        benign_detections = detector(images)
         
-        dets = [{'boxes': benign_output.boxes[i],
-            'scores': benign_output.scores[i],
-            'labels': benign_output.labels[i]} for i in range(len(image))]
-
-        if args[-4]=="Yes":
-            data = {'image': image, 'label':[dets[-1] for i in image]}
+        # for Visdrone dataset which does not contain targets
+        if len(groundtruth_detections) == 0:
+            groundtruth_detections = benign_detections
+            
+            class ImageDataset:
+                def __init__(self, images, groundtruth, threshold=0.8):
+                    self.images = images
+                    self.groundtruth = groundtruth
+                    self.threshold = threshold
+                    
+                def __len__(self)->int:
+                    return len(self.images)
+                
+                def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
+                    image = self.images[ind]
+                    detection = self.groundtruth[ind]
+                    return image, detection, {}
+                
+            jatic_dataset = ImageDataset(images, deepcopy(benign_detections), threshold=0.9)
         else:
-            data = {'image': image, 'label': dets}
+            # in the case of COCO
+            # As Adversarial patch requires targets to all be same length, use the predicted detections
+            jatic_dataset._boxes = [detection.boxes for detection in benign_detections]
+            jatic_dataset._scores = [detection.scores for detection in benign_detections]
+            jatic_dataset._labels = [detection.labels for detection in benign_detections]
+            
+        map_metric = HeartMAPMetric()
+        map_metric.update(benign_detections, groundtruth_detections)
+        benign_map = map_metric.compute()
+        benign_map_50 = benign_map["map_50"].item()
         
-        output = attack.run_attack(data=data)
-        adv_output = detector(output.adversarial_examples)
-        out_imgs = []
-        for i in range(len(output.adversarial_examples)):
-            pred = {'boxes': adv_output.boxes[i],
-                    'scores': adv_output.scores[i],
-                    'labels': adv_output.labels[i]}
-            preds_orig = extract_predictions(pred, box_thresh)
-            out_img = plot_image_with_boxes(img=output.adversarial_examples[i].transpose(1,2,0).copy(),
+        if args[-4]!="":
+            class TargetedImageDataset:
+                def __init__(self, images, groundtruth, target_label):
+                    self.images = images
+                    self.groundtruth = groundtruth
+                    self.target_label = target_label
+                    
+                def __len__(self)->int:
+                    return len(self.images)
+                
+                def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
+                    image = self.images[ind]
+                    targeted_detection = self.groundtruth[ind]
+                    targeted_detection.labels = [self.target_label]*len(targeted_detection.labels)
+                    return image, targeted_detection, {}
+                
+            jatic_dataset = TargetedImageDataset(images, deepcopy(benign_detections), args[-4])
+        
+        adv_x, _, metadata = attack(jatic_dataset)
+        adv_detections = detector(adv_x)
+        map_metric.update(adv_detections, groundtruth_detections)
+        adv_map = map_metric.compute()
+        adv_map_50 = adv_map["map_50"].item()
+        
+        out_imgs_adv = []
+        for i in range(len(adv_detections)):
+            preds_orig = extract_predictions(adv_detections[i], box_thresh)
+            out_img = plot_image_with_boxes(img=adv_x[i].transpose(1,2,0).copy(),
                                         boxes=preds_orig[1], pred_cls=preds_orig[0], title="Detections")
-            out_imgs.append(out_img)
+            if out_img.max() > 1:
+                out_img = out_img.astype(np.uint8)
+            else:
+                out_img = out_img.astype(np.float32)
+            out_imgs_adv.append(out_img)
     
         out_imgs_benign = []
-        for i in range(len(image)):
-            pred = {'boxes': benign_output.boxes[i],
-                    'scores': benign_output.scores[i],
-                    'labels': benign_output.labels[i]}
-            preds_benign = extract_predictions(pred, box_thresh)
-            out_img = plot_image_with_boxes(img=image[i].transpose(1,2,0).copy(),
+        for i in range(len(benign_detections)):
+            preds_benign = extract_predictions(benign_detections[i], box_thresh)
+            out_img = plot_image_with_boxes(img=images[i].transpose(1,2,0).copy(),
                                         boxes=preds_benign[1], pred_cls=preds_benign[0], title="Detections")
+            if out_img.max() > 1:
+                out_img = out_img.astype(np.uint8)
+            else:
+                out_img = out_img.astype(np.float32)
             out_imgs_benign.append(out_img)
-        
-        
-        image = []
-        for i, img in enumerate(out_imgs_benign):
-            image.append(img.astype(np.uint8))
-        
-        adv_imgs = []
-        for i, img in enumerate(out_imgs):
-            adv_imgs.append(img.astype(np.uint8))
             
-        patch, patch_mask = output.adversarial_patch
-        patch_image = (((patch) * patch_mask).transpose(1,2,0).astype(np.uint8)) * 255
-        return [image, adv_imgs, patch_image]
+        patch = metadata[0]["patch"]
+        patch_mask = metadata[0]["mask"]
+        
+        patch_image = ((patch) * patch_mask).transpose(1,2,0)
+        if patch_image.max() > 1:
+            patch_image = patch_image.astype(np.uint8)
+        else:
+            patch_image = patch_image.astype(np.float32)
+            
+        return [out_imgs_benign, out_imgs_adv, benign_map_50, adv_map_50, patch_image]
 
 def clf_evasion_evaluate(*args):
     '''
@@ -616,60 +894,34 @@ def clf_evasion_evaluate(*args):
     image = args[-1]
     
     if dataset_type == "Example XView":
-        from maite import load_dataset
-        import torchvision
-        jatic_dataset = load_dataset(
-            provider="huggingface",
-            dataset_name="CDAO/xview-subset-classification",
-            task="image-classification",
-            split="test",
-        )
-        IMAGE_H, IMAGE_W = 224, 224
-        transform = torchvision.transforms.Compose(
-            [  
-                torchvision.transforms.Resize((IMAGE_H, IMAGE_W)),
-                torchvision.transforms.ToTensor(),
-            ]
-        )  
-        jatic_dataset.set_transform(lambda x: {"image": transform(x["image"]), "label": x["label"]})
-        image = {'image': [i['image'].numpy() for i in jatic_dataset],
-                'label': [i['label'] for i in jatic_dataset]}   
-    elif dataset_type=="huggingface":
-        from maite import load_dataset
-        jatic_dataset = load_dataset(
-            provider=dataset_type,
-            dataset_name=dataset_path,
-            task="image-classification",
-            split=dataset_split,
-            drop_labels=False
-        )
+        from datasets import load_dataset
+        from heart_library.utils import process_inputs_for_art
+        from torchvision import transforms
         
-        image = {'image': [i['image'] for i in jatic_dataset],
-                'label': [i['label'] for i in jatic_dataset]}
+        clf_labels = ['Building', 'Construction Site', 'Engineering Vehicle', 'Fishing Vessel', 'Oil Tanker', 'Vehicle Lot']
+        jatic_dataset = load_dataset("CDAO/xview-subset-classification", split="test[0:100]")
+        
+        IMAGE_H, IMAGE_W = 224, 224
+
+        preprocess = transforms.Compose([
+            transforms.Resize((IMAGE_H, IMAGE_W)),
+            transforms.ToTensor()
+        ])
+
+        jatic_dataset = jatic_dataset.map(lambda x: {"image": preprocess(x["image"]), "label": x["label"]})
+        images, groundtruth, _ = process_inputs_for_art(jatic_dataset) 
+    elif dataset_type=="huggingface":
+        pass
     elif dataset_type=="torchvision":
-        from maite import load_dataset
-        jatic_dataset = load_dataset(
-            provider=dataset_type,
-            dataset_name=dataset_path,
-            task="image-classification",
-            split=dataset_split,
-            root='./data/',
-            download=True
-        )
-        image = {'image': [i['image'] for i in jatic_dataset],
-                'label': [i['label'] for i in jatic_dataset]}  
+        pass
+         
     elif dataset_type=="Example CIFAR10":
-        from maite import load_dataset
-        jatic_dataset = load_dataset(
-            provider="torchvision",
-            dataset_name="CIFAR10",
-            task="image-classification",
-            split=dataset_split,
-            root='./data/',
-            download=True
-        )
-        image = {'image': [i['image'] for i in jatic_dataset][:100],
-                'label': [i['label'] for i in jatic_dataset][:100]}  
+        from datasets import load_dataset
+        from heart_library.utils import process_inputs_for_art
+        
+        clf_labels = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+        jatic_dataset = load_dataset("cifar10", split="test[0:10]") 
+        images, groundtruth, _ = process_inputs_for_art(jatic_dataset)
         
     if model_type == "Example CIFAR10":
         jptc = basic_cifar10_model()  
@@ -691,27 +943,26 @@ def clf_evasion_evaluate(*args):
         _ = model.eval()
         jptc = JaticPyTorchClassifier(
             model=model, loss = torch.nn.CrossEntropyLoss(), input_shape=(3, 224, 224),
-            nb_classes=len(classes), clip_values=(0, 1), labels=list(classes.values())
+            nb_classes=len(classes), clip_values=(0, 1)
         )
     elif model_type == "torchvision":
-        from maite.interop.torchvision import TorchVisionClassifier 
+        from torchvision.models import resnet18, ResNet18_Weights
         from heart_library.estimators.classification.pytorch import JaticPyTorchClassifier
         
-        clf = TorchVisionClassifier.from_pretrained(model_path)
+        resnet_model = resnet18(ResNet18_Weights)
         loss_fn = torch.nn.CrossEntropyLoss(reduction="sum")
         jptc = JaticPyTorchClassifier(
-            model=clf._model, loss=loss_fn, input_shape=(model_channels, model_height, model_width), 
-            nb_classes=len(clf._labels), clip_values=(0, model_clip), labels=clf._labels
+            model=resnet_model, loss=loss_fn, input_shape=(model_channels, model_height, model_width), 
+            nb_classes=1000, clip_values=(0, model_clip)
         )
     elif model_type == "huggingface":
-        from maite.interop.huggingface import HuggingFaceImageClassifier 
         from heart_library.estimators.classification.pytorch import JaticPyTorchClassifier
         
-        clf = HuggingFaceImageClassifier.from_pretrained(model_path)
         loss_fn = torch.nn.CrossEntropyLoss(reduction="sum")
         jptc = JaticPyTorchClassifier(
-            model=clf._model, loss=loss_fn, input_shape=(model_channels, model_height, model_width), 
-            nb_classes=len(clf._labels), clip_values=(0, model_clip), labels=clf._labels
+            model=model_path, loss=loss_fn, input_shape=(model_channels, model_height, model_width),
+            nb_classes=1000, clip_values=(0, model_clip), preprocessing=([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            provider="huggingface"
         )
     
     if attack=="PGD":
@@ -719,151 +970,175 @@ def clf_evasion_evaluate(*args):
         from heart_library.attacks.attack import JaticAttack
         from heart_library.metrics import AccuracyPerturbationMetric
         from torch.nn.functional import softmax
-        from maite.protocols import HasDataImage, is_typed_dict, ArrayLike
         
         pgd_attack = ProjectedGradientDescentPyTorch(estimator=jptc, max_iter=args[7], eps=args[8],
                                                  eps_step=args[9], targeted=args[10]!="")
-        attack = JaticAttack(pgd_attack)
+        attack = JaticAttack(pgd_attack, norm=2)
         
-        preds = jptc(image)
-        preds = softmax(torch.from_numpy(preds.logits), dim=1)
-        labels = {}
-        for i, label in enumerate(jptc.get_labels()):
-            labels[label] = preds[0][i]
+        preds = jptc(images)
         
-        if args[10]!="":
-            if is_typed_dict(image, HasDataImage):
-                data = {'image': image['image'], 'label': [args[10]]*len(image['image'])}
-            else:
-                data = {'image': image, 'label': [args[10]]}
-        else:
-            data = image
+        # override jatic_dataset with targeted dataset args[10]
+        if args[11]!="":
+            class TargetedImageDataset:
+                def __init__(self, images, target):
+                    self._images = images
+                    self._target = target
+                def __len__(self)->int:
+                    return len(self._images)
+                def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
+                    image = self._images[ind]
+                    return image, self._target, {}
+            
+            images = TargetedImageDataset(images, args[10])
         
-        x_adv = attack.run_attack(data=data)
-        adv_preds = jptc(x_adv.adversarial_examples)
-        adv_preds = softmax(torch.from_numpy(adv_preds.logits), dim=1)
-        adv_labels = {}
-        for i, label in enumerate(jptc.get_labels()):
-            adv_labels[label] = adv_preds[0][i]
+        x_adv, _, metadata = attack(images)
+        adv_preds = jptc(x_adv)
         
-        metric = AccuracyPerturbationMetric()
-        metric.update(jptc, jptc.device, image, x_adv.adversarial_examples)
-        clean_accuracy, robust_accuracy, perturbation_added = metric.compute()
+        metric = AccuracyPerturbationMetric(preds, metadata)
+        metric.update(adv_preds, groundtruth)
+        result = metric.compute()
 
         # convert numpy.float64 to python float for gradio>=4.24.0 compatibility
-        clean_accuracy = float(clean_accuracy)
-        robust_accuracy = float(robust_accuracy)
-        perturbation_added = float(perturbation_added)
-
-        metrics = pd.DataFrame([[clean_accuracy, robust_accuracy, perturbation_added]],
-                               columns=['clean accuracy', 'robust accuracy', 'perturbation'])
-
-        adv_imgs = [img.transpose(1,2,0) for img in x_adv.adversarial_examples]
-        if is_typed_dict(image, HasDataImage):
-            image = image['image']
-        if not isinstance(image, list):
-            image = [image]
-            
-        # in case where multiple images, use argmax to get the predicted label and add as caption
-        if dataset_type!="local":
-            temp = []
-            for i, img in enumerate(image):
-                if isinstance(img, ArrayLike):
-                    temp.append((img.transpose(1,2,0), str(jptc.get_labels()[np.argmax(preds[i])]) ))
-                else:
-                    temp.append((img, str(jptc.get_labels()[np.argmax(preds[i])]) ))
-            image = temp
-            
-            temp = []
-            for i, img in enumerate(adv_imgs):
-                temp.append((img, str(jptc.get_labels()[np.argmax(adv_preds[i])]) ))
-            adv_imgs = temp
+        clean_accuracy = float(result["clean_accuracy"])
+        robust_accuracy = float(result["robust_accuracy"])
+        perturbation_added = float(result["mean_delta"])
         
-        return [image, labels, adv_imgs, adv_labels, clean_accuracy, robust_accuracy, perturbation_added]
+        
+        # transform to probabilities
+        preds = softmax(torch.from_numpy(preds), dim=1)
+        labels = {}
+        for i, label in enumerate(clf_labels):
+            labels[label] = preds[0][i]
+            
+        adv_preds = softmax(torch.from_numpy(adv_preds), dim=1)
+        adv_labels = {}
+        for i, label in enumerate(clf_labels):
+            adv_labels[label] = adv_preds[0][i]
+
+        adv_imgs = [img.transpose(1,2,0) for img in x_adv]
+        
+        image_list = []
+
+        for i, img in enumerate(images):
+            if isinstance(img, Tuple):
+                if img[0].max()>1:
+                    image_list.append((img[0].transpose(1,2,0).astype(np.uint8), str(clf_labels[np.argmax(preds[i]).item()]) ))
+                else:
+                    image_list.append((img[0].transpose(1,2,0).astype(np.float32), str(clf_labels[np.argmax(preds[i]).item()]) ))
+            else:
+                if img.max()>1:
+                    image_list.append((img.transpose(1,2,0).astype(np.uint8), str(clf_labels[np.argmax(preds[i]).item()]) ))
+                else:
+                    image_list.append((img.transpose(1,2,0).astype(np.float32), str(clf_labels[np.argmax(preds[i]).item()]) ))
+        
+        adv_image_list = []
+        for i, img in enumerate(adv_imgs):
+            if img.max()>1:
+                adv_image_list.append((img.astype(np.uint8), str(clf_labels[np.argmax(adv_preds[i]).item()]) ))
+            else:
+                adv_image_list.append((img.astype(np.float32), str(clf_labels[np.argmax(adv_preds[i]).item()]) ))
+            
+        
+        
+        return [image_list, labels, adv_image_list, adv_labels, clean_accuracy, robust_accuracy, perturbation_added]
 
     elif attack=="Adversarial Patch":
         from art.attacks.evasion.adversarial_patch.adversarial_patch_pytorch import AdversarialPatchPyTorch
         from heart_library.attacks.attack import JaticAttack
         from heart_library.metrics import AccuracyPerturbationMetric
         from torch.nn.functional import softmax
-        from maite.protocols import HasDataImage, is_typed_dict, ArrayLike
         
         batch_size = 16
         scale_min = 0.3
         scale_max = 1.0
         rotation_max = 0
         learning_rate = 5000.
-        max_iter = 2000
-        patch_shape = (3, 14, 14)
-        patch_location = (18,18)
 
         patch_attack = AdversarialPatchPyTorch(estimator=jptc, rotation_max=rotation_max, patch_location=(args[8], args[9]),
                             scale_min=scale_min, scale_max=scale_max, patch_type='square',
                             learning_rate=learning_rate, max_iter=args[7], batch_size=batch_size,
                             patch_shape=(3, args[10], args[10]), verbose=False, targeted=args[11]!="")
         
-        attack = JaticAttack(patch_attack)
+        attack = JaticAttack(patch_attack, norm=2)
         
-        preds = jptc(image)
-        preds = softmax(torch.from_numpy(preds.logits), dim=1)
-        labels = {}
-        for i, label in enumerate(jptc.get_labels()):
-            labels[label] = preds[0][i]
+        preds = jptc(images)
         
+        # override jatic_dataset with targeted dataset args[10]
         if args[11]!="":
-            if is_typed_dict(image, HasDataImage):
-                data = {'image': image['image'], 'label': [args[11]]*len(image['image'])}
-            else:
-                data = {'image': image, 'label': [args[11]]}
-        else:
-            data = image
+            class TargetedImageDataset:
+                def __init__(self, images, target):
+                    self._images = images
+                    self._target = target
+                def __len__(self)->int:
+                    return len(self._images)
+                def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
+                    image = self._images[ind]
+                    return image, self._target, {}
+            
+            images = TargetedImageDataset(images, args[11])
         
-        attack_output = attack.run_attack(data=data)
-        adv_preds = jptc(attack_output.adversarial_examples)
-        adv_preds = softmax(torch.from_numpy(adv_preds.logits), dim=1)
+        x_adv, _, metadata = attack(images)
+        adv_preds = jptc(x_adv)
+        
+        metric = AccuracyPerturbationMetric(preds, metadata)
+        metric.update(adv_preds, groundtruth)
+        result = metric.compute()
+
+        # convert numpy.float64 to python float for gradio>=4.24.0 compatibility
+        clean_accuracy = float(result["clean_accuracy"])
+        robust_accuracy = float(result["robust_accuracy"])
+        perturbation_added = float(result["mean_delta"])
+        
+        # transform to probabilities
+        preds = softmax(torch.from_numpy(preds), dim=1)
+        
+        labels = {}
+        for i, label in enumerate(clf_labels):
+            labels[label] = preds[0][i]
+            
+        adv_preds = softmax(torch.from_numpy(adv_preds), dim=1)
         adv_labels = {}
-        for i, label in enumerate(jptc.get_labels()):
+        for i, label in enumerate(clf_labels):
             adv_labels[label] = adv_preds[0][i]
-        
-        metric = AccuracyPerturbationMetric()
-        metric.update(jptc, jptc.device, image, attack_output.adversarial_examples)
-        clean_accuracy, robust_accuracy, perturbation_added = metric.compute()
 
         # convert numpy.float64 to python float for gradio>=4.24.0 compatibility
         clean_accuracy = float(clean_accuracy)
         robust_accuracy = float(robust_accuracy)
         perturbation_added = float(perturbation_added)
+        
+        adv_imgs = [img.transpose(1,2,0) for img in x_adv]
+        
+        image_list = []
 
-        metrics = pd.DataFrame([[clean_accuracy, robust_accuracy, perturbation_added]],
-                               columns=['clean accuracy', 'robust accuracy', 'perturbation'])
-
-        adv_imgs = [img.transpose(1,2,0) for img in attack_output.adversarial_examples]
-        if is_typed_dict(image, HasDataImage):
-            image = image['image']
-        if not isinstance(image, list):
-            image = [image]
-            
-        # in case where multiple images, use argmax to get the predicted label and add as caption
-        if dataset_type!="local":
-            temp = []
-            for i, img in enumerate(image):
-                
-                if isinstance(img, ArrayLike):
-                    temp.append((img.transpose(1,2,0), str(jptc.get_labels()[np.argmax(preds[i])]) ))
+        for i, img in enumerate(images):
+            if isinstance(img, Tuple):
+                if img[0].max()>1:
+                    image_list.append((img[0].transpose(1,2,0).astype(np.uint8), str(clf_labels[np.argmax(preds[i]).item()]) ))
                 else:
-                    temp.append((img, str(jptc.get_labels()[np.argmax(preds[i])]) ))
+                    image_list.append((img[0].transpose(1,2,0).astype(np.float32), str(clf_labels[np.argmax(preds[i]).item()]) ))
+            else:
+                if img.max()>1:
+                    image_list.append((img.transpose(1,2,0).astype(np.uint8), str(clf_labels[np.argmax(preds[i]).item()]) ))
+                else:
+                    image_list.append((img.transpose(1,2,0).astype(np.float32), str(clf_labels[np.argmax(preds[i]).item()]) ))
+        
+        adv_image_list = []
+        for i, img in enumerate(adv_imgs):
+            if img.max()>1:
+                adv_image_list.append((img.astype(np.uint8), str(clf_labels[np.argmax(adv_preds[i]).item()]) ))
+            else:
+                adv_image_list.append((img.astype(np.float32), str(clf_labels[np.argmax(adv_preds[i]).item()]) ))
+            
+        patch = metadata[0]["patch"]
+        patch_mask = metadata[0]["mask"]
+        
+        if patch.max()>1:
+            patch_image = ((patch) * patch_mask).transpose(1,2,0).astype(np.uint8)
+        else:
+            patch_image = ((patch) * patch_mask).transpose(1,2,0).astype(np.float32)
                 
-            image = temp
-            
-            temp = []
-            for i, img in enumerate(adv_imgs):
-                temp.append((img, str(jptc.get_labels()[np.argmax(adv_preds[i])]) ))
-            adv_imgs = temp
-            
-        patch, patch_mask = attack_output.adversarial_patch
-        patch_image = ((patch) * patch_mask).transpose(1,2,0)
-            
-        return [image, labels, adv_imgs, adv_labels, clean_accuracy, robust_accuracy, patch_image]
+        
+        return [image_list, labels, adv_image_list, adv_labels, clean_accuracy, robust_accuracy, patch_image]
             
 def show_model_params(model_type):
     '''
@@ -925,9 +1200,9 @@ with gr.Blocks(css=css, theme='xiaobaiyuan/theme_brief') as demo:
         with gr.Row():
             # Model and Dataset type e.g. Torchvision, HuggingFace, local etc.
             with gr.Column():
-                model_type = gr.Radio(label="Model type", choices=["Example CIFAR10", "Example XView", "torchvision"],
+                model_type = gr.Radio(label="Model type", choices=["Example CIFAR10", "Example XView"],
                                     value="Example CIFAR10")
-                dataset_type = gr.Radio(label="Dataset", choices=["Example CIFAR10", "Example XView", "local", "torchvision", "huggingface"],
+                dataset_type = gr.Radio(label="Dataset", choices=["Example CIFAR10", "Example XView"],
                                     value="Example CIFAR10")
             # Model parameters e.g. RESNET, VIT, input dimensions, clipping values etc.
             with gr.Column(visible=False) as model_params:
@@ -980,8 +1255,8 @@ with gr.Blocks(css=css, theme='xiaobaiyuan/theme_brief') as demo:
                             with gr.Column(scale=1):
                                 attack = gr.Textbox(visible=True, value="PGD", label="Attack", interactive=False)
                                 max_iter = gr.Slider(minimum=1, maximum=20, label="Max iterations", value=10, step=1)
-                                eps = gr.Slider(minimum=0.03, maximum=1, label="Epslion", value=0.03) 
-                                eps_steps = gr.Slider(minimum=0.003, maximum=0.99, label="Epsilon steps", value=0.003) 
+                                eps = gr.Slider(minimum=2, maximum=255, label="Epslion", value=8, step=1) 
+                                eps_steps = gr.Slider(minimum=1, maximum=254, label="Epsilon steps", value=2, step=1) 
                                 targeted = gr.Textbox(placeholder="Target label (integer)", label="Target")
                                 with gr.Accordion("Target mapping", open=False):
                                     cifar_labels = gr.Dataframe(pd.DataFrame(['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'],
@@ -1138,7 +1413,7 @@ with gr.Blocks(css=css, theme='xiaobaiyuan/theme_brief') as demo:
             with gr.Column():
                 model_type = gr.Radio(label="Model type", choices=["DeTR"],
                                     value="DeTR")
-                dataset_type = gr.Radio(label="Dataset", choices=["COCO",],
+                dataset_type = gr.Radio(label="Dataset", choices=["COCO", "VisDrone"],
                                     value="COCO")
             
             model_type.change(show_model_params, model_type, model_params)
@@ -1174,7 +1449,7 @@ with gr.Blocks(css=css, theme='xiaobaiyuan/theme_brief') as demo:
                                 eps = gr.Slider(minimum=0.01, maximum=1, label="Epslion", value=0.01, step=0.01)
                                 eps_steps = gr.Slider(minimum=0.001, maximum=0.9, label="Epsilon steps", value=0.001, step=0.001)
                                 targeted = gr.Textbox(placeholder="Target label (integer)", label="Target")
-                                det_threshold = gr.Slider(minimum=0.0, maximum=100, label="Detection threshold", value=0.2)
+                                det_threshold = gr.Slider(minimum=0.0, maximum=1.0, label="Detection threshold", value=0.7, step=0.05)
                                 eval_btn_pgd = gr.Button("Evaluate")
                                 model_clip.change(pgd_update_epsilon, model_clip, eps)
                                 
@@ -1183,18 +1458,21 @@ with gr.Blocks(css=css, theme='xiaobaiyuan/theme_brief') as demo:
                                 with gr.Row():
                                     with gr.Column():
                                         original_gallery = gr.Gallery(label="Original", preview=True, show_download_button=True, height=600)
+                                        clean_map = gr.Number(label="Clean mAP@50", precision=2)
                                         
                                     with gr.Column():
                                         adversarial_gallery = gr.Gallery(label="Adversarial", preview=True, show_download_button=True, height=600)
+                                        robust_map = gr.Number(label="Robust mAP@50", precision=2)
+                                        perturbation_added = gr.Number(label="Perturbation Added", precision=2)
                                         
                                 eval_btn_pgd.click(det_evasion_evaluate, inputs=[attack, model_type, model_path, model_channels, model_height, model_width,
                                                                              model_clip, max_iter, eps, eps_steps, targeted, 
                                                                              det_threshold, dataset_type, image],
-                                                    outputs=[original_gallery, adversarial_gallery], api_name='patch')
+                                                    outputs=[original_gallery, adversarial_gallery, clean_map, robust_map, perturbation_added], api_name='patch')
                         
                         with gr.Row():
                             clear_btn = gr.ClearButton([image, original_gallery,
-                                                        adversarial_gallery])
+                                                        adversarial_gallery, clean_map, robust_map, perturbation_added])
                     with gr.Tab("Adversarial Patch"):
                         gr.Markdown("This attack crafts an adversarial patch that facilitates evasion.")
                         
@@ -1206,8 +1484,8 @@ with gr.Blocks(css=css, theme='xiaobaiyuan/theme_brief') as demo:
                                     patch_dim = gr.Slider(minimum=1, maximum=640, label="Patch dimension", value=100, step=1, info="The height and width of the patch") 
                                     x_location = gr.Slider(minimum=0, maximum=640, label="Location (x)", value=100, step=1, info="Shift patch left and right") 
                                     y_location = gr.Slider(minimum=0, maximum=480, label="Location (y)", value=100, step=1, info="Shift patch up and down") 
-                                    targeted = gr.Radio(choices=['Yes', 'No'], value='No', label="Targeted")
-                                    det_threshold = gr.Slider(minimum=0.0, maximum=100, label="Detection threshold", value=0.2)
+                                    targeted = gr.Textbox(placeholder="Target label (integer)", label="Target")
+                                    det_threshold = gr.Slider(minimum=0.0, maximum=1.0, label="Detection threshold", value=0.7, step=0.05)
                                     
                                     dataset_type.change(update_patch_sliders, 
                                                       [x_location, y_location, patch_dim, dataset_type, dataset_path, dataset_split, image],
@@ -1231,6 +1509,24 @@ with gr.Blocks(css=css, theme='xiaobaiyuan/theme_brief') as demo:
                                     preview_patch_loc.click(preview_patch_location, inputs=[x_location, y_location, patch_dim,
                                                                                                 dataset_type, dataset_path, dataset_split, image],
                                                                 outputs = [test_patch_gallery])
+                            
+                            with gr.Column(scale=1):
+                                with gr.Accordion('Target Mapping', open=False):
+                                    gr.Markdown('''<i>If deploying a targeted attack, use the mapping of classes
+                                                to integer below to populate the <b>target label</b> box in the parameters section.</i>''')
+                                    coco_labels = gr.Dataframe(pd.DataFrame(['N/A','person','bicycle','car','motorcycle','airplane','bus','train',
+                                                                            'truck','boat','traffic light','fire hydrant','N/A','stop sign','parking meter','bench',
+                                                                            'bird','cat','dog','horse','sheep','cow','elephant','bear','zebra','giraffe','N/A',
+                                                                            'backpack','umbrella','N/A','N/A','handbag','tie','suitcase','frisbee','skis','snowboard',
+                                                                            'sports ball','kite','baseball bat','baseball glove','skateboard','surfboard','tennis racket',
+                                                                            'bottle','N/A','wine glass','cup','fork','knife','spoon','bowl','banana','apple','sandwich',
+                                                                            'orange','broccoli','carrot','hot dog','pizza','donut','cake','chair','couch','potted plant',
+                                                                            'bed','N/A','dining table','N/A','N/A','toilet','N/A','tv','laptop','mouse','remote','keyboard',
+                                                                            'cell phone','microwave','oven','toaster','sink','refrigerator','N/A','book','clock',
+                                                                            'vase','scissors','teddy bear','hair drier','toothbrush'],
+                                                                columns=['label']).rename_axis('target').reset_index(),
+                                                                visible=True, elem_classes=["small-font", "df-padding"],
+                                                                type="pandas",interactive=False)
                         
                         with gr.Row():
                             eval_btn_patch = gr.Button("Evaluate")
@@ -1241,9 +1537,11 @@ with gr.Blocks(css=css, theme='xiaobaiyuan/theme_brief') as demo:
                                 with gr.Row():
                                     with gr.Column(scale=2):
                                         original_gallery = gr.Gallery(label="Original", preview=True, show_download_button=True, height=600)
+                                        clean_map = gr.Number(label="Clean mAP@50", precision=2)
                                         
                                     with gr.Column(scale=2):
                                         adversarial_gallery = gr.Gallery(label="Adversarial", preview=True, show_download_button=True, height=600)
+                                        robust_map = gr.Number(label="Robust mAP@50", precision=2)
                                    
                                     with gr.Column(scale=1):     
                                         patch_image = gr.Image(label="Adversarial Patch")
@@ -1252,11 +1550,11 @@ with gr.Blocks(css=css, theme='xiaobaiyuan/theme_brief') as demo:
                                 eval_btn_patch.click(det_evasion_evaluate, inputs=[attack, model_type, model_path, model_channels, model_height, model_width,
                                                                              model_clip, max_iter, x_location, y_location, patch_dim, targeted, 
                                                                              det_threshold,dataset_type, image],
-                                                    outputs=[original_gallery, adversarial_gallery, patch_image])
+                                                    outputs=[original_gallery, adversarial_gallery, clean_map, robust_map, patch_image])
                         
                         with gr.Row():
                             clear_btn = gr.ClearButton([image, targeted, original_gallery,
-                                                        adversarial_gallery])
+                                                        adversarial_gallery, clean_map, robust_map])
                         
                 with gr.Tab("Poisoning"):
                     gr.Markdown("Coming soon.")

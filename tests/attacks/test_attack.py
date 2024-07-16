@@ -26,20 +26,18 @@ from art.utils import load_dataset
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip_framework("keras", "non_dl_frameworks", "mxnet", "kerastf", "tensorflow1", "tensorflow2v1")
-def test_jatic_supported_attack(art_warning):
+def test_jatic_supported_attack(heart_warning):
     try:
         from art.attacks.evasion import ProjectedGradientDescentPyTorch
         from heart_library.attacks.attack import JaticAttack
-        from heart_library.attacks.typing import Attack, HasEvasionAttackResult
-        from maite.protocols import ImageClassifier
+        import maite.protocols.image_classification as ic 
 
         jptc = get_cifar10_image_classifier_pt()
         pgd_attack = ProjectedGradientDescentPyTorch(estimator=jptc, targeted=True)
         attack = JaticAttack(pgd_attack)
 
-        assert isinstance(jptc, ImageClassifier)
-        assert isinstance(attack, Attack)
+        assert isinstance(jptc, ic.Model)
+        assert isinstance(attack, ic.Augmentation)
 
         import numpy as np
 
@@ -47,32 +45,29 @@ def test_jatic_supported_attack(art_warning):
 
         img = x_train[[0]].transpose(0, 3, 1, 2).astype('float32')
 
-        data = {'image': img[0], 'label': 4}
+        data = {'images': img[:1], 'labels': [4]}
 
-        x_adv = attack.run_attack(data=data)
-        assert isinstance(x_adv, HasEvasionAttackResult)
-        x_adv = x_adv.adversarial_examples
+        x_adv, _, _ = attack(data=data)
 
-        assert np.argmax(jptc(x_adv[0]).logits) == 4
-        assert np.argmax(jptc(img).logits) != np.argmax(jptc(x_adv[0]).logits)
+        assert np.argmax(jptc(x_adv[0])) == 4
+        assert np.argmax(jptc(img)) != np.argmax(jptc(x_adv[0]))
 
     except HEARTTestException as e:
-        art_warning(e)
+        heart_warning(e)
         
-@pytest.mark.skip_framework("keras", "non_dl_frameworks", "mxnet", "kerastf", "tensorflow1", "tensorflow2v1")
-def test_jatic_supported_black_box_attack(art_warning):
+        
+def test_jatic_supported_black_box_attack(heart_warning):
     try:
         from art.attacks.evasion import HopSkipJump
         from heart_library.attacks.attack import JaticAttack
-        from heart_library.attacks.typing import Attack, HasEvasionAttackResult
-        from maite.protocols import ImageClassifier
+        import maite.protocols.image_classification as ic 
 
         jptc = get_cifar10_image_classifier_pt()
         pgd_attack = HopSkipJump(classifier=jptc)
         attack = JaticAttack(pgd_attack)
 
-        assert isinstance(jptc, ImageClassifier)
-        assert isinstance(attack, Attack)
+        assert isinstance(jptc, ic.Model)
+        assert isinstance(attack, ic.Augmentation)
 
         import numpy as np
 
@@ -80,24 +75,21 @@ def test_jatic_supported_black_box_attack(art_warning):
 
         img = x_train[[0]].transpose(0, 3, 1, 2).astype('float32')
 
-        data = {'image': img[0], 'label': 4}
+        data = {'images': img[:1], 'labels': [4]}
 
-        x_adv = attack.run_attack(data=data)
-        assert isinstance(x_adv, HasEvasionAttackResult)
-        x_adv = x_adv.adversarial_examples
+        x_adv, _, _ = attack(data=data)
 
-        assert np.argmax(jptc(x_adv[0]).logits) == 3
-        assert np.argmax(jptc(img).logits) != np.argmax(jptc(x_adv[0]).logits)
+        assert np.argmax(jptc(x_adv[0])) == 3
+        assert np.argmax(jptc(img)) != np.argmax(jptc(x_adv[0]))
 
     except HEARTTestException as e:
-        art_warning(e)
+        heart_warning(e)
         
-def test_jatic_supported_patch_attack(art_warning):
+def test_jatic_supported_patch_attack(heart_warning):
     try:
         from art.attacks.evasion import AdversarialPatchPyTorch
         from heart_library.attacks.attack import JaticAttack
-        from heart_library.attacks.typing import Attack, HasEvasionAttackResult
-        from maite.protocols import ImageClassifier
+        import maite.protocols.image_classification as ic 
 
         jptc = get_cifar10_image_classifier_pt()
         
@@ -116,8 +108,8 @@ def test_jatic_supported_patch_attack(art_warning):
                             patch_shape=patch_shape, verbose=False, targeted=True)
         attack = JaticAttack(patch_attack)
 
-        assert isinstance(jptc, ImageClassifier)
-        assert isinstance(attack, Attack)
+        assert isinstance(jptc, ic.Model)
+        assert isinstance(attack, ic.Augmentation)
 
         import numpy as np
 
@@ -125,26 +117,25 @@ def test_jatic_supported_patch_attack(art_warning):
 
         img = x_train[[0]].transpose(0, 3, 1, 2).astype('float32')
 
-        data = {'image': img[0], 'label': 3}
+        data = {'images': img[:1], 'labels': [3], 'metadata': [{}]}
 
-        attack_output = attack.run_attack(data=data)
-        assert isinstance(attack_output, HasEvasionAttackResult)
-        x_adv = attack_output.adversarial_examples
-        patch, _ = attack_output.adversarial_patch
+        x_adv, _, metadata = attack(data=data)
+        
+        patch = metadata[0]["patch"]
 
         assert patch.shape == patch_shape
-        assert np.argmax(jptc(x_adv[0]).logits) == 3
+        assert np.argmax(jptc(x_adv[0])) == 3
 
     except HEARTTestException as e:
-        art_warning(e)
+        heart_warning(e)
 
-def test_jatic_supported_obj_det_patch_attack(art_warning):
+
+def test_jatic_supported_obj_det_patch_attack(heart_warning):
     try:
         from art.attacks.evasion import ProjectedGradientDescent
         from heart_library.attacks.attack import JaticAttack
         from heart_library.estimators.object_detection import JaticPyTorchDETR
-        from heart_library.attacks.typing import Attack, HasEvasionAttackResult
-        from maite.protocols import ObjectDetector
+        from maite.protocols.object_detection import Model, ObjectDetectionTarget
         from torchvision import transforms
         from PIL import Image
         import requests
@@ -170,14 +161,12 @@ def test_jatic_supported_obj_det_patch_attack(art_warning):
                             clip_values=(0, 1), 
                             attack_losses=("loss_ce",
                                 "loss_bbox",
-                                "loss_giou",),
-                            labels=labels)
+                                "loss_giou",),)
 
         evasion_attack = ProjectedGradientDescent(estimator=detector, max_iter=2)
         attack = JaticAttack(evasion_attack)
             
-        assert isinstance(detector, ObjectDetector)
-        assert isinstance(attack, Attack)
+        assert isinstance(detector, Model)
 
         import numpy as np
 
@@ -197,21 +186,18 @@ def test_jatic_supported_obj_det_patch_attack(art_warning):
         coco_images.append(im)
         coco_images = np.array(coco_images)
         
-        output = detector(coco_images)
-
-        dets = [{'boxes': output.boxes[i],
-            'scores': output.scores[i],
-            'labels': output.labels[i]} for i in range(len(coco_images))]
-
-        data = {'image': coco_images[[0]], 'label': dets[:1]}
-        attack_output = attack.run_attack(data=data)
+        attack_output, _, _ = attack(coco_images)
         
-        adv_output = detector(attack_output.adversarial_examples)
-        isinstance(adv_output, HasEvasionAttackResult)
+        detections = detector(coco_images)
+        adv_output = detector(attack_output)
         
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_output.boxes[0], output.boxes[0])
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_output.scores[0], output.scores[0])
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_output.labels[0], output.labels[0])
+        isinstance(adv_output, ObjectDetectionTarget)
+        
+        
+        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_output[0].boxes, detections[0].boxes)
+        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_output[0].scores, detections[0].scores)
+        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_output[0].labels, detections[0].labels)
 
     except HEARTTestException as e:
-        art_warning(e)
+        heart_warning(e)
+

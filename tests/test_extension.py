@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (C) The Adversarial Robustness Toolbox (ART) Authors 2023
+# Copyright (C) The Adversarial Robustness Toolbox (HEART) Authors 2024
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.framework_agnostic
-def test_import_art(art_warning):
+def test_import_art(heart_warning):
     try:
 
         import art
@@ -34,19 +34,19 @@ def test_import_art(art_warning):
         assert art.__version__ >= "1.17.1"
 
     except HEARTTestException as e:
-        art_warning(e)
+        heart_warning(e)
 
 
 @pytest.mark.framework_agnostic
-def test_import_heart(art_warning):
+def test_import_heart(heart_warning):
     try:
 
         import heart_library
 
-        assert heart_library.__version__ == "0.3.3"
+        assert heart_library.__version__ == "0.4.0"
 
     except HEARTTestException as e:
-        art_warning(e)
+        heart_warning(e)
 
 
 @pytest.fixture()
@@ -57,7 +57,6 @@ def fix_get_mnist_subset(get_mnist_dataset):
     yield x_train_mnist[:n_train], y_train_mnist[:n_train], x_test_mnist[:n_test], y_test_mnist[:n_test]
 
 
-@pytest.mark.skip_framework("keras", "non_dl_frameworks", "mxnet", "kerastf", "tensorflow1", "tensorflow2v1")
 def test_heart_classifier_ext(fix_get_mnist_subset):
     (x_train_mnist, _, _, _) = fix_get_mnist_subset
     classifier = get_mnist_image_classifier_pt()

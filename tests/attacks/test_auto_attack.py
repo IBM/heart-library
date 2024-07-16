@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (C) The Adversarial Robustness Toolbox (ART) Authors 2023
+# Copyright (C) The Adversarial Robustness Toolbox (HEART) Authors 2024
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
@@ -18,7 +18,6 @@
 
 import logging
 
-import pytest
 from tests.utils import HEARTTestException, get_cifar10_image_classifier_pt
 from art.utils import load_dataset
 
@@ -26,11 +25,9 @@ from art.utils import load_dataset
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip_framework("keras", "non_dl_frameworks", "mxnet", "kerastf", "tensorflow1", "tensorflow2v1")
-def test_parallel_auto_attack(art_warning):
+def test_parallel_auto_attack(heart_warning):
     try:
         from art.attacks.evasion.auto_attack import AutoAttack
-        from heart_library.attacks.evasion.auto_attack import JaticAutoAttack
         from art.attacks.evasion.projected_gradient_descent.projected_gradient_descent_pytorch import (
             ProjectedGradientDescentPyTorch,
         )
@@ -49,8 +46,8 @@ def test_parallel_auto_attack(art_warning):
                 estimator=ptc, norm=np.inf, eps=0.1, max_iter=10, targeted=False, batch_size=32, verbose=False
             )
         )
-        jatic_attack_noparallel = JaticAutoAttack(estimator=ptc, attacks=attacks, targeted=True, parallel=False)
-        jatic_attack_parallel = JaticAutoAttack(estimator=ptc, attacks=attacks, targeted=True, parallel=True)
+        jatic_attack_noparallel = AutoAttack(estimator=ptc, attacks=attacks, targeted=True, parallel=False)
+        jatic_attack_parallel = AutoAttack(estimator=ptc, attacks=attacks, targeted=True, parallel=True)
         core_attack = AutoAttack(estimator=ptc, attacks=attacks, targeted=True)
 
         no_parallel_adv = jatic_attack_noparallel.generate(x=x_train, y=y_train)
@@ -81,4 +78,4 @@ def test_parallel_auto_attack(art_warning):
         )
 
     except HEARTTestException as e:
-        art_warning(e)
+        heart_warning(e)

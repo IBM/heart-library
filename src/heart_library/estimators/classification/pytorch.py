@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (C) The Adversarial Robustness Toolbox (ART) Authors 2023
+# Copyright (C) The Adversarial Robustness Toolbox (HEART) Authors 2024
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
@@ -18,71 +18,52 @@
 """
 This module implements a JATIC compatible ART PyTorchClassifier.
 """
-from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Any
 
 from art.estimators.classification.pytorch import PyTorchClassifier
-from maite.errors import InvalidArgument
-from maite.protocols import HasLogits, SupportsArray
+from maite.protocols import ArrayLike
 
 from heart_library.utils import process_inputs_for_art
 
-META_NOT_SPECIFIED: str = "Not specified"
 
-
-@dataclass
-class JaticPytorchClassifierOutput:
-    """
-    Dataclass output of ART JATIC PyTorch Classifier
-    """
-
-    logits: SupportsArray
-
-
-@dataclass
-class HeartClassifierMetadata:
-    """
-    HEART metadata dataclass for PyTorch Classifier
-    """
-
-    model_name: str
-    provider: str
-    task: str = "Image Classification"
-
-
-class JaticPyTorchClassifier(PyTorchClassifier):  # pylint: disable=R0901
+class JaticPyTorchClassifier(PyTorchClassifier):  # pylint: disable=R0901,R0901
     """
     JATIC compatible extension of ART core PyTorchClassifier
     """
 
-    metadata: HeartClassifierMetadata
+    def __init__(self, provider: str = "", **kwargs: Any):
 
-    def __init__(
-        self,
-        labels: Sequence[str],
-        model_name: str = META_NOT_SPECIFIED,
-        provider: str = META_NOT_SPECIFIED,
-        **kwargs: Any
-    ):
+        if provider == "huggingface":
+            import transformers  # pylint: disable=C0415
+            from art.estimators.classification.hugging_face import \
+                HuggingFaceClassifierPyTorch  # pylint: disable=C0415
+
+            model = transformers.AutoModelForImageClassification.from_pretrained(kwargs["model"])
+            kwargs["model"] = model
+            hf_model = HuggingFaceClassifierPyTorch(**kwargs)
+            kwargs["model"] = hf_model.model
+        elif provider == "timm":
+            from art.estimators.classification.hugging_face import \
+                HuggingFaceClassifierPyTorch  # pylint: disable=C0415
+            from timm import create_model  # pylint: disable=C0415
+
+            model = create_model(
+                kwargs["model"],
+                pretrained=True,
+                num_classes=kwargs["nb_classes"],
+            )
+            kwargs["model"] = model
+            hf_model = HuggingFaceClassifierPyTorch(**kwargs)
+            kwargs["model"] = hf_model.model
+
         super().__init__(**kwargs)
-        if labels is None:
-            raise InvalidArgument("No labels were provided.")
-        self._labels: Sequence[str] = labels
-        self.metadata = HeartClassifierMetadata(model_name, provider)
 
-    def __call__(self, data: SupportsArray) -> HasLogits:
+    def __call__(self, data: ArrayLike) -> ArrayLike:
 
         # convert to ART supported type
-        images, _ = process_inputs_for_art(data, self._device)
+        images, _, _ = process_inputs_for_art(data)
 
         # make prediction
         output = self.predict(images)
 
-        # convert back to JATIC supported type
-        return JaticPytorchClassifierOutput(output)
-
-    def get_labels(self) -> Sequence[str]:
-        """Get labels."""
-        if self._labels is None:
-            raise InvalidArgument("No labels were provided.")
-        return self._labels
+        return output

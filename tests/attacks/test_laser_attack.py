@@ -26,12 +26,11 @@ from art.utils import load_dataset
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip_framework("keras", "non_dl_frameworks", "mxnet", "kerastf", "tensorflow1", "tensorflow2v1")
-def test_laser_attack(art_warning):
+def test_laser_attack(heart_warning):
     try:
         from heart_library.attacks.evasion import HeartLaserBeamAttack
         from heart_library.attacks.attack import JaticAttack
-        from maite.protocols import ImageClassifier
+        import maite.protocols.image_classification as ic
         import numpy as np
 
         jptc = get_cifar10_image_classifier_pt()
@@ -39,7 +38,8 @@ def test_laser_attack(art_warning):
         laser_attack = HeartLaserBeamAttack(estimator=jptc, iterations=5, max_laser_beam=(580, 3.14, 32, 32))
         attack = JaticAttack(laser_attack)
 
-        assert isinstance(jptc, ImageClassifier)
+        assert isinstance(jptc, ic.Model)
+        assert isinstance(attack, ic.Augmentation)
 
         import numpy as np
 
@@ -47,17 +47,12 @@ def test_laser_attack(art_warning):
 
         img = x_train[[0]].transpose(0, 3, 1, 2).astype('float32')
 
-        data = {'image': img[0], 'label': 3}
+        data = {'images': img[:1], 'labels': [3]}
 
-        attack_output = attack.run_attack(data=data)
-        
-        x_adv = attack_output.adversarial_examples
-        
-        # test that the adversarial sample is not the same as the original image
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, attack_output.adversarial_examples, img[[0]])
-        
-        # assert that the predicted logits are different for the adversarial image
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, jptc(x_adv[0]).logits, jptc(img[0]).logits)
+        x_adv, _, _ = attack(data=data)
+
+        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, x_adv[[0]], img[[0]])
+        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, jptc(x_adv[[0]]), jptc(img[[0]]))
 
     except HEARTTestException as e:
-        art_warning(e)
+        heart_warning(e)

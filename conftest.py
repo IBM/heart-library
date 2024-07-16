@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (C) The Adversarial Robustness Toolbox (ART) Authors 2023
+# Copyright (C) HEART Authors 2024
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
@@ -30,13 +30,11 @@ from tests.utils import (
 logger = logging.getLogger(__name__)
 
 deep_learning_frameworks = [
-    "keras", "tensorflow1", "tensorflow2", "tensorflow2v1", "pytorch", "kerastf", "mxnet", "jax"
+    "pytorch",
 ]
-non_deep_learning_frameworks = ["scikitlearn"]
 
-art_supported_frameworks = []
-art_supported_frameworks.extend(deep_learning_frameworks)
-art_supported_frameworks.extend(non_deep_learning_frameworks)
+heart_supported_frameworks = []
+heart_supported_frameworks.extend(deep_learning_frameworks)
 
 master_seed(1234)
 
@@ -51,25 +49,18 @@ def pytest_addoption(parser):
         action="store",
         default=get_default_framework(),
         help="HEART tests allow you to specify which framework to use. The default framework used is `tensorflow`. "
-        "Other options available are {0}".format(art_supported_frameworks),
+        "Other options available are {0}".format(heart_supported_frameworks),
     )
 
 
 @pytest.fixture(scope="session")
 def framework(request):
     ml_framework = request.config.getoption("--framework")
-    if ml_framework == "tensorflow":
-        import tensorflow as tf
 
-        if tf.__version__[0] == "2":
-            ml_framework = "tensorflow2"
-        else:
-            ml_framework = "tensorflow1"
-
-    if ml_framework not in art_supported_frameworks:
+    if ml_framework not in heart_supported_frameworks:
         raise Exception(
             "framework value {0} is unsupported. Please use one of these valid values: {1}".format(
-                ml_framework, " ".join(art_supported_frameworks)
+                ml_framework, " ".join(heart_supported_frameworks)
             )
         )
     return ml_framework
@@ -83,14 +74,14 @@ def framework_agnostic(request, framework):
 
 
 @pytest.fixture
-def art_warning(request):
-    def _art_warning(exception):
+def heart_warning(request):
+    def _heart_warning(exception):
         if type(exception) is HEARTTestFixtureNotImplemented:
             if request.node.get_closest_marker("framework_agnostic"):
                 if not request.node.get_closest_marker("parametrize"):
                     raise Exception(
                         "This test has marker framework_agnostic decorator which means it will only be ran "
-                        "once. However the ART test exception was thrown, hence it is never run fully. "
+                        "once. However the HEART test exception was thrown, hence it is never run fully. "
                     )
 
             # NotImplementedErrors are raised in HEART whenever a test model does not exist for a specific
@@ -100,7 +91,7 @@ def art_warning(request):
         else:
             raise exception
 
-    return _art_warning
+    return _heart_warning
 
 
 @pytest.fixture(scope="session")
@@ -122,7 +113,7 @@ def get_mnist_dataset(load_mnist_dataset, mnist_shape):
 
 @pytest.fixture()
 def mnist_shape(framework):
-    if framework == "pytorch" or framework == "mxnet":
+    if framework == "pytorch":
         return (1, 28, 28)
     else:
         return (28, 28, 1)

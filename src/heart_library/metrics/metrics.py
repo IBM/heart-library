@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (C) The Adversarial Robustness Toolbox (ART) Authors 2023
+# Copyright (C) The Adversarial Robustness Toolbox (HEART) Authors 2024
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
@@ -23,18 +23,125 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import logging
-from typing import Any, Dict, Sequence, Tuple
+from typing import Any, Dict, Sequence, Union
 
 import numpy as np
-import numpy.linalg as la
-from maite.protocols import (ArrayLike, HasLogits, HasProbs, HasScores,
-                             ImageClassifier, SupportsArray)
-from numpy.typing import NDArray
 
 from heart_library.attacks.attack import JaticAttack
-from heart_library.utils import process_inputs_for_art
+from heart_library.estimators.object_detection import \
+    JaticPyTorchObjectDetectionOutput
 
 logger = logging.getLogger(__name__)
+
+
+class HeartMAPMetric:
+    """
+    Facilitating support for Torchmetric's MAP metric.
+    """
+
+    def __init__(self, **kwargs):
+        """
+        :param **kwargs: arguments passed to Torchmetric's MAP metric
+        """
+        from torchmetrics.detection.mean_ap import \
+            MeanAveragePrecision  # pylint: disable=C0415
+
+        self.metric = MeanAveragePrecision(**kwargs)
+
+    def reset(self) -> None:
+        """
+        Clear contents of current metric's cache of predictions and targets.
+        """
+        return self.metric.reset()
+
+    def update(
+        self,
+        preds_batch: Sequence[JaticPyTorchObjectDetectionOutput],
+        targets_batch: Sequence[JaticPyTorchObjectDetectionOutput],
+    ) -> None:
+        """
+        Add predictions and targets to metric's cache for later calculation.
+        :param preds_batch: predictions in ObjectDetectionTarget format.
+        :param targets_batch: groundtruth targets in ObjectDetectionTarget format.
+        """
+        import torch  # pylint: disable=C0415
+
+        # Torchmetrics mAP expects list of dicts with one dict per image; each dict with:
+        # - boxes: Tensor w/shape (num_boxes, 4)
+        # - scores: Tensor w/shape (num_boxes)
+        # - labels: Tensor w/shape (num_boxes)
+        # iterate over images in batch
+        for preds, targets in zip(preds_batch, targets_batch):
+            # put predictions and labels in dictionaries
+            # tensor bridge to PyTorch tensors (required by Torchmetrics)
+            preds_dict = dict(
+                boxes=torch.as_tensor(preds.boxes),
+                scores=torch.as_tensor(preds.scores),
+                labels=torch.as_tensor(preds.labels),
+            )
+            targets_dict = dict(
+                boxes=torch.as_tensor(targets.boxes),
+                scores=torch.as_tensor(targets.scores),
+                labels=torch.as_tensor(targets.labels),
+            )
+            self.metric.update([preds_dict], [targets_dict])
+
+    def compute(self) -> Dict[str, Any]:
+        """
+        Compute MAP scores.
+        """
+        return self.metric.compute()
+
+
+class HeartAccuracyMetric:
+    """
+    Facilitating support for Torchmetric's Accuracy metric.
+    """
+
+    def __init__(self, is_logits: bool = True, **kwargs):
+        """
+        :param is_logits: bool indicating if predictions are logits
+        :param **kwargs: arguments passed to Torchmetric's Accuracy metric
+        """
+        from torchmetrics.classification import (  # pylint: disable=C0415
+            BinaryAccuracy, MulticlassAccuracy, MultilabelAccuracy)
+
+        self.is_logits = is_logits
+        self._metric: Union[BinaryAccuracy, MulticlassAccuracy, MultilabelAccuracy]
+        self._task = kwargs.pop("task")
+        if self._task == "binary":
+            self._metric = BinaryAccuracy(**kwargs)
+        elif self._task == "multiclass":
+            self._metric = MulticlassAccuracy(**kwargs)
+        elif self._task == "multilabel":
+            self._metric = MultilabelAccuracy(**kwargs)
+
+    def reset(self) -> None:
+        """
+        Clear contents of current metric's cache of predictions and targets.
+        """
+        return self._metric.reset()
+
+    def update(self, preds_batch: Sequence[np.ndarray], targets_batch: Sequence[np.ndarray]) -> None:
+        """
+        Add predictions and targets to metric's cache for later calculation.
+        :param preds_batch: predictions in numpy array format
+        :param targets_batch: groundtruth targets in numpy array format
+        """
+        import torch  # pylint: disable=C0415
+
+        if self.is_logits:
+            preds = torch.as_tensor(np.argmax(preds_batch, axis=1))
+        else:
+            preds = torch.as_tensor(preds_batch)
+        targets = torch.as_tensor(targets_batch)
+        self._metric.update(preds, targets)
+
+    def compute(self) -> Dict[str, float]:
+        """
+        Compute accuracy score.
+        """
+        return {"accuracy": self._metric.compute().item()}
 
 
 class RobustnessBiasMetric:
@@ -43,8 +150,17 @@ class RobustnessBiasMetric:
     of datasets. Currently supports only classification tasks.
     """
 
-    def __init__(self):
-        self._state = {}
+    def __init__(self, metadata: Sequence[Dict[str, Any]], labels: np.ndarray, interval: int = 100):
+        """
+        :param metadata: Sequence[Dict[str, Any]] - the metadata computed during attack
+            which contains delta between benign and adversarial images
+        :param labels: List[str] - classification labels
+        :param interval: int - tau
+        """
+        self._state: Dict = {}
+        self._labels: np.ndarray = labels
+        self._metadata: Sequence[Dict[str, Any]] = metadata
+        self._interval: int = interval
 
     def reset(self):
         """
@@ -52,67 +168,28 @@ class RobustnessBiasMetric:
         """
         self._state = {}
 
-    def update(
-        self,
-        classifier: ImageClassifier,
-        device: str,
-        data: SupportsArray,
-        attack_out: NDArray,
-        labels: NDArray = np.array(None),
-        norm_type: int = 2,
-        interval: int = 100,
-    ):
+    def update(self, preds_batch: Sequence[np.ndarray], targets_batch: Sequence[np.ndarray]) -> None:
         """
-        Updates the metric value. Takes as input:
-        :param classifier: The image classifier
-        :param device: The device on which to compute the metric
-        :param data: The clean sample data
-        :param attack_out: The adversarial sample data
-        :param labels: The classification labels
-        :param norm_type: The norm to use when calculating distance
+        Add predictions and targets to metric's cache for later calculation.
+        :param preds_batch: predictions in numpy array format
+        :param targets_batch: groundtruth targets in numpy array format
         """
+        try:
+            errors = np.stack([item["delta"] for item in self._metadata])
+        except KeyError as key_error:
+            raise KeyError(
+                "Delta not computed for metadata. Set norm > 0 of JaticAttack to compute delta."
+            ) from key_error
 
-        y: Any = np.array(None)
-        if labels.all() is None:
-            # labels not explicitly provided, assume they are in data
-            x, y = process_inputs_for_art(data, device)
-        else:
-            x, _ = process_inputs_for_art(data, device)
-            if isinstance(y, int):
-                y = [labels]
-            else:
-                y = labels
+        # assuming the targets batch is the groundtruth or original predictions
+        # and the preds batch are predictions for the augmented / attacked data
+        success = (np.argmax(targets_batch, axis=1) != np.argmax(preds_batch, axis=1)).astype(int)
 
-        if isinstance(x, Sequence):
-            if not x[0].shape == attack_out.shape:
-                raise ValueError("Input image sequence shape required to match output attack shape.")
-        else:
-            if not x.shape == attack_out.shape:
-                raise ValueError("Input image shape required to match output attack shape.")
-
-        if isinstance(y, np.ndarray) and len(y.shape) > 1:
-            y = np.argmax(y, axis=1)
-
-        errors = np.linalg.norm((x - attack_out).reshape(x.shape[0], -1), ord=norm_type, axis=1)
-
-        orig_result = classifier(x)
-        attack_result = classifier(attack_out)
-
-        success: NDArray
-        if isinstance(orig_result, HasLogits) and isinstance(attack_result, HasLogits):
-            success = (np.argmax(orig_result.logits, axis=1) != np.argmax(attack_result.logits, axis=1)).astype(int)
-        elif isinstance(orig_result, HasProbs) and isinstance(attack_result, HasProbs):
-            success = (np.argmax(orig_result.probs, axis=1) != np.argmax(attack_result.probs, axis=1)).astype(int)
-        elif isinstance(orig_result, HasScores) and isinstance(attack_result, HasScores):
-            success = (np.argmax(orig_result.scores, axis=1) != np.argmax(attack_result.scores, axis=1)).astype(int)
-        else:
-            raise ValueError
-
-        taus = np.linspace(0, max(errors) + 1, interval)
+        taus = np.linspace(0, max(errors) + 1, self._interval)
         series: Dict = {}
         for tau in taus:
-            for label in range(len(classifier.get_labels())):
-                idxs_of_label = np.argwhere(np.array(y) == label).ravel()
+            for label in range(len(self._labels)):
+                idxs_of_label = np.argwhere(np.argmax(targets_batch, axis=1) == label).ravel()
                 idxs_of_label_success = np.argwhere(success[idxs_of_label] == 1).ravel()
                 idxs_of_label = idxs_of_label[idxs_of_label_success]
                 errors_of_label = errors[idxs_of_label]
@@ -126,16 +203,11 @@ class RobustnessBiasMetric:
 
         self._state = series
 
-    def compute(self) -> Tuple[ArrayLike, ArrayLike, ArrayLike]:
+    def compute(self) -> Dict:
         """
         Returns the computed metric
-        in Tuple (clean_accuracy, robust_accuracy, average_perturbation)
         """
         return self._state
-
-    def to(self, device: Any):  # pylint: disable=C0103,W0613
-        """Unused protocol"""
-        return self
 
 
 class AccuracyPerturbationMetric:
@@ -144,100 +216,60 @@ class AccuracyPerturbationMetric:
     as well as the perturbation between clean and adversarial input.
     """
 
-    def __init__(self):
-        self._state = (np.array([0.0]), np.array([0.0]), np.array([0.0]))
+    def __init__(
+        self, benign_predictions: np.ndarray, metadata: Sequence[Dict[str, Any]], accuracy_type: str = "robust"
+    ):
+        """
+        :param accuracy_type: str - the type of accuracy to calculate. Choice of "adversarial" or "robust".
+            - Robust accuracy is the accuracy of the model on all samples
+            - Adversarial accuracy is the accuracy of the model only samples which were
+              correctly predicted in the non-adversarial scenario
+        """
+        self._state: Dict = {}
+        self._benign_predictions = benign_predictions
+        self._metadata = metadata
+        self._accuracy_type = accuracy_type
 
     def reset(self):
         """
         Reset the metric to default values.
         """
-        self._state = (np.array([0.0]), np.array([0.0]), np.array([0.0]))
+        self._state = {}
 
-    def update(
-        self,
-        classifier: ImageClassifier,
-        device: str,
-        data: SupportsArray,
-        attack_out: NDArray,
-        labels: NDArray = np.array(None),
-        norm_type: int = 2,
-        acc_type: str = "robust",
-    ):
+    def update(self, preds_batch: Sequence[np.ndarray], targets_batch: Sequence[np.ndarray]):
         """
-        Updates the metric value. Takes as input:
-        :param classifier: The image classifier
-        :param device: The device on which to compute the metric
-        :param data: The clean sample data
-        :param attack_out: The adversarial sample data
-        :param labels: The classification labels
-        :param norm_type: The norm to use when calculating distance
-        :param acc_type: The type of accuracy to calculate. Choice of "adversarial" or "robust".
-            - Robust accuracy is the accuracy of the model on all samples
-            - Adversarial accuracy is the accuracy of the model only samples which were
-              correctly predicted in the non-adversarial scenario
+        Updates the metric value.
         """
-        y: Any = np.array(None)
-        if labels.all() is None:
-            # labels not explicitly provided, assume they are in data
-            x, y = process_inputs_for_art(data, device)
-        else:
-            x, _ = process_inputs_for_art(data, device)
-            if isinstance(y, int):
-                y = [labels]
-            else:
-                y = labels
+        y_orig = np.argmax(self._benign_predictions, axis=1)
+        y_pred = np.argmax(preds_batch, axis=1)
 
-        if isinstance(x, Sequence):
-            if not x[0].shape == attack_out.shape:
-                raise ValueError("Input image sequence shape required to match output attack shape.")
-        else:
-            if not x.shape == attack_out.shape:
-                raise ValueError("Input image shape required to match output attack shape.")
+        try:
+            mean_delta = np.stack([item["delta"] for item in self._metadata]).mean()
+        except KeyError as key_error:
+            raise KeyError(
+                "Delta not computed for metadata. Set norm > 0 of JaticAttack to compute delta."
+            ) from key_error
 
-        orig_result = classifier(x)
-        attack_result = classifier(attack_out)
-
-        if isinstance(orig_result, HasLogits) and isinstance(attack_result, HasLogits):
-            y_orig = np.argmax(orig_result.logits, axis=1)
-            y_pred = np.argmax(attack_result.logits, axis=1)
-        elif isinstance(orig_result, HasProbs) and isinstance(attack_result, HasProbs):
-            y_orig = np.argmax(orig_result.probs, axis=1)
-            y_pred = np.argmax(attack_result.probs, axis=1)
-        elif isinstance(orig_result, HasScores) and isinstance(attack_result, HasScores):
-            y_orig = np.argmax(orig_result.scores, axis=1)
-            y_pred = np.argmax(attack_result.scores, axis=1)
-        else:
-            raise ValueError
-
-        if isinstance(y, np.ndarray) and len(y.shape) > 1:
-            y = np.argmax(y, axis=1)
-
-        y_corr = y_orig == y
+        y_corr = y_orig == targets_batch
 
         clean_acc = np.sum(y_corr) / len(y_orig)
-        if acc_type == "adversarial":
+        if self._accuracy_type == "adversarial":
             attack_acc = np.sum((y_pred == y_orig) & y_corr) / np.sum(y_corr)
-        elif acc_type == "robust":
-            attack_acc = np.mean(y_pred == y)
+        elif self._accuracy_type == "robust":
+            attack_acc = np.mean(y_pred == targets_batch)
 
-        idxs = y_pred != y
-        avg_perts = 0.0
-        perts_norm = la.norm((attack_out - x).reshape(x.shape[0], -1), ord=norm_type, axis=1)
-        perts_norm = perts_norm[idxs]
-        avg_perts = np.mean(perts_norm)
+        self._state = {
+            "clean_accuracy": clean_acc,
+            f"{self._accuracy_type}_accuracy": attack_acc,
+            "mean_delta": mean_delta,
+        }
 
-        self._state = (clean_acc, attack_acc, avg_perts)
-
-    def compute(self) -> Tuple[ArrayLike, ArrayLike, ArrayLike]:
+    def compute(self) -> Dict[str, float]:
         """
         Returns the computed metric
         in Tuple (clean_accuracy, robust_accuracy, average_perturbation)
         """
         return self._state
-
-    def to(self, device: Any):  # pylint: disable=C0103,W0613
-        """Unused protocol"""
-        return self
 
 
 class BlackBoxAttackQualityMetric:
@@ -245,40 +277,30 @@ class BlackBoxAttackQualityMetric:
     A metric for extracting the black box quality metrics.
     """
 
-    def __init__(self):
-        self._state = (np.array([0.0]), np.array([0.0]), np.array([0.0]))
+    def __init__(self, attack: JaticAttack):
+        """
+        :param attack: JaticAttack - the black-box attack (currently only HopSkipJump supported)
+        """
+        self._state: Dict = {}
+        self._attack = attack._attack
 
     def reset(self):
         """
         Reset the metric to default values.
         """
-        self._state = (np.array([0.0]), np.array([0.0]), np.array([0.0]))
+        self._state = {}
 
-    def update(
-        self,
-        attack: JaticAttack,
-    ):
+    def update(self):
         """
-        Updates the metric value. Takes as input:
-        :param attack: The black-box attack
-        :param device: The device on which to compute the metric
-        :param data: The clean sample data
-        :param attack_out: The adversarial sample data
-        :param labels: The classification labels
-        :param norm_type: The norm to use when calculating distance
-        :param acc_type: The type of accuracy to calculate. Choice of "adversarial" or "robust".
-            - Robust accuracy is the accuracy of the model on all samples
-            - Adversarial accuracy is the accuracy of the model only samples which were
-              correctly predicted in the non-adversarial scenario
+        Updates the metric value.
         """
-
-        total_queries = attack.attack.total_queries
-        adv_query_idx = attack.attack.adv_query_idx
+        total_queries = self._attack.total_queries
+        adv_query_idx = self._attack.adv_query_idx
         adv_queries = [len(adv_query_idx[i]) for i, _ in enumerate(adv_query_idx)]
         benign_queries = [total_queries[i] - n_adv for i, n_adv in enumerate(adv_queries)]
-        adv_perturb_total = attack.attack.perturbs
-        adv_perturb_iter = attack.attack.perturbs_iter
-        adv_confs_total = attack.attack.confs
+        adv_perturb_total = self._attack.perturbs
+        adv_perturb_iter = self._attack.perturbs_iter
+        adv_confs_total = self._attack.confs
 
         self._state = {
             "total_queries": total_queries,
@@ -290,13 +312,9 @@ class BlackBoxAttackQualityMetric:
             "adv_confs_total": adv_confs_total,
         }
 
-    def compute(self) -> dict:
+    def compute(self) -> Dict[str, Any]:
         """
         Returns the computed metric
         in dict
         """
         return self._state
-
-    def to(self, device: Any):  # pylint: disable=C0103,W0613
-        """Unused protocol"""
-        return self
