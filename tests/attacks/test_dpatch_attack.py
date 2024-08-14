@@ -101,7 +101,7 @@ def test_jatic_supported_obj_det_bb_patch_attack(heart_warning):
         
         adv_detections = detector(adv_images)
         
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_images[[0]], coco_images[[0]])
+        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_images[0][[0]], coco_images[[0]])
         np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_detections[0].boxes, detections[0].boxes)
         np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_detections[0].scores, detections[0].scores)
         np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_detections[0].labels, detections[0].labels)

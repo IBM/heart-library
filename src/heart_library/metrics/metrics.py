@@ -131,7 +131,7 @@ class HeartAccuracyMetric:
         import torch  # pylint: disable=C0415
 
         if self.is_logits:
-            preds = torch.as_tensor(np.argmax(preds_batch, axis=1))
+            preds = torch.as_tensor(np.argmax(preds_batch, axis=2).ravel())
         else:
             preds = torch.as_tensor(preds_batch)
         targets = torch.as_tensor(targets_batch)
@@ -183,13 +183,13 @@ class RobustnessBiasMetric:
 
         # assuming the targets batch is the groundtruth or original predictions
         # and the preds batch are predictions for the augmented / attacked data
-        success = (np.argmax(targets_batch, axis=1) != np.argmax(preds_batch, axis=1)).astype(int)
+        success = (np.argmax(targets_batch, axis=2).ravel() != np.argmax(preds_batch, axis=2).ravel()).astype(int)
 
         taus = np.linspace(0, max(errors) + 1, self._interval)
         series: Dict = {}
         for tau in taus:
             for label in range(len(self._labels)):
-                idxs_of_label = np.argwhere(np.argmax(targets_batch, axis=1) == label).ravel()
+                idxs_of_label = np.argwhere(np.argmax(targets_batch, axis=2).ravel() == label).ravel()
                 idxs_of_label_success = np.argwhere(success[idxs_of_label] == 1).ravel()
                 idxs_of_label = idxs_of_label[idxs_of_label_success]
                 errors_of_label = errors[idxs_of_label]
@@ -217,7 +217,10 @@ class AccuracyPerturbationMetric:
     """
 
     def __init__(
-        self, benign_predictions: np.ndarray, metadata: Sequence[Dict[str, Any]], accuracy_type: str = "robust"
+        self,
+        benign_predictions: Sequence[np.ndarray],
+        metadata: Sequence[Dict[str, Any]],
+        accuracy_type: str = "robust",
     ):
         """
         :param accuracy_type: str - the type of accuracy to calculate. Choice of "adversarial" or "robust".
@@ -240,8 +243,8 @@ class AccuracyPerturbationMetric:
         """
         Updates the metric value.
         """
-        y_orig = np.argmax(self._benign_predictions, axis=1)
-        y_pred = np.argmax(preds_batch, axis=1)
+        y_orig = np.argmax(self._benign_predictions, axis=2).ravel()
+        y_pred = np.argmax(preds_batch, axis=2).ravel()
 
         try:
             mean_delta = np.stack([item["delta"] for item in self._metadata]).mean()

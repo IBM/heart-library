@@ -51,8 +51,8 @@ def test_laser_attack(heart_warning):
 
         x_adv, _, _ = attack(data=data)
 
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, x_adv[[0]], img[[0]])
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, jptc(x_adv[[0]]), jptc(img[[0]]))
+        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, x_adv[0][[0]], img[[0]])
+        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, jptc(x_adv)[0][[0]], jptc(img[[0]]))
 
     except HEARTTestException as e:
         heart_warning(e)

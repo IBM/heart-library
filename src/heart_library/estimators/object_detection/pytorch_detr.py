@@ -100,7 +100,7 @@ class JaticPyTorchDETR(PyTorchDetectionTransformer):  # pylint: disable=R0901
 
         super().__init__(model=model, **kwargs)
 
-    def __call__(self, data: ArrayLike) -> Sequence[JaticPyTorchObjectDetectionOutput]:
+    def __call__(self, data: Sequence[ArrayLike]) -> Sequence[JaticPyTorchObjectDetectionOutput]:
 
         # convert to ART supported type
         images, _, _ = process_inputs_for_art(data)

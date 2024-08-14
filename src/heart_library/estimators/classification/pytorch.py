@@ -18,7 +18,7 @@
 """
 This module implements a JATIC compatible ART PyTorchClassifier.
 """
-from typing import Any
+from typing import Any, Sequence
 
 from art.estimators.classification.pytorch import PyTorchClassifier
 from maite.protocols import ArrayLike
@@ -58,7 +58,7 @@ class JaticPyTorchClassifier(PyTorchClassifier):  # pylint: disable=R0901,R0901
 
         super().__init__(**kwargs)
 
-    def __call__(self, data: ArrayLike) -> ArrayLike:
+    def __call__(self, data: Sequence[ArrayLike]) -> Sequence[ArrayLike]:
 
         # convert to ART supported type
         images, _, _ = process_inputs_for_art(data)
@@ -66,4 +66,4 @@ class JaticPyTorchClassifier(PyTorchClassifier):  # pylint: disable=R0901,R0901
         # make prediction
         output = self.predict(images)
 
-        return output
+        return [output]

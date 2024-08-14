@@ -52,6 +52,7 @@ COCO_LABELS = [
 
 
 def update_patch_sliders(*args):
+    from typing import Dict
     
     x_location, y_location, patch_dim, dataset_type, dataset_path, dataset_split, image = args
     
@@ -167,7 +168,6 @@ def update_patch_sliders(*args):
         from functools import partial
         import requests
         from heart_library.estimators.object_detection import JaticPyTorchObjectDetectionOutput
-        from typing import Dict, Tuple, Any
         from secrets import SystemRandom
         from heart_library.utils import process_inputs_for_art
         
@@ -745,7 +745,7 @@ def det_evasion_evaluate(*args):
         out_imgs = []
         for i in range(len(adv_detections)):
             preds_orig = extract_predictions(adv_detections[i], box_thresh)
-            out_img = plot_image_with_boxes(img=adv_x[i].transpose(1,2,0).copy(),
+            out_img = plot_image_with_boxes(img=adv_x[0][i].transpose(1,2,0).copy(),
                                         boxes=preds_orig[1], pred_cls=preds_orig[0], title="Detections")
             if out_img.max() > 1:
                 out_img = out_img.astype(np.uint8)
@@ -845,7 +845,7 @@ def det_evasion_evaluate(*args):
         out_imgs_adv = []
         for i in range(len(adv_detections)):
             preds_orig = extract_predictions(adv_detections[i], box_thresh)
-            out_img = plot_image_with_boxes(img=adv_x[i].transpose(1,2,0).copy(),
+            out_img = plot_image_with_boxes(img=adv_x[0][i].transpose(1,2,0).copy(),
                                         boxes=preds_orig[1], pred_cls=preds_orig[0], title="Detections")
             if out_img.max() > 1:
                 out_img = out_img.astype(np.uint8)
@@ -1005,17 +1005,17 @@ def clf_evasion_evaluate(*args):
         
         
         # transform to probabilities
-        preds = softmax(torch.from_numpy(preds), dim=1)
+        preds = softmax(torch.from_numpy(preds[0]), dim=1)
         labels = {}
         for i, label in enumerate(clf_labels):
             labels[label] = preds[0][i]
             
-        adv_preds = softmax(torch.from_numpy(adv_preds), dim=1)
+        adv_preds = softmax(torch.from_numpy(adv_preds[0]), dim=1)
         adv_labels = {}
         for i, label in enumerate(clf_labels):
             adv_labels[label] = adv_preds[0][i]
 
-        adv_imgs = [img.transpose(1,2,0) for img in x_adv]
+        adv_imgs = [img.transpose(1,2,0) for img in x_adv[0]]
         
         image_list = []
 
@@ -1090,13 +1090,13 @@ def clf_evasion_evaluate(*args):
         perturbation_added = float(result["mean_delta"])
         
         # transform to probabilities
-        preds = softmax(torch.from_numpy(preds), dim=1)
+        preds = softmax(torch.from_numpy(preds[0]), dim=1)
         
         labels = {}
         for i, label in enumerate(clf_labels):
             labels[label] = preds[0][i]
             
-        adv_preds = softmax(torch.from_numpy(adv_preds), dim=1)
+        adv_preds = softmax(torch.from_numpy(adv_preds[0]), dim=1)
         adv_labels = {}
         for i, label in enumerate(clf_labels):
             adv_labels[label] = adv_preds[0][i]
@@ -1106,7 +1106,7 @@ def clf_evasion_evaluate(*args):
         robust_accuracy = float(robust_accuracy)
         perturbation_added = float(perturbation_added)
         
-        adv_imgs = [img.transpose(1,2,0) for img in x_adv]
+        adv_imgs = [img.transpose(1,2,0) for img in x_adv[0]]
         
         image_list = []
 

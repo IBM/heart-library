@@ -67,10 +67,12 @@ class JaticAttack:  # pylint: disable=R0901
         self._norm = norm
 
     def __call__(
-        self, data: Union[Tuple[ArrayLike, ArrayLike, Sequence[dict[str, Any]]], ArrayLike], **kwargs
+        self,
+        data: Union[Tuple[Sequence[ArrayLike], Sequence[ArrayLike], Sequence[dict[str, Any]]], ArrayLike],
+        **kwargs
     ) -> Tuple[
-        ArrayLike,
-        Union[ArrayLike, Sequence[JaticPyTorchObjectDetectionOutput], Optional[Any]],
+        Sequence[ArrayLike],
+        Union[Sequence[ArrayLike], Sequence[JaticPyTorchObjectDetectionOutput], Optional[Any]],
         Sequence[dict[str, Any]],
     ]:
         """
@@ -81,8 +83,8 @@ class JaticAttack:  # pylint: disable=R0901
         """
 
         attack_output: Tuple[
-            ArrayLike,
-            Union[ArrayLike, Sequence[JaticPyTorchObjectDetectionOutput], Optional[Any]],
+            Sequence[ArrayLike],
+            Union[Sequence[ArrayLike], Sequence[JaticPyTorchObjectDetectionOutput], Optional[Any]],
             Sequence[dict[str, Any]],
         ]
 
@@ -129,9 +131,9 @@ class JaticAttack:  # pylint: disable=R0901
                         targets = [JaticPyTorchObjectDetectionOutput(detection) for detection in y]
                     else:
                         targets = []
-                    attack_output = (np.asarray(list(adv_images)), targets, meta)
+                    attack_output = ([np.asarray(list(adv_images))], targets, meta)
                 else:
-                    attack_output = np.asarray(list(adv_images)), y, meta
+                    attack_output = [np.asarray(list(adv_images))], y, meta
 
             # not a patch attack
             else:
@@ -141,9 +143,9 @@ class JaticAttack:  # pylint: disable=R0901
                         targets = [JaticPyTorchObjectDetectionOutput(detection) for detection in y]
                     else:
                         targets = []
-                    attack_output = (np.asarray(list(adv_output)), targets, meta)
+                    attack_output = ([np.asarray(list(adv_output))], targets, meta)
                 else:
-                    attack_output = np.asarray(list(adv_output)), y, meta
+                    attack_output = [np.asarray(list(adv_output))], y, meta
 
             # check if should calculate the difference between benign
             # and adversarial images to store in meta
@@ -158,8 +160,5 @@ class JaticAttack:  # pylint: disable=R0901
                     for item in diff:
                         meta.append({"delta": item})
                     attack_output = (attack_output[0], attack_output[1], meta)
-
-        if attack_output is None:
-            raise ValueError("Attack error, output is None.")
 
         return attack_output

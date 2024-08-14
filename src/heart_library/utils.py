@@ -18,6 +18,7 @@
 """
 Utility methods for converting data types to ART compatible versions.
 """
+import logging
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
@@ -27,6 +28,8 @@ from numpy.typing import NDArray
 from PIL.Image import Image as PILImage
 from torch import Tensor, is_tensor
 from torch.utils.data.dataset import Subset as TorchSubsetDataset
+
+logger = logging.getLogger(__name__)
 
 EMPTY_STRING = ""
 
@@ -140,6 +143,7 @@ def process_inputs_for_art(
         Tensor,
         Dict,
         Tuple,
+        Sequence,
     ]
 ) -> Tuple[NDArray, Optional[NDArray], List[Dict[str, Any]]]:
     """
@@ -199,7 +203,7 @@ def process_inputs_for_art(
             metadata = data["metadata"]
 
     # if Tuple of batched data, convert to np.ndarray
-    elif isinstance(data, tuple) and data[0].ndim == 4:
+    elif isinstance(data, tuple) and isinstance(data[0], (list, np.ndarray, Tensor)):
         images = np.asarray(data[0]).astype(np.float32)
         targets = data[1]
         metadata = data[2]
@@ -223,10 +227,16 @@ def process_inputs_for_art(
 
     # if data is a Sequence
     elif isinstance(data, Sequence):
+        # here assuming data is a tensor - what if a numpy array?
+        # what if each batch (len 1 or >1), has different shape?
+        # - in this case will stack fail as different dim images
+        # - should auto pad or resize? what if this occurs in other data formats?
+        # a sequence of image batches
         if data[0].ndim == 4:
             images = np.vstack([np.asarray(batch) for batch in data])
             targets = None
             metadata = []
+        # a sequence of single images
         else:
             images = np.stack([np.asarray(batch) for batch in data])
             targets = None

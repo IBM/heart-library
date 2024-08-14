@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "heart-library"
-version = "0.4.0"
+version = "0.4.1"
 description = "Hardened Extension of the Adversarial Robustness Toolbox (HEART) supports assessment of adversarial AI vulnerabilities in Test & Evaluation workflows."
 readme = "README.md"
 license = "MIT"
@@ -19,7 +19,7 @@ authors = ["Mark Baker, Jordan Fischer, Kieran Fraser, Jackson Lee, Adam Lockwoo
 # HEART Required Dependences
 python = ">=3.9, <3.11"
 adversarial-robustness-toolbox = ">=1.17.1"
-maite = ">=0.5.0"
+maite = ">=0.6.0"
 numpy = ">=1.18.5, <2"
 scikit-learn = ">=0.22.2"
 six = "*"
@@ -38,7 +38,7 @@ Pillow = { version = "*", optional = true }
 pycocotools = { version = "*", optional = true }
 sphinx = { version = ">=4.2.0", optional = true }
 furo = { version = "*", optional = true }
-torch = { version = "*", optional = true }
+torch = { version = "<=2.3.1", optional = true }  # https://github.com/IBM/heart-library/issues/1
 torchvision = { version = "*", optional = true }
 timm = { version = "*", optional = true }
 opencv-python = { version = "*", optional = true }
@@ -144,6 +144,7 @@ isort = "*"
 lxml = "*"
 mypy = "*"
 nbmake = "*"
+prettytable = "*"
 pylint = "==2.12.2"
 pylint_junit = "*"
 pytest = "*"
