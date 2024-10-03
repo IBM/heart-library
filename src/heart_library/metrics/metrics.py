@@ -74,16 +74,16 @@ class HeartMAPMetric:
         for preds, targets in zip(preds_batch, targets_batch):
             # put predictions and labels in dictionaries
             # tensor bridge to PyTorch tensors (required by Torchmetrics)
-            preds_dict = dict(
-                boxes=torch.as_tensor(preds.boxes),
-                scores=torch.as_tensor(preds.scores),
-                labels=torch.as_tensor(preds.labels),
-            )
-            targets_dict = dict(
-                boxes=torch.as_tensor(targets.boxes),
-                scores=torch.as_tensor(targets.scores),
-                labels=torch.as_tensor(targets.labels),
-            )
+            preds_dict = {
+                "boxes": torch.as_tensor(preds.boxes),
+                "scores": torch.as_tensor(preds.scores),
+                "labels": torch.as_tensor(preds.labels),
+            }
+            targets_dict = {
+                "boxes": torch.as_tensor(targets.boxes),
+                "scores": torch.as_tensor(targets.scores),
+                "labels": torch.as_tensor(targets.labels),
+            }
             self.metric.update([preds_dict], [targets_dict])
 
     def compute(self) -> Dict[str, Any]:
@@ -256,6 +256,7 @@ class AccuracyPerturbationMetric:
         y_corr = y_orig == targets_batch
 
         clean_acc = np.sum(y_corr) / len(y_orig)
+        attack_acc: float = 0.0
         if self._accuracy_type == "adversarial":
             attack_acc = np.sum((y_pred == y_orig) & y_corr) / np.sum(y_corr)
         elif self._accuracy_type == "robust":
@@ -299,7 +300,7 @@ class BlackBoxAttackQualityMetric:
         """
         total_queries = self._attack.total_queries
         adv_query_idx = self._attack.adv_query_idx
-        adv_queries = [len(adv_query_idx[i]) for i, _ in enumerate(adv_query_idx)]
+        adv_queries = [len(item) for item in adv_query_idx]
         benign_queries = [total_queries[i] - n_adv for i, n_adv in enumerate(adv_queries)]
         adv_perturb_total = self._attack.perturbs
         adv_perturb_iter = self._attack.perturbs_iter

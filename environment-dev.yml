@@ -1,0 +1,37 @@
+# https://gitlab.jatic.net/groups/jatic/ibm/-/wikis/HEART-Conda-Information
+
+name: heart-conda-dev 
+channels:
+  - conda-forge
+  - pytorch
+dependencies:
+  # Optional Dependencies
+  - datasets>=2.18.0
+  - jupyter>=1.1.1
+  - matplotlib>=3.9
+  - multiprocess>=0.70.16
+  - numba>=0.60.0
+  - pandas>=2.2.2
+  - pillow>=10.4.0
+  - pycocotools>=2.0.8
+  - timm>=1.0.9
+  - transformers>=4.44.2
+  - torchmetrics>=1.4.2
+  - pympler>=1.1
+  - gputil>=1.4.0
+  # Pytorch channel override -- Known torch+art issue: https://github.com/Trusted-AI/adversarial-robustness-toolbox/issues/2473
+  - pytorch::pytorch>=2.1.1,<=2.3.1
+  - pytorch::torchvision<0.19
+  # Yolov5 cannot support huggingface_hub>=0.25.0
+  - huggingface_hub<0.25.0
+  # Dev
+  - pytest>=8.3
+  # Pip Overrides (Fixes known issues or unavailable via conda-forge)
+  - pip
+  - pip:
+    # Missing osx-arm64 artifacts via conda-forge
+    - kornia>=0.7.3
+    # Unavailable via conda-forge
+    - opencv-python>=4.10.0.84
+    - memory-profiler>=0.61.0
+    - yolov5>=7.0.13

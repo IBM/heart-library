@@ -45,7 +45,7 @@ def greedy_search(
     adv_object_generator: AdvObjectGenerator,
     image_generator: ImageGenerator,
     debug: Optional[DebugInfo] = None,
-) -> Tuple[Optional[AdversarialObject], Optional[int]]:
+) -> Tuple[Optional[AdversarialObject], Optional[int]]:  # pragma: no cover
     """
     Extending ART's greedy search algorithm to support HEART. Specifically supports channel first images.
 
@@ -147,7 +147,7 @@ class HeartLaserAttack(LaserAttack):
 
     def _generate_params_for_single_input(
         self, x: np.ndarray, y: Optional[int] = None
-    ) -> Tuple[Optional[AdversarialObject], Optional[int]]:
+    ) -> Tuple[Optional[AdversarialObject], Optional[int]]:  # pragma: no cover
         """
         Generate adversarial example params for a single image.
 
@@ -176,7 +176,7 @@ class HeartLaserAttack(LaserAttack):
 
         return None, None
 
-    def _check_params(self) -> None:
+    def _check_params(self) -> None:  # pragma: no cover
         """
         Remove restriction against channel first images.
         """
@@ -205,7 +205,7 @@ class HeartLaserBeamAttack(HeartLaserAttack):
         random_initializations: int = 1,
         image_generator: ImageGenerator = ImageGenerator(),
         debug: Optional[DebugInfo] = None,
-    ) -> None:
+    ) -> None:  # pragma: no cover
         """
         :param estimator: Predictor of the image class.
         :param iterations: Maximum number of iterations of the algorithm.

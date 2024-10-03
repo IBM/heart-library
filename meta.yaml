@@ -1,0 +1,40 @@
+# https://gitlab.jatic.net/groups/jatic/ibm/-/wikis/HEART-Conda-Information
+
+package:
+  name: "heart-library"
+  version: {{ PYPROJECT_VERSION }}
+
+source:
+  url: dist/heart_library-{{ PYPROJECT_VERSION }}.tar.gz
+
+build:
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  number: 0
+
+requirements:
+  host:
+    - python >=3.9,<3.12
+    - poetry-core
+    - pip
+  run:
+    - python >=3.9,<3.12
+    - adversarial-robustness-toolbox >=1.17.1
+    - maite >=0.5.0
+    - numpy >=1.18.5,<2
+    - scikit-learn >=0.22.2
+    - six
+    - setuptools
+    - tqdm
+
+test:
+  imports:
+    - heart_library
+  commands:
+    - pip check
+  requires:
+    - pip
+
+about:
+  license: MIT
+  license_file: LICENSE.txt

@@ -18,7 +18,6 @@
 
 import logging
 
-import pytest
 from tests.utils import HEARTTestException, get_cifar10_image_classifier_pt
 from art.utils import load_dataset
 
@@ -84,6 +83,7 @@ def test_jatic_supported_black_box_attack(heart_warning):
 
     except HEARTTestException as e:
         heart_warning(e)
+ 
         
 def test_jatic_supported_patch_attack(heart_warning):
     try:
@@ -134,7 +134,7 @@ def test_jatic_supported_obj_det_patch_attack(heart_warning):
     try:
         from art.attacks.evasion import ProjectedGradientDescent
         from heart_library.attacks.attack import JaticAttack
-        from heart_library.estimators.object_detection import JaticPyTorchDETR
+        from heart_library.estimators.object_detection import JaticPyTorchObjectDetector
         from maite.protocols.object_detection import Model, ObjectDetectionTarget
         from torchvision import transforms
         from PIL import Image
@@ -156,7 +156,9 @@ def test_jatic_supported_obj_det_patch_attack(heart_warning):
             'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier',
             'toothbrush'
         ]
-        detector = JaticPyTorchDETR(device_type='cpu',
+        detector = JaticPyTorchObjectDetector(
+                            model_type="detr_resnet50",
+                            device_type='cpu',
                             input_shape=(3, 800, 800),
                             clip_values=(0, 1), 
                             attack_losses=("loss_ce",
@@ -200,4 +202,3 @@ def test_jatic_supported_obj_det_patch_attack(heart_warning):
 
     except HEARTTestException as e:
         heart_warning(e)
-

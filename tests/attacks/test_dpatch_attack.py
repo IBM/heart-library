@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 def test_jatic_supported_obj_det_bb_patch_attack(heart_warning):
     try:
-        from heart_library.estimators.object_detection import JaticPyTorchFasterRCNN
+        from heart_library.estimators.object_detection import JaticPyTorchObjectDetector
         from maite.protocols.object_detection import Augmentation
         from art.attacks.evasion import RobustDPatch
         from heart_library.attacks.attack import JaticAttack
@@ -36,13 +36,14 @@ def test_jatic_supported_obj_det_bb_patch_attack(heart_warning):
         from copy import deepcopy
         from typing import Dict, Tuple, Any
         
-        detector = JaticPyTorchFasterRCNN(device_type='cpu',
-                            input_shape=(3, 640, 640),
-                            clip_values=(0, 255), 
-                            attack_losses=("loss_classifier",
-                            "loss_box_reg",
-                            "loss_objectness",
-                            "loss_rpn_box_reg",),)
+        detector = detector = JaticPyTorchObjectDetector(model_type="fasterrcnn_resnet50_fpn",
+                                              device_type='cpu',
+                                                input_shape=(3, 640, 640),
+                                                clip_values=(0, 255),
+                                                attack_losses=("loss_classifier",
+                                                                "loss_box_reg",
+                                                                "loss_objectness",
+                                                                "loss_rpn_box_reg",))
 
         NUMBER_CHANNELS = 3
         INPUT_SHAPE = (NUMBER_CHANNELS, 640, 640)

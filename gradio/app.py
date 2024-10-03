@@ -655,7 +655,7 @@ def det_evasion_evaluate(*args):
         groundtruth_detections = []
         
     if model_type == "DeTR":
-        from heart_library.estimators.object_detection import JaticPyTorchDETR
+        from heart_library.estimators.object_detection import JaticPyTorchObjectDetector
         
         MEAN = [0.485, 0.456, 0.406]
         STD = [0.229, 0.224, 0.225]
@@ -665,14 +665,15 @@ def det_evasion_evaluate(*args):
         '''
         Define the detector
         '''
-        detector = JaticPyTorchDETR(device_type='cpu',
-                                    input_shape=INPUT_SHAPE,
-                                    clip_values=(0, 1), 
-                                    attack_losses=( "loss_ce",
-                                        "loss_bbox",
-                                        "loss_giou",),
-                                    channels_first=True, 
-                                    preprocessing=(MEAN, STD))
+        detector = JaticPyTorchObjectDetector(model_type="detr_resnet50",
+                                              device_type='cpu',
+                                            input_shape=INPUT_SHAPE,
+                                            clip_values=(0, 1), 
+                                            attack_losses=( "loss_ce",
+                                                "loss_bbox",
+                                                "loss_giou",),
+                                            channels_first=True, 
+                                            preprocessing=(MEAN, STD))
     
     if attack=="PGD":
         

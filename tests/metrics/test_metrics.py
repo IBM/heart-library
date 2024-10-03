@@ -21,6 +21,7 @@ import logging
 import pytest
 from tests.utils import HEARTTestException, get_cifar10_image_classifier_pt
 from art.utils import load_dataset
+import pytest
 
 
 logger = logging.getLogger(__name__)
@@ -70,6 +71,7 @@ def test_accuracy_perturbation_metric(heart_warning):
     except HEARTTestException as e:
         heart_warning(e)
 
+
 def test_robustness_bias_metric(heart_warning):
     try:
         from art.attacks.evasion import ProjectedGradientDescentPyTorch
@@ -101,6 +103,7 @@ def test_robustness_bias_metric(heart_warning):
                                                 [0.6001482106218434, 1.0]]), 0.01)
     except HEARTTestException as e:
         heart_warning(e)
+
 
 def test_bb_quality_metric(heart_warning):
     try:
@@ -141,3 +144,77 @@ def test_bb_quality_metric(heart_warning):
     except HEARTTestException as e:
         heart_warning(e)
 
+
+def test_heart_map_metric(heart_warning):
+    try:
+        from heart_library.metrics import HeartMAPMetric
+        from maite.protocols.object_detection import Metric as MaiteMetric
+        from heart_library.estimators.object_detection import JaticPyTorchObjectDetectionOutput
+        import numpy as np
+        
+        map_args = {"box_format": "xyxy",
+            "iou_type": "bbox",
+            "iou_thresholds": [0.5],
+            "rec_thresholds": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+            "max_detection_thresholds": [1, 10, 100],
+            "class_metrics": False,
+            "extended_summary": False,
+            "average": "macro"}
+        metric = HeartMAPMetric(**map_args)
+        assert isinstance(metric, MaiteMetric)
+        
+        gt_detection = {"boxes": np.array([[ 0, 0, 6.9441, 8.0846],
+                            [ 0.074183, 0, 22.789, 7.5572],
+                            [ 5.2672, 0, 31.972, 7.5443]]),
+         "labels": np.array([14, 14, 14], dtype='int'),
+         "scores": np.array([9.9953e-07,  8.4781e-08,  3.9297e-08], 'float32')}
+        pred_detection = {"boxes": np.array([[ 0, 0, 6.9441, 8.0846],
+                            [ 0.074183, 0, 22.789, 7.5572],
+                            [ 5.2672, 0, 31.972, 7.5443]]),
+         "labels": np.array([14, 14, 14], dtype='int'),
+         "scores": np.array([9.9953e-07,  8.4781e-08,  3.9297e-08], 'float32')}
+        gt = [JaticPyTorchObjectDetectionOutput(gt_detection)]
+        preds = [JaticPyTorchObjectDetectionOutput(pred_detection)]
+        metric.update(preds, gt)
+        result = metric.compute()
+        
+        assert result["map_50"] == 1.0
+    
+    except HEARTTestException as e:
+        heart_warning(e)
+        
+        
+def test_heart_acc_metric(heart_warning):
+    try:
+        from heart_library.metrics import HeartAccuracyMetric
+        from maite.protocols.object_detection import Metric as MaiteMetric
+        import numpy as np
+        
+        acc_args = {
+            "task": "multiclass", "num_classes": 10, "average":"macro"
+        }
+        metric = HeartAccuracyMetric(is_logits=False, **acc_args)
+        assert isinstance(metric, MaiteMetric)
+        
+        gt = [np.array([0, 1, 2, 3])]
+        preds = [np.array([0, 1, 2, 3])]
+        metric.update(preds, gt)
+            
+        result = metric.compute()
+        assert result["accuracy"] == 1.0
+        
+        metric = HeartAccuracyMetric(is_logits=True, **acc_args)
+        with pytest.raises(np.exceptions.AxisError):
+            gt = [1, 2]
+            preds = [np.array([0, 1, 2, 3])]
+            metric.update(preds, gt)
+            
+        gt = [1, 2] 
+        preds = [np.array([[0, 1, 0, 0],
+                           [0, 0, 1, 0]])]
+        metric.update(preds, gt)
+        result = metric.compute()
+        assert result["accuracy"] == 1.0
+        
+    except HEARTTestException as e:
+        heart_warning(e)

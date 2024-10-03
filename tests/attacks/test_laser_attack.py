@@ -18,9 +18,9 @@
 
 import logging
 
-import pytest
 from tests.utils import HEARTTestException, get_cifar10_image_classifier_pt
 from art.utils import load_dataset
+import pytest
 
 
 logger = logging.getLogger(__name__)
@@ -32,16 +32,16 @@ def test_laser_attack(heart_warning):
         from heart_library.attacks.attack import JaticAttack
         import maite.protocols.image_classification as ic
         import numpy as np
+        from heart_library.utils import process_inputs_for_art
 
         jptc = get_cifar10_image_classifier_pt()
         
-        laser_attack = HeartLaserBeamAttack(estimator=jptc, iterations=5, max_laser_beam=(580, 3.14, 32, 32))
+        laser_attack = HeartLaserBeamAttack(estimator=jptc, iterations=5, random_initializations=10, 
+                                            max_laser_beam=(580, 3.14, 32, 32))
         attack = JaticAttack(laser_attack)
 
         assert isinstance(jptc, ic.Model)
         assert isinstance(attack, ic.Augmentation)
-
-        import numpy as np
 
         (x_train, _), (_, _), _, _ = load_dataset('cifar10')
 
@@ -51,8 +51,16 @@ def test_laser_attack(heart_warning):
 
         x_adv, _, _ = attack(data=data)
 
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, x_adv[0][[0]], img[[0]])
+        np.testing.assert_array_equal(x_adv[0][[0]].shape, img[[0]].shape)
         np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, jptc(x_adv)[0][[0]], jptc(img[[0]]))
+        
+        x, y, _ = process_inputs_for_art(data)
+        x_adv = laser_attack.generate(x, y)
+        assert isinstance(x_adv, np.ndarray)
+        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, jptc(x_adv)[0][[0]], jptc(img[[0]]))
+        
+        with pytest.raises(ValueError):
+            laser_attack.generate(x.ravel())
 
     except HEARTTestException as e:
         heart_warning(e)

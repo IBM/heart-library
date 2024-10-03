@@ -25,7 +25,7 @@ import numpy as np
 from art.attacks import Attack, EvasionAttack
 from maite.protocols import ArrayLike
 
-from heart_library.estimators.object_detection.pytorch_detr import \
+from heart_library.estimators.object_detection.pytorch import \
     JaticPyTorchObjectDetectionOutput
 from heart_library.utils import process_inputs_for_art
 

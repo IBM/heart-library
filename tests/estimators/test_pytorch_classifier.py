@@ -28,6 +28,8 @@ logger = logging.getLogger(__name__)
 def test_jatic_support_classification(heart_warning):
     try:
         import maite.protocols.image_classification as ic
+        from heart_library.estimators.classification.pytorch import JaticPyTorchClassifier
+        import torch
 
         jptc = get_cifar10_image_classifier_pt()
 
@@ -41,6 +43,22 @@ def test_jatic_support_classification(heart_warning):
         output = jptc(img)
         
         assert np.argmax(output) == 9
+        
+        # test creation of classifier using HF
+        loss_fn = torch.nn.CrossEntropyLoss(reduction="sum")
+        jptc = JaticPyTorchClassifier(
+            model='nateraw/vit-base-patch16-224-cifar10', loss=loss_fn, input_shape=(3, 224, 224), nb_classes=10, clip_values=(0, 1),
+            preprocessing=([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), provider="huggingface",
+        )
+        assert isinstance(jptc, ic.Model)
+        
+        # test creation of classifier using timm
+        jptc = JaticPyTorchClassifier(
+            model='resnet50.a1_in1k', loss=loss_fn, input_shape=(3, 224, 224), nb_classes=10, clip_values=(0, 1),
+            preprocessing=([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), provider="timm",
+        )
+        assert isinstance(jptc, ic.Model)
+        
 
     except HEARTTestException as e:
         heart_warning(e)

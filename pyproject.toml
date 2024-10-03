@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "heart-library"
-version = "0.4.2"
+version = "0.4.3"
 description = "Hardened Extension of the Adversarial Robustness Toolbox (HEART) supports assessment of adversarial AI vulnerabilities in Test & Evaluation workflows."
 readme = "README.md"
 license = "MIT"
@@ -43,6 +43,8 @@ pandas = { version = "*", optional = true }
 Pillow = { version = "*", optional = true }
 pycocotools = { version = "*", optional = true }
 sphinx = { version = ">=4.2.0", optional = true }
+sphinx-charts = { version = ">=0.2.1", optional = true }
+sphinx-design = { version = ">=0.6.1", optional = true }
 furo = { version = "*", optional = true }
 torch = { version = "<=2.3.1", optional = true }  # https://github.com/IBM/heart-library/issues/1
 torchvision = { version = "*", optional = true }
@@ -54,7 +56,8 @@ torchmetrics = { version = "*", optional = true }
 memory-profiler = { version = "*", optional = true }
 pympler = { version = "*", optional = true }
 GPUtil = { version = "*", optional = true }
-
+yolov5 = { version = "*", optional = true, markers = "python_version >= '3.10'" }
+huggingface_hub = { version = "<0.25.0", optional = true }  # Resolves yolov5 incompatibility (GitLab Issue #437)
 
 # All Optional Dependencies
 [tool.poetry.extras]
@@ -74,6 +77,8 @@ all = [
     "transformers",
     "kornia",
     "torchmetrics",
+    "yolov5",
+    "huggingface_hub",
 ]
 
 
@@ -111,6 +116,8 @@ object_detection = [
     "torch",
     "opencv-python",
     "pycocotools",
+    "yolov5",
+    "huggingface_hub",
 ]
 
 
@@ -138,6 +145,8 @@ gradio = [
 # Optional Sphinx Dependencies
 docs = [
     "sphinx",
+    "sphinx-charts",
+    "sphinx-design",
     "furo"
 ]
 
@@ -194,6 +203,14 @@ markers = [
 
 [tool.coverage.run]
 omit = [
+    "tests/*",
     "*/.cache/*",
     "conftest.py",
+    "src/heart_library/config.py",
+]
+exclude_lines = [
+    "if __name__ == '__main__':",  # Exclude the main block
+    "pragma: no cover",            # Exclude lines with this pragma
+    "raise NotImplementedError",   # Exclude lines raising NotImplementedError
+    "raise AssertionError"          # Exclude lines raising AssertionError
 ]

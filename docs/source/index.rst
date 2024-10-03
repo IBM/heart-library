@@ -28,7 +28,9 @@ Contents
    :maxdepth: 2
 
    setup_and_access
+   attack_cards/index
    notebooks
+   flowchart
    legal
 
 

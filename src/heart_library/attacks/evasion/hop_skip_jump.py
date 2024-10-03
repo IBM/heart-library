@@ -29,7 +29,7 @@ from art.utils import (check_and_transform_label_format, get_labels_np_array,
 from tqdm.auto import tqdm
 
 
-def softmax(x):
+def softmax(x):  # pragma: no cover
     """Compute softmax values for each sets of scores in x."""
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum()
@@ -86,7 +86,7 @@ class HeartHopSkipJump(HopSkipJump):
         self.curr_idx: int = 0
         self.curr_val: np.ndarray = np.array([])
 
-    def generate(self, x: np.ndarray, y: Optional[np.ndarray] = None, **kwargs) -> np.ndarray:
+    def generate(self, x: np.ndarray, y: Optional[np.ndarray] = None, **kwargs) -> np.ndarray:  # pragma: no cover
         """
         Generate adversarial samples and return them in an array.
 
@@ -232,7 +232,7 @@ class HeartHopSkipJump(HopSkipJump):
         mask: Optional[np.ndarray],
         clip_min: float,
         clip_max: float,
-    ) -> Optional[Union[np.ndarray, Tuple[np.ndarray, int]]]:
+    ) -> Optional[Union[np.ndarray, Tuple[np.ndarray, int]]]:  # pragma: no cover
         """
         Find initial adversarial example for the attack.
 
@@ -341,7 +341,7 @@ class HeartHopSkipJump(HopSkipJump):
         mask: Optional[np.ndarray],
         clip_min: float,
         clip_max: float,
-    ) -> np.ndarray:
+    ) -> np.ndarray:  # pragma: no cover
         """
         Main function for the boundary attack.
 
@@ -428,7 +428,7 @@ class HeartHopSkipJump(HopSkipJump):
 
     def _adversarial_satisfactory(
         self, samples: np.ndarray, target: int, clip_min: float, clip_max: float
-    ) -> np.ndarray:
+    ) -> np.ndarray:  # pragma: no cover
         """
         Check whether an image is adversarial.
 

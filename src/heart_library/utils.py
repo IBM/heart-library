@@ -149,7 +149,7 @@ def process_inputs_for_art(
     """
     Convert JATIC supported data to ART supported data
     """
-
+    images = np.array([])
     # convert Hugging Face
     if isinstance(data, (HFDataset, HFIterableDataset)):
         data = hf_dataset_to_maite(data)
@@ -248,10 +248,10 @@ def process_inputs_for_art(
             image_list = []
             targets = []
             metadata = []
-            for i in range(len(data)):
-                image_list.append(data.__getitem__(i)[0])
-                targets.append(data.__getitem__(i)[1])
-                metadata.append(data.__getitem__(i)[2])
+            for item in data:
+                image_list.append(item[0])
+                targets.append(item[1])
+                metadata.append(item[2])
 
         elif hasattr(data, "__iter__"):
             image_list = [item[0] for item in data]
