@@ -18,7 +18,7 @@ release = '0.4.3'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc','sphinx_charts.charts']
+extensions = ['sphinx.ext.autodoc','sphinx_charts.charts','sphinx_design']
 
 html_static_path = ['_static']
 templates_path = ['_templates']
