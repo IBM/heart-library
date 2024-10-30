@@ -30,7 +30,7 @@ Contents
    setup_and_access
    attack_cards/index
    notebooks
-   flowchart
+   evaluation_pathways
    legal
 
 

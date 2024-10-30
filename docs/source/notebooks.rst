@@ -14,6 +14,8 @@ HEART Library Notebooks can be found on `github <https://github.com/IBM/heart-li
 
 |
 
+.. _pgd-notebook-label:
+
 ``1_get_started_pgd_attack.ipynb``
 ----------------------------------
 
@@ -58,6 +60,8 @@ HEART Library Notebooks can be found on `github <https://github.com/IBM/heart-li
   **Intended Audience:** Advanced T&E Users
 
 |
+
+.. _patch-notebook-label:
 
 ``4_get_started_adversarial_patch.ipynb``
 -----------------------------------------
