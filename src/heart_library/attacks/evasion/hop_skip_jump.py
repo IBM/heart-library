@@ -19,23 +19,24 @@
 This module extends ART's `HopSkipJump` attack to support HEART.
 """
 
-from typing import List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 from art.attacks.evasion import HopSkipJump
 from art.config import ART_NUMPY_DTYPE
 from art.utils import (check_and_transform_label_format, get_labels_np_array,
                        to_categorical)
+from numpy.typing import NDArray
 from tqdm.auto import tqdm
 
 
-def softmax(x):  # pragma: no cover
+def softmax(x: NDArray[np.float32]) -> NDArray[np.float32]:
     """Compute softmax values for each sets of scores in x."""
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum()
 
 
-class HeartHopSkipJump(HopSkipJump):
+class HeartHopSkipJump(HopSkipJump):  # type: ignore
     """
     Extension of ART's implementation of a generic laser attack case which
     supports channel first images.
@@ -43,7 +44,7 @@ class HeartHopSkipJump(HopSkipJump):
 
     def __init__(
         self,
-        classifier,
+        classifier: Any,
         batch_size: int = 64,
         targeted: bool = False,
         norm: Union[int, float, str] = 2,
@@ -78,15 +79,17 @@ class HeartHopSkipJump(HopSkipJump):
             verbose=verbose,
         )
 
-        self.total_queries: np.ndarray = np.array([])
-        self.adv_query_idx: List = []
-        self.perturbs: List = []
-        self.perturbs_iter: List = []
-        self.confs: List = []
+        self.total_queries: NDArray[np.float32] = np.array([])
+        self.adv_query_idx: List[List[np.int32]] = []
+        self.perturbs: List[List[np.float32]] = []
+        self.perturbs_iter: List[List[np.float32]] = []
+        self.confs: List[List[np.float32]] = []
         self.curr_idx: int = 0
-        self.curr_val: np.ndarray = np.array([])
+        self.curr_val: NDArray[np.float32] = np.array([])
 
-    def generate(self, x: np.ndarray, y: Optional[np.ndarray] = None, **kwargs) -> np.ndarray:  # pragma: no cover
+    def generate(
+        self, x: NDArray[np.float32], y: Optional[NDArray[np.float32]] = None, **kwargs: Any
+    ) -> NDArray[np.float32]:
         """
         Generate adversarial samples and return them in an array.
 
@@ -104,7 +107,7 @@ class HeartHopSkipJump(HopSkipJump):
         :return: An array holding the adversarial examples.
         """
         mask = kwargs.get("mask")
-        self.total_queries = np.zeros(x.shape[0])
+        self.total_queries = np.zeros(x.shape[0], dtype=np.float32)
         self.adv_query_idx = [[] for i in range(x.shape[0])]
         self.perturbs = [[] for i in range(x.shape[0])]
         self.perturbs_iter = [[] for i in range(x.shape[0])]
@@ -147,6 +150,8 @@ class HeartHopSkipJump(HopSkipJump):
             mask = np.array([None] * x.shape[0])
 
         # Get clip_min and clip_max from the classifier or infer them from data
+        clip_min: Any
+        clip_max: Any
         if self.estimator.clip_values is not None:
             clip_min, clip_max = self.estimator.clip_values
         else:
@@ -199,8 +204,8 @@ class HeartHopSkipJump(HopSkipJump):
                     x=val,
                     y=y[ind],  # type: ignore
                     y_p=preds[ind],
-                    init_pred=init_preds[ind],
-                    adv_init=x_adv_init[ind],
+                    init_pred=init_preds[ind],  # type: ignore
+                    adv_init=x_adv_init[ind],  # type: ignore
                     mask=mask[ind],
                     clip_min=clip_min,
                     clip_max=clip_max,
@@ -211,8 +216,8 @@ class HeartHopSkipJump(HopSkipJump):
                     x=val,
                     y=-1,
                     y_p=preds[ind],
-                    init_pred=init_preds[ind],
-                    adv_init=x_adv_init[ind],
+                    init_pred=init_preds[ind],  # type: ignore
+                    adv_init=x_adv_init[ind],  # type: ignore
                     mask=mask[ind],
                     clip_min=clip_min,
                     clip_max=clip_max,
@@ -411,7 +416,7 @@ class HeartHopSkipJump(HopSkipJump):
                 )
 
             # Update current sample
-            current_sample = np.clip(potential_sample, clip_min, clip_max)
+            current_sample = np.clip(potential_sample, clip_min, clip_max)  # type: ignore
 
             # Calc perturbs for iter
             dist = np.linalg.norm(self.original_image[self.curr_idx] - current_sample)

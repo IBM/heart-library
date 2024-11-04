@@ -22,30 +22,30 @@ This module extends ART's `LaserAttack` attack to support HEART.
 """
 
 import logging
-from typing import Callable, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Union
 
 import numpy as np
-from art.attacks.evasion.laser_attack.laser_attack import (AdvObjectGenerator,
-                                                           LaserAttack,
+from art.attacks.evasion.laser_attack.laser_attack import (LaserAttack,
                                                            LaserBeam,
                                                            LaserBeamGenerator)
 from art.attacks.evasion.laser_attack.utils import (AdversarialObject,
                                                     DebugInfo, ImageGenerator)
 from art.summary_writer import SummaryWriter
+from numpy.typing import NDArray
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def greedy_search(
-    image: np.ndarray,
-    estimator,
+    image: NDArray[np.float32],
+    estimator: Any,
     iterations: int,
     actual_class: int,
     actual_class_confidence: float,
-    adv_object_generator: AdvObjectGenerator,
-    image_generator: ImageGenerator,
-    debug: Optional[DebugInfo] = None,
-) -> Tuple[Optional[AdversarialObject], Optional[int]]:  # pragma: no cover
+    adv_object_generator: Any,
+    image_generator: Any,
+    debug: Optional[Any] = None,
+) -> Tuple[Optional[Any], Optional[int]]:
     """
     Extending ART's greedy search algorithm to support HEART. Specifically supports channel first images.
 
@@ -60,6 +60,7 @@ def greedy_search(
     """
     params = adv_object_generator.random()
     for _ in range(iterations):
+        predicted_class: int = -1
         for sign in [-1, 1]:
             params_prim = adv_object_generator.update_params(params, sign=sign)
             adversarial_image = image_generator.update_image(image, params_prim)
@@ -90,13 +91,13 @@ class HeartLaserAttack(LaserAttack):
 
     def __init__(
         self,
-        estimator,
+        estimator: Any,
         iterations: int,
-        laser_generator: AdvObjectGenerator,
-        image_generator: ImageGenerator = ImageGenerator(),
+        laser_generator: Any,
+        image_generator: Any = ImageGenerator(),
         random_initializations: int = 1,
         optimisation_algorithm: Callable = greedy_search,
-        debug: Optional[DebugInfo] = None,
+        debug: Optional[Any] = None,
     ) -> None:
         """
         :param estimator: Predictor of the image class.
@@ -117,7 +118,9 @@ class HeartLaserAttack(LaserAttack):
             debug=debug,
         )
 
-    def generate(self, x: np.ndarray, y: Optional[np.ndarray] = None, **kwargs) -> np.ndarray:
+    def generate(
+        self, x: NDArray[np.float32], y: Optional[NDArray[np.float32]] = None, **kwargs: Any
+    ) -> NDArray[np.float32]:
         """
         Generate adversarial examples.
 
@@ -198,14 +201,14 @@ class HeartLaserBeamAttack(HeartLaserAttack):
 
     def __init__(
         self,
-        estimator,
+        estimator: Any,
         iterations: int,
-        max_laser_beam: Union[LaserBeam, Tuple[float, float, float, int]],
-        min_laser_beam: Union[LaserBeam, Tuple[float, float, float, int]] = (380.0, 0.0, 1.0, 1),
+        max_laser_beam: Union[Any, Tuple[float, float, float, int]],
+        min_laser_beam: Union[Any, Tuple[float, float, float, int]] = (380.0, 0.0, 1.0, 1),
         random_initializations: int = 1,
-        image_generator: ImageGenerator = ImageGenerator(),
-        debug: Optional[DebugInfo] = None,
-    ) -> None:  # pragma: no cover
+        image_generator: Any = ImageGenerator(),
+        debug: Optional[Any] = None,
+    ) -> None:
         """
         :param estimator: Predictor of the image class.
         :param iterations: Maximum number of iterations of the algorithm.

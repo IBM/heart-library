@@ -29,7 +29,7 @@ from PIL.Image import Image as PILImage
 from torch import Tensor, is_tensor
 from torch.utils.data.dataset import Subset as TorchSubsetDataset
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 EMPTY_STRING = ""
 
@@ -39,20 +39,20 @@ class ImageDataset:
     MAITE aligned dataset
     """
 
-    def __init__(self, images: List[np.ndarray], targets: np.ndarray, metadata: List[Dict[str, Any]]):
-        self.images = images
-        self.targets = targets
-        self.metadata = metadata
+    def __init__(self, images: List[NDArray[np.float32]], targets: NDArray[np.float32], metadata: List[Dict[str, Any]]):
+        self._images = images
+        self._targets = targets
+        self._metadata = metadata
 
     def __len__(self) -> int:
-        return len(self.images)
+        return len(self._images)
 
-    def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
-        return self.images[ind], self.targets[ind], self.metadata[ind]
+    def __getitem__(self, ind: int) -> Tuple[NDArray[np.float32], NDArray[np.float32], Dict[str, Any]]:
+        return self._images[ind], self._targets[ind], self._metadata[ind]
 
 
 def hf_dataset_to_maite(
-    dataset: HFDataset,
+    dataset: Any,
     image_label: str = EMPTY_STRING,
     target_label: str = EMPTY_STRING,
     meta_label: str = EMPTY_STRING,
@@ -118,7 +118,7 @@ def hf_dataset_to_maite(
     return ImageDataset(images, targets, metadata)
 
 
-def torch_subset_to_maite(dataset: TorchSubsetDataset) -> ImageDataset:
+def torch_subset_to_maite(dataset: Any) -> ImageDataset:
     """
     Convert Torch subset dataset to MAITE aligned dataset
     """
@@ -135,17 +135,8 @@ def torch_subset_to_maite(dataset: TorchSubsetDataset) -> ImageDataset:
 
 
 def process_inputs_for_art(
-    data: Union[
-        HFDataset,
-        HFIterableDataset,
-        TorchSubsetDataset,
-        np.ndarray,
-        Tensor,
-        Dict,
-        Tuple,
-        Sequence,
-    ]
-) -> Tuple[NDArray, Optional[NDArray], List[Dict[str, Any]]]:
+    data: Any,
+) -> Tuple[NDArray[np.float32], Optional[Union[NDArray[np.float32], List[Dict[str, Any]]]], List[Dict[str, Any]]]:
     """
     Convert JATIC supported data to ART supported data
     """

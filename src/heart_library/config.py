@@ -24,7 +24,7 @@ import os
 
 import numpy as np
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------------------------------------- CONSTANTS AND TYPES
 
@@ -39,7 +39,7 @@ if not os.access(_folder, os.W_OK):  # pragma: no cover
 _folder = os.path.join(_folder, ".heart")
 
 
-def set_data_path(path):
+def set_data_path(path: str) -> None:
     """
     Set the path for HEART's data directory (HEART_DATA_PATH).
     """
@@ -56,18 +56,19 @@ def set_data_path(path):
 
 
 # Load data from configuration file if it exists. Otherwise create one.
+_config: dict = {}
 _config_path = os.path.expanduser(os.path.join(_folder, "config.json"))
 if os.path.exists(_config_path):
     try:
-        with open(_config_path, encoding="utf8") as f:
-            _config = json.load(f)
+        with open(_config_path, encoding="utf8") as _f:
+            _config = json.load(_f)
 
             # Since renaming this variable we must update existing config files
             if "DATA_PATH" in _config:  # pragma: no cover
                 _config["HEART_DATA_PATH"] = _config.pop("DATA_PATH")
                 try:
-                    with open(_config_path, "w", encoding="utf8") as f:
-                        f.write(json.dumps(_config, indent=4))
+                    with open(_config_path, "w", encoding="utf8") as _f:
+                        _f.write(json.dumps(_config, indent=4))
                 except IOError:
                     logger.warning("Unable to update configuration file", exc_info=True)
 
@@ -85,8 +86,8 @@ if not os.path.exists(_config_path):
     _config = {"HEART_DATA_PATH": os.path.join(_folder, "data")}
 
     try:
-        with open(_config_path, "w", encoding="utf8") as f:
-            f.write(json.dumps(_config, indent=4))
+        with open(_config_path, "w", encoding="utf8") as _f:
+            _f.write(json.dumps(_config, indent=4))
     except IOError:  # pragma: no cover
         logger.warning("Unable to create configuration file", exc_info=True)
 

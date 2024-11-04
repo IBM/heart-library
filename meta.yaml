@@ -20,7 +20,7 @@ requirements:
   run:
     - python >=3.9,<3.12
     - adversarial-robustness-toolbox >=1.17.1
-    - maite >=0.5.0
+    - maite >=0.6.0,<0.7.0
     - numpy >=1.18.5,<2
     - scikit-learn >=0.22.2
     - six

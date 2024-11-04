@@ -19,7 +19,7 @@
 This module implements a JATIC compatible ART Object Detector.
 """
 import sys
-from typing import Any, Dict, List, Sequence, Union
+from typing import Any, Dict, List, Sequence, Union, Optional
 
 import numpy as np
 import torch
@@ -27,7 +27,7 @@ from art.estimators.object_detection import (PyTorchDetectionTransformer,
                                              PyTorchFasterRCNN,
                                              PyTorchObjectDetector,
                                              PyTorchYolo)
-from maite.protocols import ArrayLike
+from numpy.typing import NDArray
 from torchvision.models import detection as fasterrcnn
 
 from heart_library.utils import process_inputs_for_art
@@ -41,7 +41,7 @@ if sys.version_info >= (3, 10):
         Wrapper for YOLO object detection models
         """
 
-        def __init__(self, model, device):
+        def __init__(self, model: Any, device: str):
             super().__init__()
             self.model = model
             self.model.hyp = {
@@ -55,15 +55,17 @@ if sys.version_info >= (3, 10):
             }
             self.model.model.model.to(device)  # Required when using GPU
 
-            self.compute_loss = ComputeLoss(self.model.model.model)
+            self._compute_loss: Any = ComputeLoss(self.model.model.model)
 
-        def forward(self, x, targets=None):
+        def forward(
+            self, x: torch.Tensor, targets: Optional[torch.Tensor] = None
+        ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
             """
             Modified forward to facilitate computation of loss dict
             """
             if self.training:
                 outputs = self.model.model.model(x)
-                loss, loss_items = self.compute_loss(outputs, targets)
+                loss, loss_items = self._compute_loss(outputs, targets)
                 loss_components_dict = {"loss_total": loss}
                 loss_components_dict["loss_box"] = loss_items[0]
                 loss_components_dict["loss_obj"] = loss_items[1]
@@ -248,7 +250,7 @@ COCO_FASTER_RCNN_LABELS = COCO_DETR_LABELS = [
     "toothbrush",
     "hairbrush",
 ]
-SUPPORTED_DETECTORS: dict = {
+SUPPORTED_DETECTORS: Dict[str, str] = {
     "yolov5s": "YOLOv5 model. Ref: https://github.com/ultralytics/yolov5",
     "yolov5n": "YOLOv5 model. Ref: https://github.com/ultralytics/yolov5",
     "yolov5m": "YOLOv5 model. Ref: https://github.com/ultralytics/yolov5",
@@ -287,7 +289,7 @@ class JaticPyTorchObjectDetectionOutput:
     Object Detection Output
     """
 
-    def __init__(self, detection: Dict[str, np.ndarray]):
+    def __init__(self, detection: Dict[str, NDArray[np.float32]]):
         """
         param: Dict[str, np.ndarray] - detection data
         """
@@ -296,42 +298,42 @@ class JaticPyTorchObjectDetectionOutput:
         self._scores = detection["scores"]
 
     @property
-    def boxes(self) -> np.ndarray:
+    def boxes(self) -> NDArray[np.float32]:
         """
         Return detection bounding boxes
         """
         return self._boxes
 
     @boxes.setter
-    def boxes(self, value):
+    def boxes(self, value: NDArray[np.float32]) -> None:
         """
         Update detection bounding boxes
         """
         self._boxes = value
 
     @property
-    def labels(self) -> np.ndarray:
+    def labels(self) -> NDArray[np.float32]:
         """
         Return detection labels
         """
         return self._labels
 
     @labels.setter
-    def labels(self, value):
+    def labels(self, value: NDArray[np.float32]) -> None:
         """
         Update detection labels
         """
         self._labels = value
 
     @property
-    def scores(self) -> np.ndarray:
+    def scores(self) -> NDArray[np.float32]:
         """
         Return detection scores
         """
         return self._scores
 
     @scores.setter
-    def scores(self, value):
+    def scores(self, value: NDArray[np.float32]) -> None:
         """
         Update detection scores
         """
@@ -365,7 +367,7 @@ class JaticPyTorchObjectDetector(PyTorchObjectDetector):  # pylint: disable=R090
                 raise ValueError(f"Model type {model_type} is not supported. Try one of {SUPPORTED_DETECTORS}.")
 
         elif isinstance(model, str):
-
+            device_type: Any
             if "device_type" in kwargs:
                 device_type = kwargs["device_type"]
             else:
@@ -381,6 +383,7 @@ class JaticPyTorchObjectDetector(PyTorchObjectDetector):  # pylint: disable=R090
                         with one of the supported models: {SUPPORTED_DETECTORS}"
                 )
 
+            loaded_model: Any = None
             # YOLO
             if "yolo" in model_type:
                 if sys.version_info >= (3, 10):
@@ -424,10 +427,10 @@ class JaticPyTorchObjectDetector(PyTorchObjectDetector):  # pylint: disable=R090
             else:
                 raise ValueError(f"Model type {model_type} is not supported. Try one of {SUPPORTED_DETECTORS}.")
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         return getattr(self._detector, attr)
 
-    def __call__(self, data: ArrayLike) -> Sequence[JaticPyTorchObjectDetectionOutput]:
+    def __call__(self, data: Any) -> Sequence[JaticPyTorchObjectDetectionOutput]:
         # convert to ART supported type
         images, _, _ = process_inputs_for_art(data)
 

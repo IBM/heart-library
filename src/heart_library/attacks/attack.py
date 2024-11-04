@@ -22,8 +22,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
-from art.attacks import Attack, EvasionAttack
-from maite.protocols import ArrayLike
+from art.attacks import EvasionAttack
+from numpy.typing import NDArray
 
 from heart_library.estimators.object_detection.pytorch import \
     JaticPyTorchObjectDetectionOutput
@@ -35,7 +35,9 @@ class JaticEvasionAttackOutput:
     Dataclass output JaticEvasionAttackOutput
     """
 
-    def __init__(self, images: List[np.ndarray], targets: np.ndarray, metadata: List[Dict[str, Any]]):
+    def __init__(
+        self, images: List[NDArray[np.float32]], targets: NDArray[np.float32], metadata: List[Dict[str, Any]]
+    ):  # pyright: ignore
         self.images = images
         self.targets = targets
         self.metadata = metadata
@@ -43,7 +45,7 @@ class JaticEvasionAttackOutput:
     def __len__(self) -> int:
         return len(self.images)
 
-    def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
+    def __getitem__(self, ind: int) -> Tuple[NDArray[np.float32], NDArray[np.float32], Dict[str, Any]]:
         return self.images[ind], self.targets[ind], self.metadata[ind]
 
 
@@ -53,8 +55,8 @@ class JaticPoisonAttackOutput:
     Dataclass output JaticEvasionAttackOutput
     """
 
-    poisoning_examples: ArrayLike
-    poisoning_labels: ArrayLike
+    poisoning_examples: NDArray[np.float32]
+    poisoning_labels: NDArray[np.float32]
 
 
 class JaticAttack:  # pylint: disable=R0901
@@ -62,17 +64,20 @@ class JaticAttack:  # pylint: disable=R0901
     Wrapper for JATIC compatible attacks
     """
 
-    def __init__(self, attack: Attack, norm: int = 0):
+    def __init__(self, attack: Any, norm: int = 0):
         self._attack = attack
         self._norm = norm
 
     def __call__(
         self,
-        data: Union[Tuple[Sequence[ArrayLike], Sequence[ArrayLike], Sequence[dict[str, Any]]], ArrayLike],
-        **kwargs
+        data: Union[
+            Tuple[Sequence[NDArray[np.float32]], Sequence[NDArray[np.float32]], Sequence[dict[str, Any]]],
+            NDArray[np.float32],
+        ],
+        **kwargs: Any
     ) -> Tuple[
-        Sequence[ArrayLike],
-        Union[Sequence[ArrayLike], Sequence[JaticPyTorchObjectDetectionOutput], Optional[Any]],
+        Sequence[NDArray[np.float32]],
+        Union[Sequence[NDArray[np.float32]], Sequence[JaticPyTorchObjectDetectionOutput], Optional[Any]],
         Sequence[dict[str, Any]],
     ]:
         """
@@ -83,10 +88,10 @@ class JaticAttack:  # pylint: disable=R0901
         """
 
         attack_output: Tuple[
-            Sequence[ArrayLike],
-            Union[Sequence[ArrayLike], Sequence[JaticPyTorchObjectDetectionOutput], Optional[Any]],
+            Sequence[NDArray],
+            Union[Sequence[NDArray], Sequence[JaticPyTorchObjectDetectionOutput], Optional[Any]],
             Sequence[dict[str, Any]],
-        ]
+        ] = ([], [], [])
 
         # convert to ART supported data types
         # assume data is a batch of data and returns a modified version of that batch
@@ -102,7 +107,7 @@ class JaticAttack:  # pylint: disable=R0901
         # run the attack
         if isinstance(self._attack, EvasionAttack):
 
-            adv_output = self._attack.generate(x, y, **kwargs)
+            adv_output = self._attack.generate(x, y, **kwargs)  # pyright: ignore[reportArgumentType]
 
             # check if adversarial patch attack
             # requries extra step of applying the patch
@@ -116,7 +121,7 @@ class JaticAttack:  # pylint: disable=R0901
                     adv_images = self._attack.apply_patch(x=x)
                 else:
                     patch, mask = adv_output
-                    adv_images = self._attack.apply_patch(x=x, scale=1)
+                    adv_images = getattr(self._attack, "apply_patch")(x=x, scale=1)
 
                 if meta is not None and None not in meta and len(meta) > 0:
                     for item in meta:

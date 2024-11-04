@@ -18,9 +18,13 @@
 """
 This module implements a HEART compatible ART QueryEfficientGradientEstimationClassifier.
 """
+from typing import Any
+
 import numpy as np
-from art.estimators.classification import QueryEfficientGradientEstimationClassifier
+from art.estimators.classification import \
+    QueryEfficientGradientEstimationClassifier
 from art.utils import clip_and_round
+from numpy.typing import NDArray
 
 
 class HeartQueryEfficientGradientEstimationClassifier(
@@ -32,14 +36,16 @@ class HeartQueryEfficientGradientEstimationClassifier(
 
     def __init__(
         self,
-        classifier,
+        classifier: Any,
         num_basis: int = 20,
         sigma: float = 1 / 64.0,
         round_samples: float = 0.0,
     ):
         super().__init__(classifier=classifier, num_basis=num_basis, sigma=sigma, round_samples=round_samples)
 
-    def predict(self, x: np.ndarray, batch_size: int = 128, **kwargs) -> np.ndarray:  # pylint: disable=W0221
+    def predict(
+        self, x: NDArray[np.float32], batch_size: int = 128, **kwargs: Any
+    ) -> NDArray[np.float32]:  # pylint: disable=W0221
         """
         Perform prediction of the classifier for input `x`. Rounds results first.
 

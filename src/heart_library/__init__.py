@@ -1,16 +1,19 @@
 """
 The HEART extension.
 """
+
 import logging.config
+from logging import Logger
+from typing import Any, Dict
 
 # Project Imports
 
 # Semantic Version
-__version__ = "0.4.3"
+__version__ = "0.4.4"
 
 # pylint: disable=C0103
 
-LOGGING = {
+LOGGING: Dict[str, Any] = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
@@ -35,4 +38,4 @@ LOGGING = {
     },
 }
 logging.config.dictConfig(LOGGING)
-logger = logging.getLogger(__name__)
+logger: Logger = logging.getLogger(__name__)

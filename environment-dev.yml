@@ -3,7 +3,6 @@
 name: heart-conda-dev 
 channels:
   - conda-forge
-  - pytorch
 dependencies:
   # Optional Dependencies
   - datasets>=2.18.0
@@ -19,13 +18,14 @@ dependencies:
   - torchmetrics>=1.4.2
   - pympler>=1.1
   - gputil>=1.4.0
-  # Pytorch channel override -- Known torch+art issue: https://github.com/Trusted-AI/adversarial-robustness-toolbox/issues/2473
-  - pytorch::pytorch>=2.1.1,<=2.3.1
-  - pytorch::torchvision<0.19
+  - pytorch>=2.1.1,<=2.3.1
+  - torchvision<0.19
   # Yolov5 cannot support huggingface_hub>=0.25.0
   - huggingface_hub<0.25.0
   # Dev
+  - isort>=5
   - pytest>=8.3
+  - pytest-cov>=4.1
   # Pip Overrides (Fixes known issues or unavailable via conda-forge)
   - pip
   - pip:
@@ -34,4 +34,6 @@ dependencies:
     # Unavailable via conda-forge
     - opencv-python>=4.10.0.84
     - memory-profiler>=0.61.0
+    # Yolov5 does not support python 3.9 due to AWS-CLI dependencies (boto3/botocore/urllib3)
+    # See https://github.com/fcakyon/yolov5-pip/discussions/256 for more information
     - yolov5>=7.0.13

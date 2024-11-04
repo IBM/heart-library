@@ -25,7 +25,7 @@ Projected Gradient Descent
 
     .. grid-item-card::  Getting started
 
-        To get started with PGD attacks, see the :ref:`pgd-notebook-label` notebook, available `here <https://github.com/IBM/heart-library/blob/main/notebooks/1_get_started_pgd_attack.ipynb>`_.
+        To get started with PGD attacks, see the :ref:`pgd-notebook-label` notebook, available `here <https://github.com/IBM/heart-library/blob/main/notebooks/1_get_started_pgd_attack.ipynb>`__.
 
         For increased relevance to your use case, replace the selected hugging face model with your own model, and the test data set with a test dataset of your own.
 
@@ -104,7 +104,7 @@ Projected Gradient Descent
 
           - PGD is just one type of gradient-based attack. For more information on others, see `article <https://securing.ai/ai-security/gradient-based-attacks/>`_.
 
-          - Adversarial Patch attacks can be applied in similar circumstances as PGD attacks. For more information see :ref:`patch-notebook-label` notebook, available `here <https://github.com/IBM/heart-library/blob/main/notebooks/4_get_started_adversarial_patch.ipynb>`_.
+          - Adversarial Patch attacks can be applied in similar circumstances as PGD attacks. For more information see :ref:`patch-notebook-label` notebook, available `here <https://github.com/IBM/heart-library/blob/main/notebooks/4_get_started_adversarial_patch.ipynb>`__.
         - Further reading:
 
           - `Adversarial Robustness Toolbox v1.0.0 <https://arxiv.org/abs/1807.01069>`_

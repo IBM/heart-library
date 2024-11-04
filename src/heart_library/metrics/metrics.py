@@ -26,12 +26,13 @@ import logging
 from typing import Any, Dict, Sequence, Union
 
 import numpy as np
+from numpy.typing import NDArray
 
 from heart_library.attacks.attack import JaticAttack
 from heart_library.estimators.object_detection import \
     JaticPyTorchObjectDetectionOutput
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class HeartMAPMetric:
@@ -39,20 +40,20 @@ class HeartMAPMetric:
     Facilitating support for Torchmetric's MAP metric.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         """
         :param **kwargs: arguments passed to Torchmetric's MAP metric
         """
         from torchmetrics.detection.mean_ap import \
             MeanAveragePrecision  # pylint: disable=C0415
 
-        self.metric = MeanAveragePrecision(**kwargs)
+        self._metric = MeanAveragePrecision(**kwargs)
 
     def reset(self) -> None:
         """
         Clear contents of current metric's cache of predictions and targets.
         """
-        return self.metric.reset()
+        return self._metric.reset()
 
     def update(
         self,
@@ -84,13 +85,13 @@ class HeartMAPMetric:
                 "scores": torch.as_tensor(targets.scores),
                 "labels": torch.as_tensor(targets.labels),
             }
-            self.metric.update([preds_dict], [targets_dict])
+            self._metric.update([preds_dict], [targets_dict])
 
     def compute(self) -> Dict[str, Any]:
         """
         Compute MAP scores.
         """
-        return self.metric.compute()
+        return self._metric.compute()
 
 
 class HeartAccuracyMetric:
@@ -98,7 +99,7 @@ class HeartAccuracyMetric:
     Facilitating support for Torchmetric's Accuracy metric.
     """
 
-    def __init__(self, is_logits: bool = True, **kwargs):
+    def __init__(self, is_logits: bool = True, **kwargs: Any):
         """
         :param is_logits: bool indicating if predictions are logits
         :param **kwargs: arguments passed to Torchmetric's Accuracy metric
@@ -122,7 +123,7 @@ class HeartAccuracyMetric:
         """
         return self._metric.reset()
 
-    def update(self, preds_batch: Sequence[np.ndarray], targets_batch: Sequence[np.ndarray]) -> None:
+    def update(self, preds_batch: Sequence[NDArray[np.float32]], targets_batch: Sequence[NDArray[np.float32]]) -> None:
         """
         Add predictions and targets to metric's cache for later calculation.
         :param preds_batch: predictions in numpy array format
@@ -150,25 +151,25 @@ class RobustnessBiasMetric:
     of datasets. Currently supports only classification tasks.
     """
 
-    def __init__(self, metadata: Sequence[Dict[str, Any]], labels: np.ndarray, interval: int = 100):
+    def __init__(self, metadata: Sequence[Dict[str, Any]], labels: NDArray[np.float32], interval: int = 100):
         """
         :param metadata: Sequence[Dict[str, Any]] - the metadata computed during attack
             which contains delta between benign and adversarial images
         :param labels: List[str] - classification labels
         :param interval: int - tau
         """
-        self._state: Dict = {}
+        self._state: Dict[str, Any] = {}
         self._labels: np.ndarray = labels
         self._metadata: Sequence[Dict[str, Any]] = metadata
         self._interval: int = interval
 
-    def reset(self):
+    def reset(self) -> None:
         """
         Reset the metric to default values.
         """
         self._state = {}
 
-    def update(self, preds_batch: Sequence[np.ndarray], targets_batch: Sequence[np.ndarray]) -> None:
+    def update(self, preds_batch: Sequence[NDArray[np.float32]], targets_batch: Sequence[NDArray[np.float32]]) -> None:
         """
         Add predictions and targets to metric's cache for later calculation.
         :param preds_batch: predictions in numpy array format
@@ -203,7 +204,7 @@ class RobustnessBiasMetric:
 
         self._state = series
 
-    def compute(self) -> Dict:
+    def compute(self) -> Dict[str, Any]:
         """
         Returns the computed metric
         """
@@ -218,7 +219,7 @@ class AccuracyPerturbationMetric:
 
     def __init__(
         self,
-        benign_predictions: Sequence[np.ndarray],
+        benign_predictions: Sequence[NDArray[np.float32]],
         metadata: Sequence[Dict[str, Any]],
         accuracy_type: str = "robust",
     ):
@@ -233,13 +234,13 @@ class AccuracyPerturbationMetric:
         self._metadata = metadata
         self._accuracy_type = accuracy_type
 
-    def reset(self):
+    def reset(self) -> None:
         """
         Reset the metric to default values.
         """
         self._state = {}
 
-    def update(self, preds_batch: Sequence[np.ndarray], targets_batch: Sequence[np.ndarray]):
+    def update(self, preds_batch: Sequence[NDArray[np.float32]], targets_batch: Sequence[NDArray[np.float32]]) -> None:
         """
         Updates the metric value.
         """
@@ -288,23 +289,23 @@ class BlackBoxAttackQualityMetric:
         self._state: Dict = {}
         self._attack = attack._attack
 
-    def reset(self):
+    def reset(self) -> None:
         """
         Reset the metric to default values.
         """
         self._state = {}
 
-    def update(self):
+    def update(self) -> None:
         """
         Updates the metric value.
         """
-        total_queries = self._attack.total_queries
-        adv_query_idx = self._attack.adv_query_idx
+        total_queries = getattr(self._attack, "total_queries", np.array([]))
+        adv_query_idx = getattr(self._attack, "adv_query_idx", [])
         adv_queries = [len(item) for item in adv_query_idx]
         benign_queries = [total_queries[i] - n_adv for i, n_adv in enumerate(adv_queries)]
-        adv_perturb_total = self._attack.perturbs
-        adv_perturb_iter = self._attack.perturbs_iter
-        adv_confs_total = self._attack.confs
+        adv_perturb_total = getattr(self._attack, "perturbs", [])
+        adv_perturb_iter = getattr(self._attack, "perturbs_iter", [])
+        adv_confs_total = getattr(self._attack, "confs", [])
 
         self._state = {
             "total_queries": total_queries,

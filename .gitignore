@@ -113,3 +113,9 @@ demo/pics/*
 
 # HEART script executions
 script_executions/
+
+# Project Root Yolov5 Pytorch Tensors
+yolov5s.pt
+
+# Sphinx Documentation Build
+docs/build/

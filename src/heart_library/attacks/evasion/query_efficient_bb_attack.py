@@ -18,14 +18,16 @@
 """
 This module implements a HEART compatible ART Query Efficient Black Box attack
 """
-from typing import Optional, Union
+from typing import Any, List, Optional, Union
 
 import numpy as np
 from art.attacks import EvasionAttack
 from art.attacks.evasion import FastGradientMethod
 from art.estimators import BaseEstimator, LossGradientsMixin
+from numpy.typing import NDArray
 
-from heart_library.estimators.classification import HeartQueryEfficientGradientEstimationClassifier
+from heart_library.estimators.classification import \
+    HeartQueryEfficientGradientEstimationClassifier
 
 
 class HeartQueryEfficientBlackBoxAttack(EvasionAttack):
@@ -33,7 +35,7 @@ class HeartQueryEfficientBlackBoxAttack(EvasionAttack):
     HEART defined extension of ART core Query Efficient Black Box attack.
     """
 
-    attack_params = EvasionAttack.attack_params + [
+    attack_params: List[str] = EvasionAttack.attack_params + [
         "norm",
         "eps",
         "eps_step",
@@ -47,18 +49,18 @@ class HeartQueryEfficientBlackBoxAttack(EvasionAttack):
 
     def __init__(
         self,
-        estimator,
+        estimator: Any,
         num_basis: int = 20,
         sigma: float = 1 / 64.0,
         round_samples: float = 0.0,
         norm: Union[int, float, str] = np.inf,
-        eps: Union[int, float, np.ndarray] = 0.3,
-        eps_step: Union[int, float, np.ndarray] = 0.1,
+        eps: Union[int, float, NDArray[np.float32]] = 0.3,
+        eps_step: Union[int, float, NDArray[np.float32]] = 0.1,
         targeted: bool = False,
         num_random_init: int = 0,
         batch_size: int = 32,
         minimal: bool = False,
-        **kwargs
+        **kwargs: Any
     ):
         super().__init__(estimator=estimator, **kwargs)
 
@@ -76,5 +78,7 @@ class HeartQueryEfficientBlackBoxAttack(EvasionAttack):
             minimal=minimal,
         )
 
-    def generate(self, x: np.ndarray, y: Optional[np.ndarray] = None, **kwargs) -> np.ndarray:
+    def generate(
+        self, x: NDArray[np.float32], y: Optional[NDArray[np.float32]] = None, **kwargs: Any
+    ) -> NDArray[np.float32]:
         return self._attack.generate(x)

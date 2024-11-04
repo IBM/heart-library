@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "heart-library"
-version = "0.4.3"
+version = "0.4.4"
 description = "Hardened Extension of the Adversarial Robustness Toolbox (HEART) supports assessment of adversarial AI vulnerabilities in Test & Evaluation workflows."
 readme = "README.md"
 license = "MIT"
@@ -20,11 +20,15 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 
+[tool.setuptools.package-data]
+heart_library = ["py.typed"]
+
+
 # HEART Required Dependences
 [tool.poetry.dependencies]
 python = ">=3.9, <3.12"
 adversarial-robustness-toolbox = ">=1.17.1"
-maite = ">=0.6.0"
+maite = ">=0.6.0, <0.7.0"
 numpy = ">=1.18.5, <2"
 scikit-learn = ">=0.22.2"
 six = "*"
@@ -34,7 +38,6 @@ tqdm = "*"
 
 # HEART Optional Dependencies
 datasets = { version = ">=2.18.0", optional = true }
-gradio = { version = ">=4.13.0", optional = true }
 jupyter = { version = "*", optional = true}
 matplotlib = { version = "*", optional = true }
 multiprocess = { version = "*", optional = true }
@@ -130,18 +133,6 @@ notebooks = [
 ]
 
 
-# Optional Gradio App Dependencies
-gradio = [
-    "datasets",
-    "gradio",
-    "matplotlib",
-    "pandas",
-    "timm",
-    "transformers",
-    "kornia",
-]
-
-
 # Optional Sphinx Dependencies
 docs = [
     "sphinx",
@@ -168,17 +159,15 @@ optional = true
 black = "*"
 isort = "*"
 lxml = "*"
-mypy = "*"
 nbmake = "*"
 prettytable = "*"
-pylint = ">=3.1.0"
-pylint_junit = "*"
 pytest = "*"
 pytest-flake8 = "*"
 pytest-black = "*"
 pytest-isort = "*"
 pytest-mock = "*"
 pytest-cov = "*"
+pyright = "^1"
 
 
 [tool.black]
@@ -191,6 +180,7 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 flake8-max-line-length = 120
+addopts = "-vvv --cov=heart_library --cov-config=pyproject.toml --cov-report term"
 testpaths = [
     "tests",
 ]
@@ -214,3 +204,8 @@ exclude_lines = [
     "raise NotImplementedError",   # Exclude lines raising NotImplementedError
     "raise AssertionError"          # Exclude lines raising AssertionError
 ]
+
+
+[tool.pyright]
+include = ["src/heart_library"]
+stubPath = "typings/"
