@@ -1,7 +1,7 @@
 Projected Gradient Descent
 ==========================
 
-**Attack type:** white box, gradient-based, evasion
+**Attack type:** white box, gradient-based, evasion, digital
 
 **Best for:** models with continuous domain and high-dimensional input data such as images and videos are most vulnerable to PGD attacks, as there is more opportunity to find a combination of imperceptible perturbations that are successful.
 
@@ -18,10 +18,10 @@ Projected Gradient Descent
 
     .. grid-item-card::  Compatibility considerations
 
-        - **Task:** Object detection and classification models.
-        - **Modality:** HEART currently only supports images, ART supports images and video.
+        - **Task:** Object detection or classification
+        - **Modality:** HEART currently only supports images, ART supports images and video
         - **Data:** Single or three color channel images, of standardized dimensions. Specify pixels in range 0-1 or 0-255, matching input data
-        - **Model:** Must be fully differentiable in order to compute gradients.
+        - **Model:** Must be fully differentiable in order to compute gradients
 
     .. grid-item-card::  Getting started
 
@@ -63,17 +63,18 @@ Projected Gradient Descent
 
     .. grid-item-card::  Scalability
 
-        The examples of time and compute requirements below cover a variety of models and datasets to guide users' expectations. More data points coming soon!
+        The examples of time and compute requirements below cover a variety of models and datasets to guide users' expectations. . These data can be used for resource planning for model testing and evaluation (T&E).
 
         .. csv-table::
-           :file: ../_static/scalability_metrics.csv
+           :file: ../_static/pgd_scalability_metrics.csv
            :widths: 10, 10, 10, 10, 10, 10, 10, 10, 10, 10
            :header-rows: 1
            :class: longtable
 
         .. raw:: html
 
-           <iframe allowtransparency="true" src="../_static/plot.html" height="450px" width="100%"></iframe>
+           <iframe allowtransparency="true" src="../_static/pgd_plot_memory.html" height="450px" width="100%"></iframe>
+           <iframe allowtransparency="true" src="../_static/pgd_plot_duration.html" height="450px" width="100%"></iframe>
 
 
 .. grid:: 2
@@ -95,7 +96,7 @@ Projected Gradient Descent
 
         - *Last* sample of attack path returned, not adversarial --> have optimization algorithm return *best* attack path sample
 
-        For more information on causes of attack failure, see Carlini's `Indicators of Attack Failure <https://arxiv.org/pdf/2106.09947>`_.
+        For more information on causes of attack failure, see Carlini's `Indicators of Attack Failure <https://arxiv.org/pdf/2106.09947>`_ and Tramer's `On Adaptive Attacks to Adversarial Example Defenses <https://proceedings.nips.cc/paper/2020/file/11f38f8ecd71867b42433548d1078e38-Paper.pdf>`_.
 
 
     .. grid-item-card::  More resources

@@ -26,11 +26,14 @@ Contents
 
 .. toctree::
    :maxdepth: 2
+   :caption: Contents:
 
    setup_and_access
    attack_cards/index
    notebooks
+   explanations/index
    evaluation_pathways
+   modules/index
    legal
 
 

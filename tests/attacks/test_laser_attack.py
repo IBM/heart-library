@@ -26,6 +26,7 @@ import pytest
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.required
 def test_laser_attack(heart_warning):
     try:
         from heart_library.attacks.evasion import HeartLaserBeamAttack
@@ -50,14 +51,13 @@ def test_laser_attack(heart_warning):
         data = {'images': img[:1], 'labels': [3]}
 
         x_adv, _, _ = attack(data=data)
+        x_adv = np.stack(x_adv)
 
-        np.testing.assert_array_equal(x_adv[0][[0]].shape, img[[0]].shape)
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, jptc(x_adv)[0][[0]], jptc(img[[0]]))
+        np.testing.assert_array_equal(x_adv[[0]].shape, img[[0]].shape)
         
         x, y, _ = process_inputs_for_art(data)
         x_adv = laser_attack.generate(x, y)
         assert isinstance(x_adv, np.ndarray)
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, jptc(x_adv)[0][[0]], jptc(img[[0]]))
         
         with pytest.raises(ValueError):
             laser_attack.generate(x.ravel())

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "heart-library"
-version = "0.4.4"
+version = "0.5.0"
 description = "Hardened Extension of the Adversarial Robustness Toolbox (HEART) supports assessment of adversarial AI vulnerabilities in Test & Evaluation workflows."
 readme = "README.md"
 license = "MIT"
@@ -24,49 +24,62 @@ build-backend = "poetry.core.masonry.api"
 heart_library = ["py.typed"]
 
 
-# HEART Required Dependences
+# HEART Required Dependencies ----------------------------------------------------[tool.poetry.dependencies (required)]
+
 [tool.poetry.dependencies]
+
 python = ">=3.9, <3.12"
-adversarial-robustness-toolbox = ">=1.17.1"
-maite = ">=0.6.0, <0.7.0"
+adversarial-robustness-toolbox = ">=1.17.1, <1.19.0"    # GitLab issue 561
+maite = ">=0.7.0"
 numpy = ">=1.18.5, <2"
 scikit-learn = ">=0.22.2"
-six = "*"
-setuptools = "*"
-tqdm = "*"
+six = "^1"
+setuptools = "^75"
+tqdm = "^4"
 
 
-# HEART Optional Dependencies
+# HEART Optional Dependencies ----------------------------------------------------[tool.poetry.dependencies (optional)]
+
 datasets = { version = ">=2.18.0", optional = true }
-jupyter = { version = "*", optional = true}
-matplotlib = { version = "*", optional = true }
-multiprocess = { version = "*", optional = true }
-numba = { version = "*", optional = true }
-pandas = { version = "*", optional = true }
-Pillow = { version = "*", optional = true }
-pycocotools = { version = "*", optional = true }
+furo = { version = "^2024", optional = true }
+GPUtil = { version = "^1", optional = true }
+jupyter = { version = "^1", optional = true}
+kornia = { version = ">=0.7.3", optional = true }
+matplotlib = { version = "^3", optional = true }
+memory-profiler = { version = ">=0.61.0", optional = true }
+multiprocess = { version = ">=0.70.0", optional = true }
+myst-parser = { version = "^3", optional = true }
+numba = { version = ">=0.50.0", optional = true }
+opencv-python = { version = "^4", optional = true }
+pandas = { version = "^2", optional = true }
+Pillow = { version = "^10", optional = true }
+pycocotools = { version = "^2", optional = true }
+pympler = { version = "^1", optional = true }
 sphinx = { version = ">=4.2.0", optional = true }
 sphinx-charts = { version = ">=0.2.1", optional = true }
 sphinx-design = { version = ">=0.6.1", optional = true }
-furo = { version = "*", optional = true }
-torch = { version = "<=2.3.1", optional = true }  # https://github.com/IBM/heart-library/issues/1
-torchvision = { version = "*", optional = true }
-timm = { version = "*", optional = true }
-opencv-python = { version = "*", optional = true }
-transformers = { version = "*", optional = true }
-kornia = { version = "*", optional = true }
-torchmetrics = { version = "*", optional = true }
-memory-profiler = { version = "*", optional = true }
-pympler = { version = "*", optional = true }
-GPUtil = { version = "*", optional = true }
-yolov5 = { version = "*", optional = true, markers = "python_version >= '3.10'" }
-huggingface_hub = { version = "<0.25.0", optional = true }  # Resolves yolov5 incompatibility (GitLab Issue #437)
+torch = { version = "<=2.3.1", optional = true }                        # https://github.com/IBM/heart-library/issues/1
+torchvision = { version = ">=0.18.0", optional = true }
+timm = { version = "^1", optional = true }
+transformers = { version = "^4", optional = true }
+torchmetrics = { version = "^1", optional = true }
+
+# yolov5 with compatibility workarounds
+# https://github.com/fcakyon/yolov5-pip/discussions/256
+huggingface_hub = { version = "<0.25.0", optional = true }
+yolov5 = { version = ">=7.0.13", optional = true, markers = "python_version >= '3.10'" }
+
+
+# HEART Optional Dependency Groups ----------------------------------------------------------------[tool.poetry.extras]
+
+[tool.poetry.extras]
 
 # All Optional Dependencies
-[tool.poetry.extras]
+
 all = [
     "datasets",
     "jupyter",
+    "kornia",
     "matplotlib",
     "multiprocess",
     "numba",
@@ -78,7 +91,6 @@ all = [
     "opencv-python",
     "timm",
     "transformers",
-    "kornia",
     "torchmetrics",
     "yolov5",
     "huggingface_hub",
@@ -86,13 +98,20 @@ all = [
 
 
 # Optional Individual Framework Dependencies
-pytorch = ["torch", "torchvision", "torchmetrics"]
+
+pytorch = [
+    "torch",
+    "torchvision",
+    "torchmetrics"
+]
 
 
 # Optional Non-Framework Dependencies
+
 non_framework = [
     "datasets",
     "jupyter",
+    "kornia",
     "matplotlib",
     "multiprocess",
     "numba",
@@ -102,11 +121,11 @@ non_framework = [
     "opencv-python",
     "timm",
     "transformers",
-    "kornia",
 ]
 
 
 # Optional Image Classification Dependencies
+
 image_classification = [
     "torch",
     "torchvision",
@@ -115,6 +134,7 @@ image_classification = [
 
 
 # Optional Object Detection Dependencies
+
 object_detection = [
     "torch",
     "opencv-python",
@@ -125,24 +145,29 @@ object_detection = [
 
 
 # Optional Jupyter Notebook Dependencies
+
 notebooks = [
+    "datasets",
     "jupyter",
+    "kornia",
     "matplotlib",
     "pandas",
-    "kornia",
 ]
 
 
 # Optional Sphinx Dependencies
+
 docs = [
+    "furo",
+    "myst-parser",
     "sphinx",
     "sphinx-charts",
     "sphinx-design",
-    "furo"
 ]
 
 
 # Optional Script Dependencies
+
 script = [
     "memory-profiler",
     "pympler",
@@ -150,36 +175,24 @@ script = [
 ]
 
 
-# HEART Dev Tools and Configurations
+# HEART Dev Dependencies/Configurations---------------------------------------------------------[tool.poetry.group.dev]
+
 [tool.poetry.group.dev]
 optional = true
 
 
 [tool.poetry.group.dev.dependencies]
-black = "*"
-isort = "*"
-lxml = "*"
-nbmake = "*"
-prettytable = "*"
-pytest = "*"
-pytest-flake8 = "*"
-pytest-black = "*"
-pytest-isort = "*"
-pytest-mock = "*"
-pytest-cov = "*"
+nbmake = "^1"
+pre-commit = "^3"
+prettytable = "^3"
+pytest = "^8"
+pytest-mock = "^3"
+pytest-cov = "^6"
 pyright = "^1"
-
-
-[tool.black]
-line-length=120
-
-
-[tool.mypy]
-ignore_missing_imports = true
+ruff = ">=0.8.0"
 
 
 [tool.pytest.ini_options]
-flake8-max-line-length = 120
 addopts = "-vvv --cov=heart_library --cov-config=pyproject.toml --cov-report term"
 testpaths = [
     "tests",
@@ -188,6 +201,8 @@ markers = [
     "skip_framework: marks a test to be skipped for specific framework values. Valid values are ('tensorflow' 'keras' 'mxnet' 'pytorch' 'scikitlearn')",
     "framework_agnostic: marks a test to be agnostic to frameworks and run only for one default framework",
     "skip_module: Skip the test if a module is not available in the current environment",
+    "required: Unit tests marked required (with core dependencies only installed) based on documented program standards",
+    "optional: Unit tests marked optional (with core and optional dependencies installed) based on documented program standards",
 ]
 
 
@@ -198,14 +213,77 @@ omit = [
     "conftest.py",
     "src/heart_library/config.py",
 ]
-exclude_lines = [
-    "if __name__ == '__main__':",  # Exclude the main block
-    "pragma: no cover",            # Exclude lines with this pragma
-    "raise NotImplementedError",   # Exclude lines raising NotImplementedError
-    "raise AssertionError"          # Exclude lines raising AssertionError
+
+
+[tool.coverage.report]
+exclude_also = [
+    "if __name__ == '__main__':",      # Exclude the main block
+    "pragma: no cover",                # Exclude lines with this pragma
+    "raise NotImplementedError",       # Exclude lines raising NotImplementedError
+    "raise AssertionError",            # Exclude lines raising AssertionError
 ]
 
 
 [tool.pyright]
 include = ["src/heart_library"]
 stubPath = "typings/"
+
+
+# Ruff rules - https://docs.astral.sh/ruff/rules/
+[tool.ruff]
+# Exclude content as appropriate.
+exclude = [
+  ".devcontainer",
+  ".github",
+  ".vscode",
+  ".jupyter_cache",
+  "*env*",
+  "output",
+  "_build",
+  ".tox",
+  "prototype",
+]
+
+line-length = 120  # feel free to change line length per line length guidelines (CR-2).
+indent-width = 4
+
+# Program Standards defined minimum supported python version
+target-version = "py39"
+
+extend-include = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "C90", "I", "N", "D1", "D200", "D201", "D211", "D403", "D419", "UP",
+          "YTT", "ANN", "S",  "BLE", "B", "A", "COM", "C4", "T10", "ISC", "ICN", "PYI", "PT", "Q",
+          "RSE", "RET", "SLF", "SIM", "TID252", "ARG", "FIX", "PD", "FLY", "NPY", "RUF027",
+          "RUF100", "PERF"]
+
+ignore = ["ANN101","ANN102"]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+
+[tool.ruff.lint.isort]
+known-first-party = ["heart-library"] # Change to say your package.
+
+[tool.ruff.lint.mccabe]
+# Flag errors (`C901`) whenever the complexity level exceeds 5.
+max-complexity = 5
+
+[tool.ruff.lint.pydocstyle]
+# Choose from "google", "numpy", and "pep257"
+# To properly use these you should use all of "D" instead of the selection from "D" in "select" above,
+# by replacing those with "D". [See here for details.](https://docs.astral.sh/ruff/settings/#lintpydocstyle)
+convention = "google"

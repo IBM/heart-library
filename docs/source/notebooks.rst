@@ -1,7 +1,7 @@
 Notebooks
 =========
 
-HEART Library Notebooks can be found on `github <https://github.com/IBM/heart-library/notebooks>`_. Notebooks beginning with ‘get_started’ are for all T&E users and are a great place to start.
+HEART Library Notebooks can be found on `github <https://github.com/IBM/heart-library/tree/main/notebooks>`_. Notebooks beginning with ‘get_started’ are for all T&E users and are a great place to start.
 
 |
 
@@ -80,6 +80,8 @@ HEART Library Notebooks can be found on `github <https://github.com/IBM/heart-li
   **Intended Audience:** All T&E Users
 
 |
+
+.. _patch-objdet-notebook-label:
 
 ``6_adversarial_patch_for_object_detection.ipynb``
 --------------------------------------------------

@@ -18,7 +18,6 @@
 
 import logging
 
-import pytest
 from tests.utils import HEARTTestException, get_cifar10_image_classifier_pt
 from art.utils import load_dataset
 import pytest
@@ -27,6 +26,7 @@ import pytest
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.required
 def test_accuracy_perturbation_metric(heart_warning):
     try:
         from art.attacks.evasion import ProjectedGradientDescentPyTorch
@@ -72,6 +72,7 @@ def test_accuracy_perturbation_metric(heart_warning):
         heart_warning(e)
 
 
+@pytest.mark.required
 def test_robustness_bias_metric(heart_warning):
     try:
         from art.attacks.evasion import ProjectedGradientDescentPyTorch
@@ -105,6 +106,7 @@ def test_robustness_bias_metric(heart_warning):
         heart_warning(e)
 
 
+@pytest.mark.required
 def test_bb_quality_metric(heart_warning):
     try:
         from heart_library.attacks.evasion import HeartHopSkipJump
@@ -145,6 +147,7 @@ def test_bb_quality_metric(heart_warning):
         heart_warning(e)
 
 
+@pytest.mark.required
 def test_heart_map_metric(heart_warning):
     try:
         from heart_library.metrics import HeartMAPMetric
@@ -183,7 +186,8 @@ def test_heart_map_metric(heart_warning):
     except HEARTTestException as e:
         heart_warning(e)
         
-        
+
+@pytest.mark.required
 def test_heart_acc_metric(heart_warning):
     try:
         from heart_library.metrics import HeartAccuracyMetric
@@ -195,23 +199,22 @@ def test_heart_acc_metric(heart_warning):
         }
         metric = HeartAccuracyMetric(is_logits=False, **acc_args)
         assert isinstance(metric, MaiteMetric)
-        
-        gt = [np.array([0, 1, 2, 3])]
-        preds = [np.array([0, 1, 2, 3])]
+
+        gt = [np.array([0]), np.array([1]), np.array([2]), np.array([3])]
+        preds = [np.array([0]), np.array([1]), np.array([2]), np.array([3])]
         metric.update(preds, gt)
             
         result = metric.compute()
         assert result["accuracy"] == 1.0
         
         metric = HeartAccuracyMetric(is_logits=True, **acc_args)
-        with pytest.raises(np.exceptions.AxisError):
-            gt = [1, 2]
-            preds = [np.array([0, 1, 2, 3])]
+        with pytest.raises(ValueError):
+            gt = [np.array([1]), np.array([2])]
+            preds = [np.array([0]), np.array([1]), np.array([2]), np.array([3])]
             metric.update(preds, gt)
             
-        gt = [1, 2] 
-        preds = [np.array([[0, 1, 0, 0],
-                           [0, 0, 1, 0]])]
+        gt = [np.array([1]), np.array([2])]
+        preds = [np.array([0, 1, 0, 0]), np.array([0, 0, 1, 0])]
         metric.update(preds, gt)
         result = metric.compute()
         assert result["accuracy"] == 1.0

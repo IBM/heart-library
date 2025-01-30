@@ -507,8 +507,6 @@ def basic_cifar10_model():
                 self.fullyconnected.weight = torch.nn.Parameter(torch.Tensor(w_dense))
                 self.fullyconnected.bias = torch.nn.Parameter(torch.Tensor(b_dense))
 
-            # pylint: disable=W0221
-            # disable pylint because of API requirements for function
             def forward(self, x):
                 """
                 Forward function to evaluate the model

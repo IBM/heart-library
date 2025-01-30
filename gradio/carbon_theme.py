@@ -8,6 +8,11 @@ import carbon_colors
 
 
 class Carbon(Base):
+    """Sets the custom theme to be used for gradio app.
+
+    Args:
+        Base : Gradio themes base.
+    """    
     def __init__(
         self,
         *,
@@ -30,6 +35,18 @@ class Carbon(Base):
             fonts.GoogleFont("IBM Plex Mono"),
         ),
     ):
+        """Carbon initialization.
+
+        Args:
+            primary_hue (carbon_colors.Color | str, optional): This is the color which draws attention in your theme. Defaults to carbon_colors.white.
+            secondary_hue (carbon_colors.Color | str, optional): This is the color that is used for secondary elements in your theme. Defaults to carbon_colors.red.
+            neutral_hue (carbon_colors.Color | str, optional): This is the color that is used for text and other neutral elements in your theme. Defaults to carbon_colors.blue.
+            spacing_size (sizes.Size | str, optional): This sets the padding within and spacing between elements. Defaults to sizes.spacing_lg.
+            radius_size (sizes.Size | str, optional): This sets the roundedness of corners of elements. Defaults to sizes.radius_none.
+            text_size (sizes.Size | str, optional): This sets the font size of text. Defaults to sizes.text_md.
+            font (fonts.Font | str | Iterable[fonts.Font  |  str], optional): This sets the primary font of the theme. Defaults to ( fonts.GoogleFont("IBM Plex Mono"), fonts.GoogleFont("IBM Plex Sans"), fonts.GoogleFont("IBM Plex Serif"), ).
+            font_mono (fonts.Font | str | Iterable[fonts.Font  |  str], optional): This sets the monospace font of the theme. Defaults to ( fonts.GoogleFont("IBM Plex Mono"), ).
+        """    
         super().__init__(
             primary_hue=primary_hue,
             secondary_hue=secondary_hue,

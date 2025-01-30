@@ -17,6 +17,7 @@
 # SOFTWARE.
 
 import logging
+import pytest
 
 from tests.utils import HEARTTestException, get_cifar10_image_classifier_pt
 from art.utils import load_dataset
@@ -25,6 +26,7 @@ from art.utils import load_dataset
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.required
 def test_jatic_supported_attack(heart_warning):
     try:
         from art.attacks.evasion import ProjectedGradientDescentPyTorch
@@ -53,8 +55,9 @@ def test_jatic_supported_attack(heart_warning):
 
     except HEARTTestException as e:
         heart_warning(e)
-        
-        
+
+
+@pytest.mark.required        
 def test_jatic_supported_black_box_attack(heart_warning):
     try:
         from art.attacks.evasion import HopSkipJump
@@ -83,8 +86,9 @@ def test_jatic_supported_black_box_attack(heart_warning):
 
     except HEARTTestException as e:
         heart_warning(e)
- 
-        
+
+
+@pytest.mark.required
 def test_jatic_supported_patch_attack(heart_warning):
     try:
         from art.attacks.evasion import AdversarialPatchPyTorch
@@ -130,6 +134,7 @@ def test_jatic_supported_patch_attack(heart_warning):
         heart_warning(e)
 
 
+@pytest.mark.required
 def test_jatic_supported_obj_det_patch_attack(heart_warning):
     try:
         from art.attacks.evasion import ProjectedGradientDescent

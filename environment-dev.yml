@@ -5,11 +5,11 @@ channels:
   - conda-forge
 dependencies:
   # Optional Dependencies
-  - datasets>=2.18.0
+  - datasets>=3.2.0
   - jupyter>=1.1.1
   - matplotlib>=3.9
-  - multiprocess>=0.70.16
-  - numba>=0.60.0
+  - multiprocess>=0.70.0
+  - numba>=0.50.0
   - pandas>=2.2.2
   - pillow>=10.4.0
   - pycocotools>=2.0.8
@@ -19,13 +19,12 @@ dependencies:
   - pympler>=1.1
   - gputil>=1.4.0
   - pytorch>=2.1.1,<=2.3.1
-  - torchvision<0.19
+  - torchvision>=0.18.0
   # Yolov5 cannot support huggingface_hub>=0.25.0
   - huggingface_hub<0.25.0
   # Dev
-  - isort>=5
   - pytest>=8.3
-  - pytest-cov>=4.1
+  - pytest-cov>=6.0
   # Pip Overrides (Fixes known issues or unavailable via conda-forge)
   - pip
   - pip:
@@ -36,4 +35,5 @@ dependencies:
     - memory-profiler>=0.61.0
     # Yolov5 does not support python 3.9 due to AWS-CLI dependencies (boto3/botocore/urllib3)
     # See https://github.com/fcakyon/yolov5-pip/discussions/256 for more information
-    - yolov5>=7.0.13
+    # Uncomment the following yolov5 pin if required:
+    # yolov5>=7.0.13

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 
 class Color:
+    """Defines colors to be used within app.py
+    """    
     all = []
 
     def __init__(

@@ -1,0 +1,28 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: mixed-line-ending
+        name: mixed-line-ending-fixer
+        description: "execute line ending fixer"
+        files: ^src/
+        args: [--fix=lf]
+      - id: end-of-file-fixer
+        name: end-of-file-fixer
+        description: "execute end of file fixer"
+        files: ^src/
+        args: []
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # ruff version must be derived from poetry.lock selected version
+    rev: v0.8.1
+    hooks:
+      - id: ruff
+        name: ruff-lint
+        description: "execute ruff linting"
+        files: ^src/
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+        name: ruff-format
+        description: "execute ruff-format"
+        files: ^src
+        args: []

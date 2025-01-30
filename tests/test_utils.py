@@ -25,6 +25,7 @@ import pytest
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.required
 def test_process_inputs_for_art(heart_warning):
     try:
         from heart_library.utils import process_inputs_for_art
@@ -134,10 +135,88 @@ def test_process_inputs_for_art(heart_warning):
         assert isinstance(y, np.ndarray)
         assert isinstance(m, list)
 
+        # object detection
+        from torchvision.transforms import transforms
+        from heart_library.estimators.object_detection import JaticPyTorchObjectDetector
+
+        MEAN = [0.485, 0.456, 0.406]
+        STD = [0.229, 0.224, 0.225] 
+        preprocessing=(MEAN, STD)
+
+        detector = JaticPyTorchObjectDetector(model_type="detr_resnet50",
+                                            device_type='cpu',
+                                            input_shape=(3, 800, 800),
+                                            clip_values=(0, 1), 
+                                            attack_losses=( "loss_ce",
+                                                "loss_bbox",
+                                                "loss_giou",), 
+                                            preprocessing=preprocessing)
+
+        data = load_dataset("guydada/quickstart-coco", split="train[25:27]")
+
+        preprocess = transforms.Compose([
+            transforms.Resize(800),
+            transforms.CenterCrop(800),
+            transforms.ToTensor()
+        ])
+
+        data = data.map(lambda x: {"image": preprocess(x["image"]), "label": None})
+        detections = detector(sample_data)
+        resnet_images = data["image"]
+        data = {"images": resnet_images, "labels": detections}
+        x, y, m = process_inputs_for_art(data)
+        assert isinstance(x, list)
+        assert isinstance(y, list)
+        assert isinstance(m, list)
+
+        data = {"images": resnet_images, "labels": [np.empty(2)]}
+        x, y, m = process_inputs_for_art(data)
+        assert isinstance(x, list)
+        assert isinstance(y, np.ndarray)
+        assert isinstance(m, list)  
+
+        data = {"images": resnet_images, "labels": [[]]}
+        x, y, m = process_inputs_for_art(data)
+        assert isinstance(x, list)
+        assert y is None
+        assert isinstance(m, list)
+
+        # tuple object detection
+        data = resnet_images, detections, []
+        x, y, m = process_inputs_for_art(data)
+        assert isinstance(x, np.ndarray)
+        assert isinstance(y, list)
+        assert isinstance(m, list)
+
+        data = resnet_images, [np.empty(2)], []
+        x, y, m = process_inputs_for_art(data)
+        assert isinstance(x, np.ndarray)
+        assert isinstance(y, np.ndarray)
+        assert isinstance(m, list)  
+
+        data = resnet_images, [[]], []
+        x, y, m = process_inputs_for_art(data)
+        assert isinstance(x, np.ndarray)
+        assert y is None
+        assert isinstance(m, list)
+
+        # sequence
+        data = [np.asarray(resnet_images)[0]]
+        x, y, m = process_inputs_for_art(data)
+        assert isinstance(x, np.ndarray)
+        assert y is None
+        assert isinstance(m, list)
+
     except HEARTTestException as e:
         heart_warning(e)
+    
+    # dataset
+    with pytest.raises(ValueError):
+        to_image = lambda x: transforms.ToPILImage()(torch.Tensor(x))
+        process_inputs_for_art(to_image)
 
 
+@pytest.mark.required
 def test_hf_dataset_to_maite(heart_warning):
     try:
         from heart_library.utils import hf_dataset_to_maite
@@ -148,12 +227,48 @@ def test_hf_dataset_to_maite(heart_warning):
         data = load_dataset("cifar10", split="test[0:10]")
         maite_dataset = hf_dataset_to_maite(data)
         assert isinstance(maite_dataset, ic.Dataset)
-        
+
+        meta_label = "image_file_path"
+        image_label = "image"
+        target_label = "label"
+
+        data = load_dataset("mnist", split="test[0:10]")
+        maite_dataset = hf_dataset_to_maite(data, image_label = image_label, target_label = target_label)
+        assert isinstance(maite_dataset, ic.Dataset)
+
+        # indices
+        indices = range(5)
+
+        # image label in dataset features
+        maite_dataset = hf_dataset_to_maite(data, image_label = image_label, target_label = target_label, indices = indices)
+        assert isinstance(maite_dataset, ic.Dataset)
+
+        # "image" in dataset features
+        maite_dataset = hf_dataset_to_maite(data, target_label = target_label, indices = indices)
+        assert isinstance(maite_dataset, ic.Dataset)
+
+        # meta
+
+        data = load_dataset("AI-Lab-Makerere/beans", split="test[0:5]")
+        maite_dataset = hf_dataset_to_maite(data, image_label = image_label, meta_label = meta_label)
+        assert isinstance(maite_dataset, ic.Dataset)
+
+        maite_dataset = hf_dataset_to_maite(data, image_label = image_label, meta_label = meta_label, indices = indices)
+        assert isinstance(maite_dataset, ic.Dataset)
+
 
     except HEARTTestException as e:
         heart_warning(e)
+    
+    with pytest.raises(ValueError):
+        data = load_dataset("squad", split="validation[0:10]")
+        maite_dataset = hf_dataset_to_maite(data)
+
+        data = load_dataset("squad", split="validation[0:10]")
+        maite_dataset = hf_dataset_to_maite(data, indices = indices)
 
 
+@pytest.mark.required
 def test_subset_to_maite(heart_warning):
     try:
         
@@ -164,13 +279,16 @@ def test_subset_to_maite(heart_warning):
         # define torchvision subset dataset and convert to art
         data = torchvision.datasets.CIFAR10("../data", train=False, download=True)
         maite_dataset = torch.utils.data.Subset(data, list(range(10)))
+        # require id metadata for dataset
+        maite_dataset.metadata = {"id": "test_id"}
         assert isinstance(maite_dataset, ic.Dataset)
         
 
     except HEARTTestException as e:
         heart_warning(e)
         
-        
+
+@pytest.mark.required
 def test_image_dataset(heart_warning):
     try:
         from heart_library.utils import ImageDataset

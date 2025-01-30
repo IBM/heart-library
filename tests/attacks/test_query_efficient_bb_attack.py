@@ -17,8 +17,8 @@
 # SOFTWARE.
 
 import logging
-
 import pytest
+
 from tests.utils import HEARTTestException, get_cifar10_image_classifier_pt
 from art.utils import load_dataset
 
@@ -26,6 +26,7 @@ from art.utils import load_dataset
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.required
 def test_query_efficient_bb_attack(heart_warning):
     try:
         from heart_library.attacks.attack import JaticAttack

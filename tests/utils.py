@@ -10,11 +10,11 @@ from tqdm.auto import tqdm
 
 from heart_library import config
 
-DATASET_TYPE = Tuple[  # pylint: disable=C0103
+DATASET_TYPE = Tuple[
     Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray], float, float
 ]
 
-CLIP_VALUES_TYPE = Tuple[Union[int, float, np.ndarray], Union[int, float, np.ndarray]]  # pylint: disable=C0103
+CLIP_VALUES_TYPE = Tuple[Union[int, float, np.ndarray], Union[int, float, np.ndarray]]
 
 logger = logging.getLogger(__name__)
 
@@ -95,8 +95,6 @@ def get_mnist_image_classifier_pt(from_logits=False, load_init=True, use_maxpool
                     self.fullyconnected.weight = torch.nn.Parameter(torch.Tensor(np.transpose(w_dense)))
                     self.fullyconnected.bias = torch.nn.Parameter(torch.Tensor(b_dense))
 
-            # pylint: disable=W0221
-            # disable pylint because of API requirements for function
             def forward(self, x):
                 """
                 Forward function to evaluate the model
@@ -166,8 +164,6 @@ def get_mnist_image_classifier_pt(from_logits=False, load_init=True, use_maxpool
                     self.fullyconnected.weight = torch.nn.Parameter(torch.Tensor(w_dense))
                     self.fullyconnected.bias = torch.nn.Parameter(torch.Tensor(b_dense))
 
-            # pylint: disable=W0221
-            # disable pylint because of API requirements for function
             def forward(self, x):
                 """
                 Forward function to evaluate the model
@@ -264,8 +260,6 @@ def get_cifar10_image_classifier_pt(from_logits=False, is_jatic=True):
             self.fullyconnected.weight = torch.nn.Parameter(torch.Tensor(w_dense))
             self.fullyconnected.bias = torch.nn.Parameter(torch.Tensor(b_dense))
 
-        # pylint: disable=W0221
-        # disable pylint because of API requirements for function
         def forward(self, x):
             """
             Forward function to evaluate the model
@@ -480,11 +474,10 @@ def get_file(
                     from six.moves.urllib.error import HTTPError, URLError
                     from six.moves.urllib.request import urlretrieve
 
-                    ssl._create_default_https_context = ssl._create_unverified_context  # pylint: disable=W0212
+                    ssl._create_default_https_context = ssl._create_unverified_context
 
                     if verbose:
                         with tqdm() as t_bar:
-                            # pylint: disable=W0640
                             last_block = [0]
 
                             def progress_bar(blocks: int = 1, block_size: int = 1, total_size: Optional[int] = None):
@@ -535,7 +528,7 @@ def _extract(full_path: str, path: str) -> bool:
             archive = tarfile.open(full_path, "r:gz")
     elif full_path.endswith("zip"):  # pragma: no cover
         if zipfile.is_zipfile(full_path):
-            archive = zipfile.ZipFile(full_path)  # pylint: disable=R1732
+            archive = zipfile.ZipFile(full_path)
         else:
             return False
     else:

@@ -17,6 +17,7 @@
 # SOFTWARE.
 
 import logging
+import pytest
 
 from tests.utils import HEARTTestException, get_cifar10_image_classifier_pt
 from art.utils import load_dataset
@@ -24,7 +25,8 @@ from art.utils import load_dataset
 
 logger = logging.getLogger(__name__)
 
-     
+
+@pytest.mark.required
 def test_jatic_supported_black_box_attack(heart_warning):
     try:
         from heart_library.attacks.evasion import HeartHopSkipJump
@@ -53,6 +55,11 @@ def test_jatic_supported_black_box_attack(heart_warning):
 
         assert np.argmax(jptc(x_adv[0])) == 3
         assert np.argmax(jptc(img)) != np.argmax(jptc(x_adv[0]))
+
+        x_adv_init = np.zeros(x.shape, dtype=np.float32)
+        mask = np.zeros(x.shape, dtype=np.float32)
+        attack = hsj.generate(x, x_adv_init = x_adv_init, mask = mask)
+        assert isinstance(attack, np.ndarray)
 
     except HEARTTestException as e:
         heart_warning(e)

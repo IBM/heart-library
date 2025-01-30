@@ -17,12 +17,14 @@
 # SOFTWARE.
 
 import logging
+import pytest
 
 from tests.utils import HEARTTestException
 
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.required
 def test_jatic_supported_obj_det_bb_patch_attack(heart_warning):
     try:
         from heart_library.estimators.object_detection import JaticPyTorchObjectDetector

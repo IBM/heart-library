@@ -25,6 +25,7 @@ from tests.utils import HEARTTestException, get_mnist_image_classifier_pt
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.required
 @pytest.mark.framework_agnostic
 def test_import_art(heart_warning):
     try:
@@ -37,13 +38,14 @@ def test_import_art(heart_warning):
         heart_warning(e)
 
 
+@pytest.mark.required
 @pytest.mark.framework_agnostic
 def test_import_heart(heart_warning):
     try:
 
         import heart_library
 
-        assert heart_library.__version__ == "0.4.4"
+        assert heart_library.__version__ == "0.5.0"
 
     except HEARTTestException as e:
         heart_warning(e)
@@ -57,6 +59,7 @@ def fix_get_mnist_subset(get_mnist_dataset):
     yield x_train_mnist[:n_train], y_train_mnist[:n_train], x_test_mnist[:n_test], y_test_mnist[:n_test]
 
 
+@pytest.mark.required
 def test_heart_classifier_ext(fix_get_mnist_subset):
     (x_train_mnist, _, _, _) = fix_get_mnist_subset
     classifier = get_mnist_image_classifier_pt()

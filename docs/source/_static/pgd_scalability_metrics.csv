@@ -1,0 +1,9 @@
+Execution Date,Dataset,Model,Attack,Device,Num samples,Peak memory,Duration (seconds),Benign Acc,Advers Acc
+27/06/2024,MITLL/LADI-v2-dataset,MITLL/LADI-v2-classifier-small,PGD,CPU,1000,6296.9,3522,81.39,46.4
+27/06/2024,MITLL/LADI-v2-dataset,MITLL/LADI-v2-classifier-small,PGD,CPU,10000,11642.1,32945,83.46,46.84
+13/11/2024,MITLL/LADI-v2-dataset,MITLL/LADI-v2-classifier-small,PGD,GPU,1000,6298,1370,81.39,46.6
+13/11/2024,MITLL/LADI-v2-dataset,MITLL/LADI-v2-classifier-small,PGD,GPU,10000,6483,1706,81.28,46.3
+13/11/2024,MITLL/LADI-v2-dataset,MITLL/LADI-v2-classifier-large,PGD,CPU,1000,,,,
+13/11/2024,MITLL/LADI-v2-dataset,MITLL/LADI-v2-classifier-large,PGD,CPU,10000,,,,
+13/11/2024,MITLL/LADI-v2-dataset,MITLL/LADI-v2-classifier-large,PGD,GPU,1000,7805.9,5185.9,82.02,33.57
+13/11/2024,MITLL/LADI-v2-dataset,MITLL/LADI-v2-classifier-large,PGD,GPU,10000,8133.7,5419.3,81.74,33.87

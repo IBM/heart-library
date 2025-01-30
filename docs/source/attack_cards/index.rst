@@ -11,3 +11,4 @@ Descriptions, metrics, scalability, and other information on the various attacks
    :maxdepth: 2
 
    projected_gradient_descent
+   patch_attack

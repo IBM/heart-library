@@ -26,6 +26,7 @@ import sys
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.required
 def test_jatic_detr(heart_warning):
     try:
         from maite.protocols.object_detection import Model, ObjectDetectionTarget
@@ -84,6 +85,7 @@ def test_jatic_detr(heart_warning):
         heart_warning(e)
         
 
+@pytest.mark.required
 def test_jatic_faster_rcnn(heart_warning):
     try:
         from maite.protocols.object_detection import Model, ObjectDetectionTarget
@@ -147,7 +149,9 @@ def test_jatic_faster_rcnn(heart_warning):
         
     except HEARTTestException as e:
         heart_warning(e)
-        
+
+
+@pytest.mark.required
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="YOLOv5 requires python version 3.10 or above.")
 def test_jatic_yolo(heart_warning):
     try:
@@ -203,6 +207,7 @@ def test_jatic_yolo(heart_warning):
         heart_warning(e)
 
 
+@pytest.mark.required
 def test_supported_detectors(heart_warning):
     try:
         from heart_library.estimators.object_detection import (SUPPORTED_DETECTORS,

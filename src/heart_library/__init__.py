@@ -1,26 +1,22 @@
-"""
-The HEART extension.
-"""
+"""The HEART extension."""
 
 import logging.config
 from logging import Logger
-from typing import Any, Dict
+from typing import Any
 
 # Project Imports
 
 # Semantic Version
-__version__ = "0.4.4"
+__version__ = "0.5.0"
 
-# pylint: disable=C0103
-
-LOGGING: Dict[str, Any] = {
+LOGGING: dict[str, Any] = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
         "std": {
             "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
             "datefmt": "%Y-%m-%d %H:%M",
-        }
+        },
     },
     "handlers": {
         "default": {
