@@ -1,21 +1,21 @@
-heart\_library.metrics package
-==============================
+# heart_library.metrics package
 
-Submodules
-----------
+## Submodules
 
-heart\_library.metrics.metrics module
--------------------------------------
+## heart_library.metrics.metrics module
 
+```{eval-rst}
 .. automodule:: heart_library.metrics.metrics
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-Module contents
----------------
+## Module contents
 
+```{eval-rst}
 .. automodule:: heart_library.metrics
    :members:
    :undoc-members:
    :show-inheritance:
+```
