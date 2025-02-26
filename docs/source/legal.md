@@ -1,10 +1,8 @@
 Legal
 =====
 
----------------------------------------
-_HEART is licensed under the MIT License_
+> _HEART is licensed under the MIT License_
 
----------------------------------------
 
 
 Copyright (c) 2024 International Business Machines

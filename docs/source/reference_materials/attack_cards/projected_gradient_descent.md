@@ -63,15 +63,15 @@
         The examples of time and compute requirements below cover a variety of models and datasets to guide users' expectations. . These data can be used for resource planning for model testing and evaluation (T&E).
 
         .. csv-table::
-           :file: ../_static/pgd_scalability_metrics.csv
+           :file: ../../_static/pgd_scalability_metrics.csv
            :widths: 10, 10, 10, 10, 10, 10, 10, 10, 10, 10
            :header-rows: 1
            :class: longtable
 
         .. raw:: html
 
-           <iframe allowtransparency="true" src="../_static/pgd_plot_memory.html" height="450px" width="100%"></iframe>
-           <iframe allowtransparency="true" src="../_static/pgd_plot_duration.html" height="450px" width="100%"></iframe>
+           <iframe allowtransparency="true" src="../../_static/pgd_plot_memory.html" height="450px" width="100%"></iframe>
+           <iframe allowtransparency="true" src="../../_static/pgd_plot_duration.html" height="450px" width="100%"></iframe>
 
 ```
 
