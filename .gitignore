@@ -92,6 +92,8 @@ ENV/
 
 # ignore pictures
 *.jpg
+!docs/source/_static/*.jpg
+
 demo/pics/*
 
 # Things TF might pull when testing
