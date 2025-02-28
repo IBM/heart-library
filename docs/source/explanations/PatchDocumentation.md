@@ -18,7 +18,7 @@ $$ f(x+\delta) \neq f(x) \text{ [1,12].}$$
 
 Figure 1. depicts an example from [1], where the authors depict adversarial examples for different classes, here the numbers from one to two or three, respectively.
 
-```{figure} figures/MNISTAttackExample.jpg
+```{figure} ../_static/MNISTAttackExample.jpg
 :scale: 50 %
 
 Figure 1: MNIST example [1]. Along the y-axis (left) is the true class, and the x-axis (on top) denotes the classification output of a model.
@@ -36,7 +36,7 @@ While these metrics integrate easily into optimization frameworks, they do not c
 In addition, ({math}`L_p`) norms may also not correspond to practically implementable changes [3,12].
 Another, convenient solution is thus, as suggested by Lian et al [2], to constrain the perturbation to a specific area of the image: to craft an adversarial patch.
 
-```{figure} figures/AdvAirplanes.jpg
+```{figure} ../_static/AdvAirplanes.jpg
 :scale: 95 %
 
   Figure 2: Adversarial Patches on an object detector detecting planes [5]. The success of the patch is visible as the purple bounding boxes around planes are missing. On the left, the patches (light green/blue) are on top of the planes, on the right, the patches are next to them.
@@ -47,7 +47,7 @@ One may be surprised that such patches are malicious as they are easy to spot.
 Yet, a human overseeing the system does not necessarily expect these patches to influence the system.
 Below is an additional example from Kong et al. [2], where the patch is a billboard affecting an autonomous vehicle’s AI. Kong et al. report that the poster affects the predicted steering angle, resulting in a wrong prediction being off by up to 17°. Assuming an angle off by around 10°, observed after 15 frames, and that the vehicle has generous 3.3 foot or 1 meter on its side, the vehicle needs 18.8 foot or 5.75 meter to leave its lane. Assuming a velocity of 30km/h or 12m/h, this distance is travelled in slightly more than 1 second.
 
-```{figure} figures/AdvBillboard.jpg
+```{figure} ../_static/AdvBillboard.jpg
 :scale: 50 %
 
    Figure 3: Adversarial Billboard [2]. At the top left, the original billboard is depicted, at the top right the adversarial counterpart. In the bottom, the billboard is depicted next to a road, as visible to vehicle and driver.
