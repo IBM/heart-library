@@ -3,20 +3,58 @@
 % You can adapt this file completely to your liking, but it should at least
 % contain the root `toctree` directive.
 
-# Welcome to HEART-library's documentation!
+# Welcome to HEART documentation!
 
-HEART is a Python extension library for Machine Learning Security that builds on the popular Adversarial Robustness algorithms in [ART](https://github.com/Trusted-AI/adversarial-robustness-toolbox).
+HEART is an open-source python library that provides AI developers and researchers with testing and evaluation (T&E) tools to assess AI model performance under adversarial attacks and improve model resiliency. HEART builds on the popular AI Security and Adversarial Robustness algorithms in [ART](https://github.com/Trusted-AI/adversarial-robustness-toolbox).
 
-The extension library is operation-ready and tailored for real-world DoD use cases, offering essential adversarial robustness methods within the three evaluation tool dimensions: physical realizability, perturbation type, black/white box. HEART allows the user to leverage core ART algorithms, while providing additional benefits to the AI Test & Evaluation (T&E) engineer:
+The extension library is operation-ready and tailored for real-world DoD use cases, offering essential adversarial robustness methods within the three evaluation tool dimensions: physical realizability, perturbation type, black/white box. To start evaluating your model’s AI Security robustness, refer to the resources below!
 
-- Support for T&E of models for DoD use cases (developers, researchers and evaluators focused on adversarial machine learning capabilities)
-- Alignment to MAITE protocols to access this subset of ART and other JATIC tools for seamless T&E workflows
-- Essential subset of adversarial robustness methods for targeted AI security coverage
-- Assessment quality assurance in the form of metadata
-- In-depth support for users in the form of guides and examples
-- Front-end application for low-code users: [HEART Gradio Application](https://huggingface.co/spaces/CDAO/HEART-Gradio)
 
-Our extension is operation-ready for real-world DoD use cases, offering essential AR methods within the three evaluation tool dimensions: physical realizability, perturbation type, black/white box.
+```{card} Quick Start
+:link: quick_start
+:link-type: doc
+
+Quick guide to install and set up the HEART library.
+```
+
+
+## Guides
+Not sure where to start? We have compiled plenty of materials to guide you on your AI Security T&E journey!
+
+```{card} Tutorials
+:link: tutorials/index
+:link-type: doc
+
+If you are new to AI Security, the tutorials will introduce you to key concepts and workflows.
+```
+
+```{card} How To Guides
+:link: how_to_guides/index
+:link-type: doc
+
+If you are familiar with AI Security and know what you want to do, the how-to guides will show you step-by-step how to do it with HEART tools.
+```
+
+```{card} Explanations
+:link: explanations/index
+:link-type: doc
+
+The explanations provide in-depth descriptions of relevant technical concepts.
+```
+
+```{card} Reference Materials
+:link: reference_materials/index
+:link-type: doc
+
+References provide further resources for your understanding of both AI Security concepts and HEART tools.
+```
+
+
+
+## Additional Resources
+-	HEART is a curated subset of tools from the [Adversarial Robustness Toolbox](https://github.com/Trusted-AI/adversarial-robustness-toolbox), an open-source library maintained by Linux Foundation AI and Data Foundation.
+-	HEART fits into a broader ecosystem of T&E tools as a part of the Joint AI Test Infrastructure Capability (JATIC). Learn about the program and other capabilities [here](https://cdao.pages.jatic.net/public/).
+
 
 ## Contents
 
@@ -24,7 +62,7 @@ Our extension is operation-ready for real-world DoD use cases, offering essentia
 :caption: 'Contents:'
 :maxdepth: 4
 
-setup_and_access
+quick_start
 how_to_guides/index
 tutorials/index
 explanations/index
@@ -34,7 +72,7 @@ glossary/index
 legal
 ```
 
-## Additional Resources
+## Other pages
 
 - {ref}`genindex`
 - {ref}`modindex`
