@@ -1,6 +1,6 @@
 # Patch Attack
 
-**Attack type:** white-box (supported by HEART), black-box (currently supported by ART), evasion, digital or physical. For more information on types of patch attack see test {doc}`these more detailed explanataions <../../explanations/PatchDocumentation>`.
+**Attack type:** white-box (supported by HEART), black-box (currently supported by ART), evasion, digital or physical. For more information on types of patch attack see test {doc}`these more detailed explanations <../../explanations/PatchDocumentation>`.
 
 **Best for:** patch attacks are localized and unbounded, making them easy to transfer to the physical world (while remaining applicable in the digital space).
 
