@@ -1,7 +1,7 @@
 Explanations
 ============
 
-Explanation materials will provide clarity and context for key concepts included in the HEART-library package.
+Explanation materials will provide clarity and context for key concepts that will help users understand in the HEART-library package.
 
 
 ```{toctree}
