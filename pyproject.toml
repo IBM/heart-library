@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "heart-library"
-version = "0.5.0"
+version = "0.6.0"
 description = "Hardened Extension of the Adversarial Robustness Toolbox (HEART) supports assessment of adversarial AI vulnerabilities in Test & Evaluation workflows."
 readme = "README.md"
 license = "MIT"
@@ -29,40 +29,40 @@ heart_library = ["py.typed"]
 [tool.poetry.dependencies]
 
 python = ">=3.9, <3.12"
-adversarial-robustness-toolbox = ">=1.17.1, <1.19.0"    # GitLab issue 561
+adversarial-robustness-toolbox = ">=1.19.1"
+datasets = ">=3.2.0"
 maite = ">=0.7.0"
-numpy = ">=1.18.5, <2"
+multiprocess = ">=0.70.0"
+numpy = ">=1.18.5,<2"
+pillow = ">=11.0.0"
 scikit-learn = ">=0.22.2"
-six = "^1"
-setuptools = "^75"
-tqdm = "^4"
+six = ">=1.0.0"
+setuptools = ">=75"
+tqdm = ">=4.0.0"
+transformers = ">=4.0.0, <4.49.0"
 
 
 # HEART Optional Dependencies ----------------------------------------------------[tool.poetry.dependencies (optional)]
 
-datasets = { version = ">=2.18.0", optional = true }
 furo = { version = "^2024", optional = true }
 GPUtil = { version = "^1", optional = true }
 jupyter = { version = "^1", optional = true}
-kornia = { version = ">=0.7.3", optional = true }
 matplotlib = { version = "^3", optional = true }
 memory-profiler = { version = ">=0.61.0", optional = true }
-multiprocess = { version = ">=0.70.0", optional = true }
 myst-parser = { version = "^3", optional = true }
-numba = { version = ">=0.50.0", optional = true }
 opencv-python = { version = "^4", optional = true }
 pandas = { version = "^2", optional = true }
-Pillow = { version = "^10", optional = true }
 pycocotools = { version = "^2", optional = true }
 pympler = { version = "^1", optional = true }
+qiskit-sphinx-theme = { version = ">=2.0.0", optional = true }
 sphinx = { version = ">=4.2.0", optional = true }
 sphinx-charts = { version = ">=0.2.1", optional = true }
+sphinx-copybutton = { version = ">=0.5.2", optional = true }
 sphinx-design = { version = ">=0.6.1", optional = true }
-torch = { version = "<=2.3.1", optional = true }                        # https://github.com/IBM/heart-library/issues/1
-torchvision = { version = ">=0.18.0", optional = true }
 timm = { version = "^1", optional = true }
-transformers = { version = "^4", optional = true }
+torch = { version = ">2.3.1", optional = true }
 torchmetrics = { version = "^1", optional = true }
+torchvision = { version = ">=0.18.0", optional = true }
 
 # yolov5 with compatibility workarounds
 # https://github.com/fcakyon/yolov5-pip/discussions/256
@@ -77,12 +77,9 @@ yolov5 = { version = ">=7.0.13", optional = true, markers = "python_version >= '
 # All Optional Dependencies
 
 all = [
-    "datasets",
     "jupyter",
-    "kornia",
     "matplotlib",
     "multiprocess",
-    "numba",
     "pandas",
     "Pillow",
     "pycocotools",
@@ -109,12 +106,9 @@ pytorch = [
 # Optional Non-Framework Dependencies
 
 non_framework = [
-    "datasets",
     "jupyter",
-    "kornia",
     "matplotlib",
     "multiprocess",
-    "numba",
     "pandas",
     "Pillow",
     "pycocotools",
@@ -147,9 +141,7 @@ object_detection = [
 # Optional Jupyter Notebook Dependencies
 
 notebooks = [
-    "datasets",
     "jupyter",
-    "kornia",
     "matplotlib",
     "pandas",
 ]
@@ -160,8 +152,11 @@ notebooks = [
 docs = [
     "furo",
     "myst-parser",
+    "qiskit-sphinx-theme",
+    "sphinx-copybutton",
     "sphinx",
     "sphinx-charts",
+    "sphinx-copybutton",
     "sphinx-design",
 ]
 
@@ -175,11 +170,28 @@ script = [
 ]
 
 
-# HEART Dev Dependencies/Configurations---------------------------------------------------------[tool.poetry.group.dev]
+# HEART Dev Dependencies/Configurations-----------------------------------------------------[tool.poetry.group.<group>]
+
+[tool.poetry.group.dev-pytorch]
+optional = true
+
+[tool.poetry.group.dev-pytorch.dependencies]
+pycocotools = "^2"
+torch = ">2.3.1"
+torchmetrics = "^1"
+torchvision = ">=0.18.0"
+
+
+[tool.poetry.group.dev-yolov5]           
+optional=true
+
+[tool.poetry.group.dev-yolov5.dependencies]
+huggingface_hub = "<0.25.0"
+yolov5 = { version = ">=7.0.13", markers = "python_version >= '3.10'" }
+
 
 [tool.poetry.group.dev]
 optional = true
-
 
 [tool.poetry.group.dev.dependencies]
 nbmake = "^1"
@@ -193,7 +205,7 @@ ruff = ">=0.8.0"
 
 
 [tool.pytest.ini_options]
-addopts = "-vvv --cov=heart_library --cov-config=pyproject.toml --cov-report term"
+addopts = "-vvv --cov=heart_library --cov-config=pyproject.toml --cov-report=term --cov-report=term-missing"
 testpaths = [
     "tests",
 ]
@@ -266,6 +278,9 @@ unfixable = []
 
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN001", "ANN201", "ANN202", "ANN204", "D", "S101"]
 
 [tool.ruff.format]
 quote-style = "double"

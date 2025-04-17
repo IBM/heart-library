@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 42 42">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#HEART_Gradient);
+      }
+
+      .cls-2 {
+        fill: url(#HEART_Gradient-2);
+      }
+
+      .cls-3 {
+        fill: #161616;
+      }
+    </style>
+    <linearGradient id="HEART_Gradient" data-name="HEART Gradient" x1="0" y1="21" x2="42" y2="21" gradientUnits="userSpaceOnUse">
+      <stop offset=".1" stop-color="#08bdba"/>
+      <stop offset=".9" stop-color="#0f62fe"/>
+    </linearGradient>
+    <linearGradient id="HEART_Gradient-2" data-name="HEART Gradient" x1="8.64" y1="21" x2="33.36" y2="21" xlink:href="#HEART_Gradient"/>
+  </defs>
+  <g>
+    <rect class="cls-3" x="0" width="42" height="42" rx="4" ry="4"/>
+    <path class="cls-1" d="M38,1c1.65,0,3,1.35,3,3v34c0,1.65-1.35,3-3,3H4c-1.65,0-3-1.35-3-3V4c0-1.65,1.35-3,3-3h34M38,0H4C1.8,0,0,1.8,0,4v34c0,2.2,1.8,4,4,4h34c2.2,0,4-1.8,4-4V4C42,1.8,40.2,0,38,0h0Z"/>
+  </g>
+  <path id="white-paper" class="cls-2" d="M16,20.51l-3.25-3.26.51-.51,2.74,2.75,6.74-6.74.51.51-7.25,7.25ZM33.36,36V12c0-.1-.04-.19-.1-.25l-6-6c-.07-.07-.16-.11-.26-.11H9c-.2,0-.36.16-.36.36v30c0,.2.16.36.36.36h24c.2,0,.36-.16.36-.36ZM9.36,6.36h17.28v5.64c0,.2.16.36.36.36h5.64v23.28H9.36V6.36ZM27.36,6.87l4.77,4.77h-4.77v-4.77ZM29,31.64H13v.72h16v-.72ZM29,27.64H13v.72h16v-.72ZM29,23.64H13v.72h16v-.72ZM17,9.64h-4v.72h4v-.72Z"/>
+</svg>

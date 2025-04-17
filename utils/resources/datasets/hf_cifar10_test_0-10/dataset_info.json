@@ -1,0 +1,62 @@
+{
+  "builder_name": "parquet",
+  "citation": "",
+  "config_name": "plain_text",
+  "dataset_name": "cifar10",
+  "dataset_size": 136635490,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/cifar10@0b2714987fa478483af9968de7c934580d0bb9a2/plain_text/train-00000-of-00001.parquet": {
+      "num_bytes": 119705255,
+      "checksum": null
+    },
+    "hf://datasets/cifar10@0b2714987fa478483af9968de7c934580d0bb9a2/plain_text/test-00000-of-00001.parquet": {
+      "num_bytes": 23940850,
+      "checksum": null
+    }
+  },
+  "download_size": 143646105,
+  "features": {
+    "img": {
+      "_type": "Image"
+    },
+    "label": {
+      "names": [
+        "airplane",
+        "automobile",
+        "bird",
+        "cat",
+        "deer",
+        "dog",
+        "frog",
+        "horse",
+        "ship",
+        "truck"
+      ],
+      "_type": "ClassLabel"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 280281595,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 113861310,
+      "num_examples": 50000,
+      "dataset_name": "cifar10"
+    },
+    "test": {
+      "name": "test",
+      "num_bytes": 22774180,
+      "num_examples": 10000,
+      "dataset_name": "cifar10"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

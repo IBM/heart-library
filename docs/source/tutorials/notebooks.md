@@ -1,4 +1,4 @@
-# Notebooks
+# Example Notebooks
 
 HEART Library Notebooks can be found on [github](https://github.com/IBM/heart-library/tree/main/notebooks). Notebooks beginning with ‘get_started’ are for all T&E users and are a great place to start.
 

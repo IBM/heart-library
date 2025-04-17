@@ -6,52 +6,43 @@
 
 **Attack summary:** Patch attacks are carried out by adding an object to an image that degrades the results of a visual model ingesting that image, either producing the wrong classification, or failing to detect a relevant object within the image. Adversarial patches can be created with access to only the model's output, and are not norm-bound or specific to a single image. Patch attacks are highly versatile and can be implemented both digitally and physically.
 
-```{eval-rst}
-.. grid:: 2
-    :gutter: 1
-    :margin: 0
+::::{grid} 2
 
-    .. grid-item-card::  Compatibility considerations
+:::{grid-item-card} Compatibility considerations
+- **Task:** Object detection vs image classification
+- **Modality:** HEART currently only supports images, ART supports images and video
+- **Data:** Single or three color channel images, of standardized dimensions. Specify pixels in range 0-1 or 0-255, matching input data
+- **Model:** Computer vision model
+:::
 
-        - **Task:** Object detection or classification
-        - **Modality:** HEART currently only supports images, ART supports images and video
-        - **Data:** Single or three color channel images, of standardized dimensions. Specify pixels in range 0-1 or 0-255, matching input data
-        - **Model:** Computer vision models
+:::{grid-item-card} Getting started
+To get started with Patch attacks, see the :ref:`patch-notebook-label` notebook, available [here](https://github.com/IBM/heart-library/blob/main/notebooks/4_get_started_adversarial_patch.ipynb).
 
-    .. grid-item-card::  Getting started
+For increased relevance to your use case, replace the selected hugging face model with your own model, and the test data set with a test dataset of your own.
+:::
 
-        To get started with Patch attacks, see the :ref:`patch-notebook-label` notebook, available `here <https://github.com/IBM/heart-library/blob/main/notebooks/4_get_started_adversarial_patch.ipynb>`__.
+::::
 
-        For increased relevance to your use case, replace the selected hugging face model with your own model, and the test data set with a test dataset of your own.
+::::{grid} 2
 
-    .. grid-item-card::  Interpreting the results
+:::{grid-item-card} Interpreting the results
+A model's robustness can be assessed by comparing performance before and after an attack. For details on how to evaluate model performance and attack effectiveness, see this explanation of [evaluation metrics](/explanations/evaluation_metrics).
+:::
 
-        - **Adversarial perturbation size:** usually defined by the norm of the perturbation matrix
-        - **Accuracy:** used to evaluate classification models (correct out of total)
-        - **mAP (mean average precision):** used to evaluate object detection models (calculated difference between ground truth and prediction boxes)
-        - evaluate test results at 3 levels:
+:::{grid-item-card} Remediation resources
+1. Pre-processing [mitigation steps](https://github.com/IBM/heart-library/blob/main/notebooks/8_get_started_defenses.ipynb) (image compression, spatial smoothing, variance minimization)
+2. Defenses like adversarial training (currently supported by ART)
 
-          - **Clean:** standard
+- [Adversarial training example with MNIST](https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/main/notebooks/adversarial_training_mnist.ipynb)
 
-          - **Robust:** after adversarial attack on all samples
+- [Adversarial retraining](https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/main/notebooks/adversarial_retraining.ipynb)
 
-          - **Adversarial:** after adversarial attack on samples correctly predicted in non-adversarial scenario
+- [Certified adversarial training](https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/main/notebooks/certified_adversarial_training.ipynb)
+:::
 
-    .. grid-item-card::  Remediation resources
-
-        1. Pre-processing `mitigation steps <https://github.com/IBM/heart-library/blob/main/notebooks/8_get_started_defenses.ipynb>`_ (image compression, spatial smoothing, variance minimization)
-        2. Defenses like adversarial training (currently supported by ART)
-
-        - `Adversarial training example with MNIST <https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/main/notebooks/adversarial_training_mnist.ipynb>`_
-
-        - `Adversarial retraining <https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/main/notebooks/adversarial_retraining.ipynb>`_
-
-        - `Certified adversarial training <https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/main/notebooks/certified_adversarial_training.ipynb>`_
+::::
 
 
-        3. Coming soon: defenses/defense cards
-
-```
 
 ```{eval-rst}
 .. grid:: 1

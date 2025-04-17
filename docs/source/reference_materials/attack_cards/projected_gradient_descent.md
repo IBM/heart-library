@@ -6,52 +6,43 @@
 
 **Attack summary:** PGD attacks produce adversarial perturbations (slight variations) in an image (or other approximately continuous domain) that are often difficult to detect with the naked eye. PGD attacks are white-box attacks, which means that they are only possible when the attacker has access to, and knowledge of, the model architecture, parameters and gradients. Gradient-based attacks exploit the knowledge of the model’s gradients to determine how slight changes in the input (pixels in the case of images) influences the output of the model (such as classification probabilities or object detections). These perturbations are carefully optimized to increase the likelihood that the input will be misclassified (or objects go undetected) without making significant changes to the overall image. Perturbations across features can be uniform, small and very hard to detect, which means that the attack runs a high risk of going undetected.
 
-```{eval-rst}
-.. grid:: 2
-    :gutter: 1
-    :margin: 0
 
-    .. grid-item-card::  Compatibility considerations
+::::{grid} 2
 
-        - **Task:** Object detection or classification
-        - **Modality:** HEART currently only supports images, ART supports images and video
-        - **Data:** Single or three color channel images, of standardized dimensions. Specify pixels in range 0-1 or 0-255, matching input data
-        - **Model:** Must be fully differentiable in order to compute gradients
+:::{grid-item-card} Compatibility considerations
+- **Task:** Object detection vs image classification
+- **Modality:** HEART currently only supports images, ART supports images and video
+- **Data:** Single or three color channel images, of standardized dimensions. Specify pixels in range 0-1 or 0-255, matching input data
+- **Model:** Must be fully differentiable in order to compute gradients
+:::
 
-    .. grid-item-card::  Getting started
+:::{grid-item-card} Getting started
+To get started with PGD attacks, see the [PGD notebook](/tutorials/notebooks), available [here](https://github.com/IBM/heart-library/blob/main/notebooks/1_get_started_pgd_attack.ipynb).
 
-        To get started with PGD attacks, see the :ref:`pgd-notebook-label` notebook, available `here <https://github.com/IBM/heart-library/blob/main/notebooks/1_get_started_pgd_attack.ipynb>`__.
+For increased relevance to your use case, replace the selected hugging face model with your own model, and the test data set with a test dataset of your own.
+:::
 
-        For increased relevance to your use case, replace the selected hugging face model with your own model, and the test data set with a test dataset of your own.
+::::
 
-    .. grid-item-card::  Interpreting the results
+::::{grid} 2
 
-        - **Adversarial perturbation size:** usually defined by the norm of the perturbation matrix
-        - **Accuracy:** used to evaluate classification models (correct out of total)
-        - **mAP (mean average precision):** used to evaluate object detection models (calculated difference between ground truth and prediction boxes)
-        - evaluate test results at 3 levels:
+:::{grid-item-card} Interpreting the results
+A model's robustness can be assessed by comparing performance before and after an attack. For details on how to evaluate model performance and attack effectiveness, see this explanation of [evaluation metrics](/explanations/evaluation_metrics).
+:::
 
-          - **Clean:** standard
+:::{grid-item-card} Remediation resources
+1. Pre-processing [mitigation steps](https://github.com/IBM/heart-library/blob/main/notebooks/8_get_started_defenses.ipynb) (image compression, spatial smoothing, variance minimization)
+2. Defenses like adversarial training (currently supported by ART)
 
-          - **Robust:** after adversarial attack on all samples
+- [Adversarial training example with MNIST](https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/main/notebooks/adversarial_training_mnist.ipynb)
 
-          - **Adversarial:** after adversarial attack on samples correctly predicted in non-adversarial scenario
+- [Adversarial retraining](https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/main/notebooks/adversarial_retraining.ipynb)
 
-    .. grid-item-card::  Remediation resources
+- [Certified adversarial training](https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/main/notebooks/certified_adversarial_training.ipynb)
+:::
 
-        1. Pre-processing `mitigation steps <https://github.com/IBM/heart-library/blob/main/notebooks/8_get_started_defenses.ipynb>`_ (image compression, spatial smoothing, variance minimization)
-        2. Defenses like adversarial training (currently supported by ART)
+::::
 
-        - `Adversarial training example with MNIST <https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/main/notebooks/adversarial_training_mnist.ipynb>`_
-
-        - `Adversarial retraining <https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/main/notebooks/adversarial_retraining.ipynb>`_
-
-        - `Certified adversarial training <https://github.com/Trusted-AI/adversarial-robustness-toolbox/blob/main/notebooks/certified_adversarial_training.ipynb>`_
-
-
-        3. Coming soon: defenses/defense cards
-
-```
 
 ```{eval-rst}
 .. grid:: 1
@@ -74,6 +65,7 @@
            <iframe allowtransparency="true" src="../../_static/pgd_plot_duration.html" height="450px" width="100%"></iframe>
 
 ```
+
 
 ```{eval-rst}
 .. grid:: 2

@@ -1,0 +1,37 @@
+.sd-btn{
+    padding: .8rem .75rem .8rem .9rem !important;
+    border-radius: 0px !important;
+}
+hr{
+border-color: rgb(224, 224, 224) !important;
+border: 0 solid;
+border-top-width: 1px;
+}
+
+.home-tile-link-list ul{
+    list-style-type: none;
+    padding: 0;
+    margin: 10 0 0 0;
+}
+
+.home-tile-link-list ul li a{
+    text-decoration: none;
+}
+
+.home-tile-link-list ul li a:visited{
+    text-decoration: none;
+    color:#0060df;
+}
+
+.home-tile-link-list a.sd-btn:visited{
+    text-decoration: none;
+    color:#0060df;
+}
+
+.article-info-block{
+border: 1px solid var(--color-table-border);
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-size: 0.875rem;
+  color: var(--color-foreground-secondary);
+}

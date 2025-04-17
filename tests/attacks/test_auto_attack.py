@@ -17,11 +17,11 @@
 # SOFTWARE.
 
 import logging
-import pytest
 
-from tests.utils import HEARTTestException, get_cifar10_image_classifier_pt
+import pytest
 from art.utils import load_dataset
 
+from tests.utils import HEARTTestError, get_cifar10_image_classifier_pt
 
 logger = logging.getLogger(__name__)
 
@@ -29,14 +29,16 @@ logger = logging.getLogger(__name__)
 @pytest.mark.required
 def test_parallel_auto_attack(heart_warning):
     try:
+        import numpy as np
         from art.attacks.evasion.auto_attack import AutoAttack
         from art.attacks.evasion.projected_gradient_descent.projected_gradient_descent_pytorch import (
             ProjectedGradientDescentPyTorch,
         )
-        import numpy as np
+        from psutil import cpu_count
 
         labels = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
         ptc = get_cifar10_image_classifier_pt(from_logits=True, is_jatic=False)
+        parallel_pool_size = cpu_count(logical=False) - 1  # set parallel pool to max physical cpus - 1
 
         (x_train, y_train), (_, _), _, _ = load_dataset("cifar10")
         x_train = x_train[:10].transpose(0, 3, 1, 2).astype("float32")
@@ -45,12 +47,36 @@ def test_parallel_auto_attack(heart_warning):
         attacks = []
         attacks.append(
             ProjectedGradientDescentPyTorch(
-                estimator=ptc, norm=np.inf, eps=0.1, max_iter=10, targeted=False, batch_size=32, verbose=False
-            )
+                estimator=ptc,
+                norm=np.inf,
+                eps=0.1,
+                max_iter=10,
+                targeted=False,
+                batch_size=32,
+                verbose=False,
+            ),
         )
-        jatic_attack_noparallel = AutoAttack(estimator=ptc, attacks=attacks, targeted=True, parallel=False)
-        jatic_attack_parallel = AutoAttack(estimator=ptc, attacks=attacks, targeted=True, parallel=True)
-        core_attack = AutoAttack(estimator=ptc, attacks=attacks, targeted=True)
+        jatic_attack_noparallel = AutoAttack(
+            estimator=ptc,
+            attacks=attacks,
+            targeted=True,
+        )
+
+        jatic_attack_parallel = AutoAttack(
+            estimator=ptc,
+            attacks=attacks,
+            targeted=True,
+            parallel_pool_size=parallel_pool_size,
+        )
+
+        core_attack = AutoAttack(
+            estimator=ptc,
+            attacks=attacks,
+            targeted=True,
+        )
+
+        # GitLab HEART Issue #319
+        jatic_attack_parallel.estimator_orig._optimizer = None  # noqa SLF001
 
         no_parallel_adv = jatic_attack_noparallel.generate(x=x_train, y=y_train)
         parallel_adv = jatic_attack_parallel.generate(x=x_train, y=y_train)
@@ -63,21 +89,90 @@ def test_parallel_auto_attack(heart_warning):
         assert core_adv_preds != parallel_adv_preds
         assert core_adv_preds == no_parallel_adv_preds
 
-        assert (
-            repr(jatic_attack_parallel)
-            == "AutoAttack(targeted=True, parallel=True, num_attacks=10)\nBestAttacks:\nimage 1: "
-            + "ProjectedGradientDescentPyTorch(norm=inf, eps=0.1, eps_step=0.1, targeted=True, num_random_init=0,"
-            + " batch_size=32, minimal=False, summary_writer=None, decay=None, max_iter=10, random_eps=False, verbose=False, )\nimage"
-            + " 2: ProjectedGradientDescentPyTorch(norm=inf, eps=0.1, eps_step=0.1, targeted=True, num_random_init=0,"
-            + " batch_size=32, minimal=False, summary_writer=None, decay=None, max_iter=10, random_eps=False, verbose=False, )\nimage"
-            + " 3: ProjectedGradientDescentPyTorch(norm=inf, eps=0.1, eps_step=0.1, targeted=True, num_random_init=0, "
-            + "batch_size=32, minimal=False, summary_writer=None, decay=None, max_iter=10, random_eps=False, verbose=False, )\nimage 4"
-            + ": n/a\nimage 5: n/a\nimage 6: n/a\nimage 7: n/a\nimage 8: ProjectedGradientDescentPyTorch(norm=inf, eps=0.1,"
-            + " eps_step=0.1, targeted=True, num_random_init=0, batch_size=32, minimal=False, summary_writer=None, decay=None, max_iter=10,"
-            + " random_eps=False, verbose=False, )\nimage 9: ProjectedGradientDescentPyTorch(norm=inf, eps=0.1, eps_step=0.1,"
-            + " targeted=True, num_random_init=0, batch_size=32, minimal=False, summary_writer=None, decay=None, max_iter=10,"
-            + " random_eps=False, verbose=False, )\nimage 10: n/a"
+        expected_parallel_output = (
+            "AutoAttack("
+            "targeted=True, "
+            f"parallel_pool_size={parallel_pool_size}, "
+            "num_attacks=10"
+            ")\n"
+            "BestAttacks:\n"
+            "image 1: ProjectedGradientDescentPyTorch("
+            "norm=inf, "
+            "eps=0.1, "
+            "eps_step=0.1, "
+            "targeted=True, "
+            "num_random_init=0, "
+            "batch_size=32, "
+            "minimal=False, "
+            "summary_writer=None, "
+            "decay=None, "
+            "max_iter=10, "
+            "random_eps=False, "
+            "verbose=False, "
+            ")\n"
+            "image 2: ProjectedGradientDescentPyTorch("
+            "norm=inf, "
+            "eps=0.1, "
+            "eps_step=0.1, "
+            "targeted=True, "
+            "num_random_init=0, "
+            "batch_size=32, "
+            "minimal=False, "
+            "summary_writer=None, "
+            "decay=None, max_iter=10, "
+            "random_eps=False, "
+            "verbose=False, "
+            ")\n"
+            "image 3: ProjectedGradientDescentPyTorch("
+            "norm=inf, "
+            "eps=0.1, "
+            "eps_step=0.1, "
+            "targeted=True, "
+            "num_random_init=0, "
+            "batch_size=32, "
+            "minimal=False, "
+            "summary_writer=None, "
+            "decay=None, "
+            "max_iter=10, "
+            "random_eps=False, "
+            "verbose=False, "
+            ")\n"
+            "image 4: n/a\n"
+            "image 5: n/a\n"
+            "image 6: n/a\n"
+            "image 7: n/a\n"
+            "image 8: ProjectedGradientDescentPyTorch("
+            "norm=inf, "
+            "eps=0.1, "
+            "eps_step=0.1, "
+            "targeted=True, "
+            "num_random_init=0, "
+            "batch_size=32, "
+            "minimal=False, "
+            "summary_writer=None, "
+            "decay=None, "
+            "max_iter=10, "
+            "random_eps=False, "
+            "verbose=False, "
+            ")\n"
+            "image 9: ProjectedGradientDescentPyTorch("
+            "norm=inf, "
+            "eps=0.1, "
+            "eps_step=0.1, "
+            "targeted=True, "
+            "num_random_init=0, "
+            "batch_size=32, "
+            "minimal=False, "
+            "summary_writer=None, "
+            "decay=None, "
+            "max_iter=10, "
+            "random_eps=False, "
+            "verbose=False, "
+            ")\n"
+            "image 10: n/a"
         )
 
-    except HEARTTestException as e:
+        assert repr(jatic_attack_parallel) == expected_parallel_output
+
+    except HEARTTestError as e:
         heart_warning(e)

@@ -17,11 +17,11 @@
 # SOFTWARE.
 
 import logging
-import pytest
 
-from tests.utils import HEARTTestException, get_cifar10_image_classifier_pt
+import pytest
 from art.utils import load_dataset
 
+from tests.utils import HEARTTestError, get_cifar10_image_classifier_pt
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +29,11 @@ logger = logging.getLogger(__name__)
 @pytest.mark.required
 def test_query_efficient_bb_attack(heart_warning):
     try:
-        from heart_library.attacks.attack import JaticAttack
-        from heart_library.attacks.evasion import HeartQueryEfficientBlackBoxAttack
         import maite.protocols.image_classification as ic
         import numpy as np
+
+        from heart_library.attacks.attack import JaticAttack
+        from heart_library.attacks.evasion import HeartQueryEfficientBlackBoxAttack
 
         ptc = get_cifar10_image_classifier_pt(from_logits=True)
 
@@ -42,15 +43,15 @@ def test_query_efficient_bb_attack(heart_warning):
         assert isinstance(ptc, ic.Model)
         assert isinstance(attack, ic.Augmentation)
 
-        (x_train, _), (_, _), _, _ = load_dataset('cifar10')
+        (x_train, _), (_, _), _, _ = load_dataset("cifar10")
 
-        img = x_train[[0]].transpose(0, 3, 1, 2).astype('float32')
+        img = x_train[[0]].transpose(0, 3, 1, 2).astype("float32")
 
-        data = {'images': img[:1], 'labels': [3]}
+        data = {"images": img[:1], "labels": [3]}
 
         x_adv, _, _ = attack(data=data)
 
         assert np.argmax(ptc(x_adv[0])) == 6
 
-    except HEARTTestException as e:
+    except HEARTTestError as e:
         heart_warning(e)

@@ -1,0 +1,837 @@
+{
+  "builder_name": "imagefolder",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "quickstart-coco",
+  "dataset_size": 24347,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000002.jpg": {
+      "num_bytes": 248372,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000008.jpg": {
+      "num_bytes": 237333,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000020.jpg": {
+      "num_bytes": 81064,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000031.jpg": {
+      "num_bytes": 145362,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000035.jpg": {
+      "num_bytes": 77499,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000058.jpg": {
+      "num_bytes": 181966,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000083.jpg": {
+      "num_bytes": 122424,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000089.jpg": {
+      "num_bytes": 159566,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000145.jpg": {
+      "num_bytes": 72800,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000164.jpg": {
+      "num_bytes": 69457,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000191.jpg": {
+      "num_bytes": 190960,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000192.jpg": {
+      "num_bytes": 86967,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000400.jpg": {
+      "num_bytes": 215592,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000436.jpg": {
+      "num_bytes": 164828,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000452.jpg": {
+      "num_bytes": 144643,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000496.jpg": {
+      "num_bytes": 188938,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000510.jpg": {
+      "num_bytes": 57254,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000557.jpg": {
+      "num_bytes": 149647,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000575.jpg": {
+      "num_bytes": 116477,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000591.jpg": {
+      "num_bytes": 163116,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000594.jpg": {
+      "num_bytes": 55728,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000600.jpg": {
+      "num_bytes": 105457,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000641.jpg": {
+      "num_bytes": 72295,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000643.jpg": {
+      "num_bytes": 78812,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000648.jpg": {
+      "num_bytes": 24927,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000665.jpg": {
+      "num_bytes": 231584,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000696.jpg": {
+      "num_bytes": 167284,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000772.jpg": {
+      "num_bytes": 50172,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000773.jpg": {
+      "num_bytes": 198947,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000781.jpg": {
+      "num_bytes": 154783,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000793.jpg": {
+      "num_bytes": 129301,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000807.jpg": {
+      "num_bytes": 63184,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000868.jpg": {
+      "num_bytes": 109588,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000880.jpg": {
+      "num_bytes": 225193,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000889.jpg": {
+      "num_bytes": 113174,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000890.jpg": {
+      "num_bytes": 78751,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000939.jpg": {
+      "num_bytes": 143773,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000957.jpg": {
+      "num_bytes": 195025,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/000998.jpg": {
+      "num_bytes": 168710,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001047.jpg": {
+      "num_bytes": 68768,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001057.jpg": {
+      "num_bytes": 157534,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001073.jpg": {
+      "num_bytes": 71633,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001078.jpg": {
+      "num_bytes": 174051,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001118.jpg": {
+      "num_bytes": 153717,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001133.jpg": {
+      "num_bytes": 43620,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001147.jpg": {
+      "num_bytes": 69741,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001154.jpg": {
+      "num_bytes": 67369,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001191.jpg": {
+      "num_bytes": 108669,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001227.jpg": {
+      "num_bytes": 73469,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001289.jpg": {
+      "num_bytes": 152402,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001312.jpg": {
+      "num_bytes": 59768,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001348.jpg": {
+      "num_bytes": 108374,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001394.jpg": {
+      "num_bytes": 158001,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001429.jpg": {
+      "num_bytes": 78445,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001430.jpg": {
+      "num_bytes": 179356,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001586.jpg": {
+      "num_bytes": 138970,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001587.jpg": {
+      "num_bytes": 148821,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001599.jpg": {
+      "num_bytes": 148235,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001614.jpg": {
+      "num_bytes": 79655,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001624.jpg": {
+      "num_bytes": 172443,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001631.jpg": {
+      "num_bytes": 127074,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001634.jpg": {
+      "num_bytes": 154592,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001645.jpg": {
+      "num_bytes": 47318,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001685.jpg": {
+      "num_bytes": 171382,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001698.jpg": {
+      "num_bytes": 63207,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001741.jpg": {
+      "num_bytes": 177725,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001744.jpg": {
+      "num_bytes": 80165,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001763.jpg": {
+      "num_bytes": 242229,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001851.jpg": {
+      "num_bytes": 132284,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001867.jpg": {
+      "num_bytes": 93660,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001888.jpg": {
+      "num_bytes": 56012,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001934.jpg": {
+      "num_bytes": 200595,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001949.jpg": {
+      "num_bytes": 126716,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001951.jpg": {
+      "num_bytes": 124821,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/001983.jpg": {
+      "num_bytes": 141462,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002015.jpg": {
+      "num_bytes": 96224,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002022.jpg": {
+      "num_bytes": 219512,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002063.jpg": {
+      "num_bytes": 56179,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002070.jpg": {
+      "num_bytes": 152190,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002086.jpg": {
+      "num_bytes": 243062,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002121.jpg": {
+      "num_bytes": 60221,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002129.jpg": {
+      "num_bytes": 42125,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002143.jpg": {
+      "num_bytes": 97783,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002184.jpg": {
+      "num_bytes": 94158,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002186.jpg": {
+      "num_bytes": 146469,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002233.jpg": {
+      "num_bytes": 71415,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002284.jpg": {
+      "num_bytes": 108542,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002334.jpg": {
+      "num_bytes": 107411,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002353.jpg": {
+      "num_bytes": 84593,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002431.jpg": {
+      "num_bytes": 45907,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002439.jpg": {
+      "num_bytes": 80137,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002450.jpg": {
+      "num_bytes": 134623,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002462.jpg": {
+      "num_bytes": 86240,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002468.jpg": {
+      "num_bytes": 101771,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002489.jpg": {
+      "num_bytes": 152892,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002497.jpg": {
+      "num_bytes": 105916,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002514.jpg": {
+      "num_bytes": 120242,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002538.jpg": {
+      "num_bytes": 113794,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002553.jpg": {
+      "num_bytes": 154930,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002586.jpg": {
+      "num_bytes": 108652,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002592.jpg": {
+      "num_bytes": 127382,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002597.jpg": {
+      "num_bytes": 55362,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002598.jpg": {
+      "num_bytes": 103304,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002640.jpg": {
+      "num_bytes": 163401,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002645.jpg": {
+      "num_bytes": 56148,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002660.jpg": {
+      "num_bytes": 217262,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002671.jpg": {
+      "num_bytes": 112363,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002748.jpg": {
+      "num_bytes": 45511,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002799.jpg": {
+      "num_bytes": 200027,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002823.jpg": {
+      "num_bytes": 86216,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002869.jpg": {
+      "num_bytes": 93938,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002905.jpg": {
+      "num_bytes": 167551,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002906.jpg": {
+      "num_bytes": 56999,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002939.jpg": {
+      "num_bytes": 169042,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/002953.jpg": {
+      "num_bytes": 143709,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003084.jpg": {
+      "num_bytes": 229601,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003087.jpg": {
+      "num_bytes": 66017,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003107.jpg": {
+      "num_bytes": 73037,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003132.jpg": {
+      "num_bytes": 130210,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003148.jpg": {
+      "num_bytes": 105143,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003154.jpg": {
+      "num_bytes": 94883,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003254.jpg": {
+      "num_bytes": 100765,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003316.jpg": {
+      "num_bytes": 72936,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003344.jpg": {
+      "num_bytes": 184006,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003391.jpg": {
+      "num_bytes": 109739,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003420.jpg": {
+      "num_bytes": 104325,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003486.jpg": {
+      "num_bytes": 79900,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003502.jpg": {
+      "num_bytes": 134078,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003541.jpg": {
+      "num_bytes": 172642,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003614.jpg": {
+      "num_bytes": 133204,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003659.jpg": {
+      "num_bytes": 81447,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003662.jpg": {
+      "num_bytes": 98136,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003665.jpg": {
+      "num_bytes": 114600,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003667.jpg": {
+      "num_bytes": 61738,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003713.jpg": {
+      "num_bytes": 106172,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003715.jpg": {
+      "num_bytes": 35643,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003754.jpg": {
+      "num_bytes": 143491,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003769.jpg": {
+      "num_bytes": 72907,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003805.jpg": {
+      "num_bytes": 351216,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003870.jpg": {
+      "num_bytes": 94708,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003871.jpg": {
+      "num_bytes": 164781,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003880.jpg": {
+      "num_bytes": 163113,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003888.jpg": {
+      "num_bytes": 79259,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003911.jpg": {
+      "num_bytes": 178430,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003964.jpg": {
+      "num_bytes": 90531,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003969.jpg": {
+      "num_bytes": 35197,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/003978.jpg": {
+      "num_bytes": 140226,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004039.jpg": {
+      "num_bytes": 106592,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004066.jpg": {
+      "num_bytes": 142237,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004082.jpg": {
+      "num_bytes": 160045,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004095.jpg": {
+      "num_bytes": 71374,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004096.jpg": {
+      "num_bytes": 112644,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004126.jpg": {
+      "num_bytes": 76725,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004131.jpg": {
+      "num_bytes": 143219,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004170.jpg": {
+      "num_bytes": 160389,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004172.jpg": {
+      "num_bytes": 128560,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004180.jpg": {
+      "num_bytes": 78008,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004222.jpg": {
+      "num_bytes": 64095,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004253.jpg": {
+      "num_bytes": 86592,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004255.jpg": {
+      "num_bytes": 88081,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004263.jpg": {
+      "num_bytes": 158045,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004284.jpg": {
+      "num_bytes": 62516,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004292.jpg": {
+      "num_bytes": 38876,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004304.jpg": {
+      "num_bytes": 139805,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004315.jpg": {
+      "num_bytes": 169386,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004316.jpg": {
+      "num_bytes": 90576,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004329.jpg": {
+      "num_bytes": 120039,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004330.jpg": {
+      "num_bytes": 85907,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004341.jpg": {
+      "num_bytes": 68702,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004371.jpg": {
+      "num_bytes": 133885,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004416.jpg": {
+      "num_bytes": 45080,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004431.jpg": {
+      "num_bytes": 109175,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004510.jpg": {
+      "num_bytes": 133294,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004514.jpg": {
+      "num_bytes": 113878,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004517.jpg": {
+      "num_bytes": 169351,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004525.jpg": {
+      "num_bytes": 190752,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004534.jpg": {
+      "num_bytes": 95483,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004535.jpg": {
+      "num_bytes": 160263,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004546.jpg": {
+      "num_bytes": 109385,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004548.jpg": {
+      "num_bytes": 173091,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004557.jpg": {
+      "num_bytes": 133449,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004585.jpg": {
+      "num_bytes": 114341,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004590.jpg": {
+      "num_bytes": 136885,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004610.jpg": {
+      "num_bytes": 137474,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004627.jpg": {
+      "num_bytes": 114750,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004651.jpg": {
+      "num_bytes": 143665,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004656.jpg": {
+      "num_bytes": 164303,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004702.jpg": {
+      "num_bytes": 164008,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004713.jpg": {
+      "num_bytes": 92598,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004743.jpg": {
+      "num_bytes": 149513,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004755.jpg": {
+      "num_bytes": 207720,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004775.jpg": {
+      "num_bytes": 104737,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004781.jpg": {
+      "num_bytes": 140506,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004831.jpg": {
+      "num_bytes": 131332,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004852.jpg": {
+      "num_bytes": 141579,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004939.jpg": {
+      "num_bytes": 182163,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004941.jpg": {
+      "num_bytes": 75940,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004965.jpg": {
+      "num_bytes": 66498,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004978.jpg": {
+      "num_bytes": 150790,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/data/004981.jpg": {
+      "num_bytes": 95553,
+      "checksum": null
+    },
+    "hf://datasets/guydada/quickstart-coco@5f5fc1d09079cefdc21e9e5f1b3a3aa1390a18bd/dataset_preview.jpg": {
+      "num_bytes": 1967079,
+      "checksum": null
+    }
+  },
+  "download_size": 26379453,
+  "features": {
+    "image": {
+      "_type": "Image"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 26403800,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 24347,
+      "num_examples": 201,
+      "dataset_name": "quickstart-coco"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

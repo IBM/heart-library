@@ -17,11 +17,11 @@
 # SOFTWARE.
 
 import logging
-import pytest
 
-from tests.utils import HEARTTestException, get_cifar10_image_classifier_pt
+import pytest
 from art.utils import load_dataset
 
+from tests.utils import HEARTTestError, get_cifar10_image_classifier_pt
 
 logger = logging.getLogger(__name__)
 
@@ -29,23 +29,24 @@ logger = logging.getLogger(__name__)
 @pytest.mark.required
 def test_jatic_supported_black_box_attack(heart_warning):
     try:
+        import maite.protocols.image_classification as ic
+        import numpy as np
+
+        from heart_library.attacks.attack import JaticAttack
         from heart_library.attacks.evasion import HeartHopSkipJump
         from heart_library.utils import process_inputs_for_art
-        from heart_library.attacks.attack import JaticAttack
-        import maite.protocols.image_classification as ic 
-        import numpy as np
 
         jptc = get_cifar10_image_classifier_pt()
         hsj = HeartHopSkipJump(classifier=jptc)
-        
-        (x_train, _), (_, _), _, _ = load_dataset('cifar10')
-        img = x_train[[0]].transpose(0, 3, 1, 2).astype('float32')
-        data = {'images': img[:1], 'labels': [4]}
+
+        (x_train, _), (_, _), _, _ = load_dataset("cifar10")
+        img = x_train[[0]].transpose(0, 3, 1, 2).astype("float32")
+        data = {"images": img[:1], "labels": [4]}
         x, y, _ = process_inputs_for_art(data)
-        
+
         attack = hsj.generate(x, y)
         assert isinstance(attack, np.ndarray)
-        
+
         attack = JaticAttack(hsj)
 
         assert isinstance(jptc, ic.Model)
@@ -58,8 +59,8 @@ def test_jatic_supported_black_box_attack(heart_warning):
 
         x_adv_init = np.zeros(x.shape, dtype=np.float32)
         mask = np.zeros(x.shape, dtype=np.float32)
-        attack = hsj.generate(x, x_adv_init = x_adv_init, mask = mask)
+        attack = hsj.generate(x, x_adv_init=x_adv_init, mask=mask)
         assert isinstance(attack, np.ndarray)
 
-    except HEARTTestException as e:
+    except HEARTTestError as e:
         heart_warning(e)

@@ -7,4 +7,5 @@ Tutorials will provide practical instructions on important functionality include
 ```{toctree}
 evaluation_pathways.md
 attack_cards/index.md
+/modules/index.md
 ```

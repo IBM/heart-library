@@ -155,8 +155,8 @@ class HeartMAPMetric:
         """Add predictions and targets to metric's cache for later calculation.
 
         Args:
-            preds_batch (Sequence[JaticPyTorchObjectDetectionOutput]): predictions in ObjectDetectionTarget format.
-            targets_batch (Sequence[JaticPyTorchObjectDetectionOutput]):
+            preds_batch (`Sequence[JaticPyTorchObjectDetectionOutput]`): predictions in ObjectDetectionTarget format.
+            targets_batch (`Sequence[JaticPyTorchObjectDetectionOutput]`):
                 groundtruth targets in ObjectDetectionTarget format.
         """
         import torch

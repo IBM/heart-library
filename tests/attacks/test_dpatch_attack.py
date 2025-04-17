@@ -17,50 +17,69 @@
 # SOFTWARE.
 
 import logging
+
 import pytest
 
-from tests.utils import HEARTTestException
+from tests.utils import HEARTTestError
 
 logger = logging.getLogger(__name__)
+
+REQUESTS_TIMEOUT = 60
 
 
 @pytest.mark.required
 def test_jatic_supported_obj_det_bb_patch_attack(heart_warning):
     try:
-        from heart_library.estimators.object_detection import JaticPyTorchObjectDetector
-        from maite.protocols.object_detection import Augmentation
-        from art.attacks.evasion import RobustDPatch
-        from heart_library.attacks.attack import JaticAttack
-        from torchvision import transforms
-        from PIL import Image
-        import requests
-        import numpy as np
         from copy import deepcopy
-        from typing import Dict, Tuple, Any
-        
-        detector = detector = JaticPyTorchObjectDetector(model_type="fasterrcnn_resnet50_fpn",
-                                              device_type='cpu',
-                                                input_shape=(3, 640, 640),
-                                                clip_values=(0, 255),
-                                                attack_losses=("loss_classifier",
-                                                                "loss_box_reg",
-                                                                "loss_objectness",
-                                                                "loss_rpn_box_reg",))
+        from typing import Any
 
-        NUMBER_CHANNELS = 3
-        INPUT_SHAPE = (NUMBER_CHANNELS, 640, 640)
+        import numpy as np
+        import requests
+        from art.attacks.evasion import RobustDPatch
+        from maite.protocols.object_detection import Augmentation
+        from PIL import Image
+        from torchvision import transforms
 
-        transform = transforms.Compose([
-                transforms.Resize(INPUT_SHAPE[1], interpolation=transforms.InterpolationMode.BICUBIC),
-                transforms.CenterCrop(INPUT_SHAPE[1]),
-                transforms.ToTensor()
-            ])
+        from heart_library.attacks.attack import JaticAttack
+        from heart_library.estimators.object_detection import JaticPyTorchObjectDetector
+
+        detector = detector = JaticPyTorchObjectDetector(
+            model_type="fasterrcnn_resnet50_fpn",
+            device_type="cpu",
+            input_shape=(3, 640, 640),
+            clip_values=(0, 255),
+            attack_losses=(
+                "loss_classifier",
+                "loss_box_reg",
+                "loss_objectness",
+                "loss_rpn_box_reg",
+            ),
+        )
+
+        number_channels = 3
+        input_shape = (number_channels, 640, 640)
+
+        transform = transforms.Compose(
+            [
+                transforms.Resize(input_shape[1], interpolation=transforms.InterpolationMode.BICUBIC),
+                transforms.CenterCrop(input_shape[1]),
+                transforms.ToTensor(),
+            ],
+        )
+
         coco_images = []
-        im = Image.open(requests.get("http://images.cocodataset.org/val2017/000000094852.jpg",
-                                     stream=True).raw)
+
+        im = Image.open(
+            requests.get(
+                "http://images.cocodataset.org/val2017/000000094852.jpg",
+                stream=True,
+                timeout=REQUESTS_TIMEOUT,
+            ).raw,
+        )
+
         im = transform(im).numpy()
         coco_images.append(im)
-        coco_images = np.array(coco_images)*255
+        coco_images = np.array(coco_images) * 255
         detections = detector(coco_images)
 
         class TargetedImageDataset:
@@ -69,45 +88,69 @@ def test_jatic_supported_obj_det_bb_patch_attack(heart_warning):
                 self.groundtruth = groundtruth
                 self.target_label = target_label
                 self.threshold = threshold
-                
-            def __len__(self)->int:
+
+            def __len__(self) -> int:
                 return len(self.images)
-            
-            def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
+
+            def __getitem__(self, ind: int) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
                 image = self.images[ind]
                 targeted_detection = self.groundtruth[ind]
-                targeted_detection.boxes = targeted_detection.boxes[targeted_detection.scores>self.threshold]
-                targeted_detection.scores = np.asarray([1.0]*len(targeted_detection.boxes))
-                targeted_detection.labels = [self.target_label]*len(targeted_detection.boxes)
+                targeted_detection.boxes = targeted_detection.boxes[targeted_detection.scores > self.threshold]
+                targeted_detection.scores = np.asarray([1.0] * len(targeted_detection.boxes))
+                targeted_detection.labels = [self.target_label] * len(targeted_detection.boxes)
                 return (image, targeted_detection, {})
-            
+
         targeted_data = TargetedImageDataset(coco_images, deepcopy(detections), 14, 0.8)
 
         evasion_attack = RobustDPatch(
             detector,
             patch_shape=(3, 300, 300),
             patch_location=(0, 0),
-            crop_range=[0,0],
+            crop_range=[0, 0],
             brightness_range=[1.0, 1.0],
             rotation_weights=[1, 0, 0, 0],
             sample_size=1,
             learning_rate=1.99,
             max_iter=5,
             verbose=True,
-            targeted=True
+            targeted=True,
         )
+
         attack = JaticAttack(evasion_attack, norm=2)
-        
+
         assert isinstance(attack, Augmentation)
 
         adv_images, _, _ = attack(targeted_data)
-        
-        adv_detections = detector(adv_images)
-        
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_images[0][[0]], coco_images[[0]])
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_detections[0].boxes, detections[0].boxes)
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_detections[0].scores, detections[0].scores)
-        np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, adv_detections[0].labels, detections[0].labels)
 
-    except HEARTTestException as e:
+        adv_detections = detector(adv_images)
+
+        np.testing.assert_raises(
+            AssertionError,
+            np.testing.assert_array_equal,
+            adv_images[0][[0]],
+            coco_images[[0]],
+        )
+
+        np.testing.assert_raises(
+            AssertionError,
+            np.testing.assert_array_equal,
+            adv_detections[0].boxes,
+            detections[0].boxes,
+        )
+
+        np.testing.assert_raises(
+            AssertionError,
+            np.testing.assert_array_equal,
+            adv_detections[0].scores,
+            detections[0].scores,
+        )
+
+        np.testing.assert_raises(
+            AssertionError,
+            np.testing.assert_array_equal,
+            adv_detections[0].labels,
+            detections[0].labels,
+        )
+
+    except HEARTTestError as e:
         heart_warning(e)

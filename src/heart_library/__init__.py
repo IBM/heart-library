@@ -7,7 +7,7 @@ from typing import Any
 # Project Imports
 
 # Semantic Version
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
 LOGGING: dict[str, Any] = {
     "version": 1,

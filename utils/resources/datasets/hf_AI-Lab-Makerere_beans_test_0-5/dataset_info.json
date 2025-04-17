@@ -1,0 +1,69 @@
+{
+  "builder_name": "parquet",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "beans",
+  "dataset_size": 180184512,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/AI-Lab-Makerere/beans@27aa014ce09b193e1a6f58112d4a66e0eddb69c5/data/train-00000-of-00001.parquet": {
+      "num_bytes": 143773054,
+      "checksum": null
+    },
+    "hf://datasets/AI-Lab-Makerere/beans@27aa014ce09b193e1a6f58112d4a66e0eddb69c5/data/validation-00000-of-00001.parquet": {
+      "num_bytes": 18499710,
+      "checksum": null
+    },
+    "hf://datasets/AI-Lab-Makerere/beans@27aa014ce09b193e1a6f58112d4a66e0eddb69c5/data/test-00000-of-00001.parquet": {
+      "num_bytes": 17706070,
+      "checksum": null
+    }
+  },
+  "download_size": 179978834,
+  "features": {
+    "image_file_path": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "image": {
+      "_type": "Image"
+    },
+    "labels": {
+      "names": [
+        "angular_leaf_spot",
+        "bean_rust",
+        "healthy"
+      ],
+      "_type": "ClassLabel"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 360163346,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 143941819,
+      "num_examples": 1034,
+      "dataset_name": "beans"
+    },
+    "validation": {
+      "name": "validation",
+      "num_bytes": 18518954,
+      "num_examples": 133,
+      "dataset_name": "beans"
+    },
+    "test": {
+      "name": "test",
+      "num_bytes": 17723739,
+      "num_examples": 128,
+      "dataset_name": "beans"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

@@ -63,33 +63,61 @@ class JaticPyTorchClassifier(PyTorchClassifier):
 
     metadata: dict[str, Any]
 
-    def __init__(self, provider: str = "", id: Optional[str] = None, **kwargs: Any) -> None:  # noqa ANN401
+    def _init_huggingface(self, kwargs: dict[str, Any]) -> dict[str, Any]:
+        from art.estimators.classification.hugging_face import HuggingFaceClassifierPyTorch
+        from torch.optim import Optimizer
+        from transformers import AutoModelForImageClassification
+
+        model = AutoModelForImageClassification.from_pretrained(kwargs["model"])
+        if "optimizer" in kwargs and not isinstance(kwargs["optimizer"], Optimizer):
+            kwargs["optimizer"] = kwargs["optimizer"](model.parameters(), lr=kwargs.pop("learning_rate", 0.01))
+        kwargs["model"] = model
+        hf_model = HuggingFaceClassifierPyTorch(**kwargs)
+        kwargs["model"] = hf_model.model
+        return kwargs
+
+    def _init_timm(self, kwargs: dict[str, Any]) -> dict[str, Any]:
+        from art.estimators.classification.hugging_face import HuggingFaceClassifierPyTorch
+        from timm import create_model
+        from torch.optim import Optimizer
+
+        model = create_model(
+            kwargs["model"],
+            pretrained=True,
+            num_classes=kwargs["nb_classes"],
+        )
+        kwargs["model"] = model
+        if "optimizer" in kwargs and not isinstance(kwargs["optimizer"], Optimizer):
+            kwargs["optimizer"] = kwargs["optimizer"](
+                kwargs["model"].parameters(),
+                lr=kwargs.pop("learning_rate", 0.01),
+            )
+        hf_model = HuggingFaceClassifierPyTorch(**kwargs)
+        kwargs["model"] = hf_model.model
+        return kwargs
+
+    def __init__(
+        self,
+        provider: str = "",
+        id: Optional[str] = None,  # noqa ANN401
+        metadata: Optional[dict[str, Any]] = None,
+        **kwargs: Any,  # noqa ANN401
+    ) -> None:
         """JaticPyTorchClassifier initialization.
 
         Args:
             provider (str, optional): Model framework to use - huggingface/timm Defaults to "".
         """
-        self.metadata = {"id": id if id is not None else str(uuid.uuid4())}
+        if metadata:
+            self.metadata = metadata
+            self.metadata["id"] = id if id is not None else str(uuid.uuid4())
+        else:
+            self.metadata = {"id": id if id is not None else str(uuid.uuid4())}
+
         if provider == "huggingface":
-            import transformers
-            from art.estimators.classification.hugging_face import HuggingFaceClassifierPyTorch
-
-            model = transformers.AutoModelForImageClassification.from_pretrained(kwargs["model"])
-            kwargs["model"] = model
-            hf_model = HuggingFaceClassifierPyTorch(**kwargs)
-            kwargs["model"] = hf_model.model
+            kwargs = self._init_huggingface(kwargs)
         elif provider == "timm":
-            from art.estimators.classification.hugging_face import HuggingFaceClassifierPyTorch
-            from timm import create_model
-
-            model = create_model(
-                kwargs["model"],
-                pretrained=True,
-                num_classes=kwargs["nb_classes"],
-            )
-            kwargs["model"] = model
-            hf_model = HuggingFaceClassifierPyTorch(**kwargs)
-            kwargs["model"] = hf_model.model
+            kwargs = self._init_timm(kwargs)
 
         super().__init__(**kwargs)
 
@@ -111,3 +139,18 @@ class JaticPyTorchClassifier(PyTorchClassifier):
 
         # return as a sequence of N TargetType instances
         return list(output)
+
+    def train(self, data: Sequence[ArrayLike], **kwargs: Any) -> None:  # noqa ANN401
+        """Train the model using JATIC supported data format
+
+        Args:
+            data (Sequence[ArrayLike]): Array of images, targets, metadata.
+
+        Returns:
+            None
+        """
+        # convert to ART supported type
+        images, labels, _ = process_inputs_for_art(data)
+
+        # train the model
+        self.fit(x=images, y=labels, **kwargs)

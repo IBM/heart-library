@@ -90,12 +90,6 @@ ENV/
 # ignore local config
 *config.ini
 
-# ignore pictures
-*.jpg
-!docs/source/_static/*.jpg
-
-demo/pics/*
-
 # Things TF might pull when testing
 *.gz
 *.npy
@@ -121,3 +115,4 @@ yolov5s.pt
 
 # Sphinx Documentation Build
 docs/build/
+docs/source/_build/

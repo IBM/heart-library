@@ -20,15 +20,16 @@
 import logging
 import uuid
 from collections.abc import Sequence
-from typing import Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import numpy as np
 from datasets import Dataset as HFDataset
-from datasets.iterable_dataset import IterableDataset as HFIterableDataset
-from numpy.typing import NDArray
-from PIL.Image import Image as PILImage
+from numpy.typing import ArrayLike, NDArray
 from torch import Tensor, is_tensor
 from torch.utils.data.dataset import Subset as TorchSubsetDataset
+
+if TYPE_CHECKING:
+    from datasets import Dataset as HFDataset
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -207,7 +208,7 @@ def hf_dataset_to_maite(
 
 def __handle_image_labels(
     image_label: str,
-    dataset: HFDataset,
+    dataset: "HFDataset",
     images: list[Any],
     item: dict[str, Any],
 ) -> list[Any]:
@@ -241,7 +242,7 @@ def __handle_target_meta_labels(
     target_list: list[Any],
     meta_label: str,
     metadata: list[Any],
-    dataset: HFDataset,
+    dataset: "HFDataset",
     item: dict[str, Any],
 ) -> tuple[list[Any], list[Any]]:
     """Generate lists of targets and metadata based on indices and labels provided.
@@ -492,6 +493,12 @@ def __handle_hf_torch_data(data: Any) -> ImageDataset:  # noqa ANN401
     Returns:
         ImageDataset: MAITE aligned image data.
     """
+    try:
+        from datasets import Dataset as HFDataset
+        from datasets.iterable_dataset import IterableDataset as HFIterableDataset
+    except ImportError as e:
+        raise ImportError("The 'datasets' package is required but not installed.") from e
+
     # convert Hugging Face
     if isinstance(data, (HFDataset, HFIterableDataset)):
         data = hf_dataset_to_maite(data)
@@ -669,22 +676,47 @@ def __handle_dataset_images_types(image_list: list, images: NDArray[np.float32])
     Returns:
         NDArray[np.float32]: Images in NDArray format.
     """
-    # if images are in PIL format, convert to np.ndarray
+    try:
+        from PIL.Image import Image as PILImage
+    except ImportError as e:
+        raise ImportError("The 'Pillow' package is required but not installed.") from e
+
     if isinstance(image_list[0], PILImage):
-        images = np.asarray(image_list).transpose(0, 3, 1, 2).astype(np.float32)
+        return np.asarray(image_list).transpose(0, 3, 1, 2).astype(np.float32)
 
-    # if images are np.ndarray or torch.Tensor, convert to np.ndarray
-    # facilitating batches
-    elif isinstance(image_list[0], np.ndarray) or is_tensor(image_list[0]):
-        if image_list[0].ndim == 3:
-            images = np.asarray(image_list).astype(np.float32)
-        else:
-            images = np.concatenate([np.asarray(batch) for batch in image_list])
+    if isinstance(image_list[0], np.ndarray) or is_tensor(image_list[0]):
+        return __handle_ndarray_or_tensor(image_list)
 
-    # if images are a list, convert to np.ndarray
-    elif isinstance(image_list[0], list):
-        images = np.asarray(image_list).astype(np.float32)
+    if isinstance(image_list[0], list):
+        return __handle_nested_list_images(image_list)
+
     return images
+
+
+def __handle_ndarray_or_tensor(image_list: list[ArrayLike]) -> NDArray[np.float32]:
+    """Convert ndarray or tensor images to NDArray format.
+
+    Args:
+        image_list (list): List of ndarrays or tensors.
+
+    Returns:
+        NDArray[np.float32]: Images in NDArray format.
+    """
+    if image_list[0].ndim == 3:
+        return np.asarray(image_list).astype(np.float32)
+    return np.concatenate([np.asarray(batch) for batch in image_list])
+
+
+def __handle_nested_list_images(image_list: list[list[ArrayLike]]) -> NDArray[np.float32]:
+    """Convert nested list of images to NDArray format.
+
+    Args:
+        image_list (list): Nested list of images.
+
+    Returns:
+        NDArray[np.float32]: Images in NDArray format.
+    """
+    return np.asarray(image_list).astype(np.float32)
 
 
 def __handle_dataset_targets(targets: Any) -> Any:  # noqa ANN401

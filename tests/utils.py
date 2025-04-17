@@ -1,38 +1,50 @@
+"""This module contains utility functions to be used within unit tests."""
+
 import logging
 import os
-import shutil
-import tarfile
-import zipfile
-from typing import List, Optional, Tuple, Union
+import tempfile
+import urllib.request
+from typing import Any, Optional, Union
 
 import numpy as np
-from tqdm.auto import tqdm
+import torch
+from six.moves.urllib.error import HTTPError, URLError
+from six.moves.urllib.request import urlretrieve
+from tqdm import tqdm
 
 from heart_library import config
+from heart_library.estimators.classification.pytorch import JaticPyTorchClassifier
 
-DATASET_TYPE = Tuple[
-    Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray], float, float
+DATASET_TYPE = tuple[
+    tuple[np.ndarray, np.ndarray],
+    tuple[np.ndarray, np.ndarray],
+    float,
+    float,
 ]
 
-CLIP_VALUES_TYPE = Tuple[Union[int, float, np.ndarray], Union[int, float, np.ndarray]]
+CLIP_VALUES_TYPE = tuple[Union[int, float, np.ndarray], Union[int, float, np.ndarray]]
 
 logger = logging.getLogger(__name__)
 
 
-class HEARTTestException(Exception):
-    def __init__(self, message):
+class HEARTTestError(Exception):
+    def __init__(self, message: str) -> None:
         super().__init__(message)
 
 
-class HEARTTestFixtureNotImplemented(HEARTTestException):
-    def __init__(self, message, fixture_name, framework, parameters_dict=""):
+class HEARTTestFixtureNotImplementedError(HEARTTestError):
+    def __init__(self, message: str, fixture_name: str, framework: str, parameters_dict: str = "") -> None:
         super().__init__(
-            "Could NOT run test for framework: {0} due to fixture: {1}. Message was: '"
-            "{2}' for the following parameters: {3}".format(framework, fixture_name, message, parameters_dict)
+            f"Could NOT run test for framework: {framework} due to fixture: {fixture_name}. Message was: '"
+            f"{message}' for the following parameters: {parameters_dict}",
         )
 
 
-def get_mnist_image_classifier_pt(from_logits=False, load_init=True, use_maxpool=True, is_jatic=True):
+def get_mnist_image_classifier_pt(
+    from_logits: bool = False,
+    load_init: bool = True,
+    use_maxpool: bool = True,
+) -> JaticPyTorchClassifier:
     """
     Standard PyTorch classifier for unit testing.
 
@@ -44,170 +56,116 @@ def get_mnist_image_classifier_pt(from_logits=False, load_init=True, use_maxpool
     :type use_maxpool: `bool`
     :return: PyTorchClassifier
     """
-    import torch
-
-    from heart_library.estimators.classification.pytorch import JaticPyTorchClassifier
-    from art.estimators.classification.pytorch import PyTorchClassifier
-
-    if use_maxpool:
-
-        class Model(torch.nn.Module):
-            """
-            Create model for pytorch.
-
-            The weights and biases are identical to the TensorFlow model in get_classifier_tf().
-            """
-
-            def __init__(self):
-                super(Model, self).__init__()
-
-                self.conv = torch.nn.Conv2d(in_channels=1, out_channels=1, kernel_size=7)
-                self.relu = torch.nn.ReLU()
-                self.pool = torch.nn.MaxPool2d(4, 4)
-                self.fullyconnected = torch.nn.Linear(25, 10)
-
-                if load_init:
-                    w_conv2d = np.load(
-                        os.path.join(
-                            os.path.dirname(os.path.dirname(__file__)), "utils/resources/models", "W_CONV2D_MNIST.npy"
-                        )
-                    )
-                    b_conv2d = np.load(
-                        os.path.join(
-                            os.path.dirname(os.path.dirname(__file__)), "utils/resources/models", "B_CONV2D_MNIST.npy"
-                        )
-                    )
-                    w_dense = np.load(
-                        os.path.join(
-                            os.path.dirname(os.path.dirname(__file__)), "utils/resources/models", "W_DENSE_MNIST.npy"
-                        )
-                    )
-                    b_dense = np.load(
-                        os.path.join(
-                            os.path.dirname(os.path.dirname(__file__)), "utils/resources/models", "B_DENSE_MNIST.npy"
-                        )
-                    )
-
-                    w_conv2d_pt = w_conv2d.reshape((1, 1, 7, 7))
-
-                    self.conv.weight = torch.nn.Parameter(torch.Tensor(w_conv2d_pt))
-                    self.conv.bias = torch.nn.Parameter(torch.Tensor(b_conv2d))
-                    self.fullyconnected.weight = torch.nn.Parameter(torch.Tensor(np.transpose(w_dense)))
-                    self.fullyconnected.bias = torch.nn.Parameter(torch.Tensor(b_dense))
-
-            def forward(self, x):
-                """
-                Forward function to evaluate the model
-                :param x: Input to the model
-                :return: Prediction of the model
-                """
-                x = self.conv(x)
-                x = self.relu(x)
-                x = self.pool(x)
-                x = x.reshape(-1, 25)
-                x = self.fullyconnected(x)
-                if not from_logits:
-                    x = torch.nn.functional.softmax(x, dim=1)
-                return x
-
-    else:
-
-        class Model(torch.nn.Module):
-            """
-            Create model for pytorch.
-            Here the model does not use maxpooling. Needed for certification tests.
-            """
-
-            def __init__(self):
-                super(Model, self).__init__()
-
-                self.conv = torch.nn.Conv2d(
-                    in_channels=1, out_channels=16, kernel_size=(4, 4), dilation=(1, 1), padding=(0, 0), stride=(3, 3)
-                )
-
-                self.fullyconnected = torch.nn.Linear(in_features=1296, out_features=10)
-
-                self.relu = torch.nn.ReLU()
-
-                if load_init:
-                    w_conv2d = np.load(
-                        os.path.join(
-                            os.path.dirname(os.path.dirname(__file__)),
-                            "utils/resources/models",
-                            "W_CONV2D_NO_MPOOL_MNIST.npy",
-                        )
-                    )
-                    b_conv2d = np.load(
-                        os.path.join(
-                            os.path.dirname(os.path.dirname(__file__)),
-                            "utils/resources/models",
-                            "B_CONV2D_NO_MPOOL_MNIST.npy",
-                        )
-                    )
-                    w_dense = np.load(
-                        os.path.join(
-                            os.path.dirname(os.path.dirname(__file__)),
-                            "utils/resources/models",
-                            "W_DENSE_NO_MPOOL_MNIST.npy",
-                        )
-                    )
-                    b_dense = np.load(
-                        os.path.join(
-                            os.path.dirname(os.path.dirname(__file__)),
-                            "utils/resources/models",
-                            "B_DENSE_NO_MPOOL_MNIST.npy",
-                        )
-                    )
-
-                    self.conv.weight = torch.nn.Parameter(torch.Tensor(w_conv2d))
-                    self.conv.bias = torch.nn.Parameter(torch.Tensor(b_conv2d))
-                    self.fullyconnected.weight = torch.nn.Parameter(torch.Tensor(w_dense))
-                    self.fullyconnected.bias = torch.nn.Parameter(torch.Tensor(b_dense))
-
-            def forward(self, x):
-                """
-                Forward function to evaluate the model
-                :param x: Input to the model
-                :return: Prediction of the model
-                """
-                x = self.conv(x)
-                x = self.relu(x)
-                x = x.reshape(-1, 1296)
-                x = self.fullyconnected(x)
-                if not from_logits:
-                    x = torch.nn.functional.softmax(x, dim=1)
-                return x
 
     # Define the network
-    model = Model()
+    model_class = _use_maxpool(from_logits=from_logits, load_init=load_init) if use_maxpool else _without_maxpool()
+    model = model_class()
     # Define a loss function and optimizer
     loss_fn = torch.nn.CrossEntropyLoss(reduction="sum")
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
     # Get classifier
-    ptc = JaticPyTorchClassifier(
-        model=model, loss=loss_fn, optimizer=optimizer, input_shape=(1, 28, 28), nb_classes=10, clip_values=(0, 1)
+    return JaticPyTorchClassifier(
+        model=model,
+        loss=loss_fn,
+        optimizer=optimizer,
+        input_shape=(1, 28, 28),
+        nb_classes=10,
+        clip_values=(0, 1),
     )
 
-    return ptc
 
+def _use_maxpool(from_logits: bool, load_init: bool) -> Any:  # noqa ANN401
+    """Create model for pytorch with maxpool.
 
-def get_cifar10_image_classifier_pt(from_logits=False, is_jatic=True):
+    Args:
+        from_logits (bool): Flag if model should predict logits (True) or probabilities (False).
+        load_init (bool): Load the initial weights if True.
+
+    Returns:
+        Any: PyTorch classifier.
     """
-    Standard PyTorch classifier for unit testing.
 
-    :param from_logits: Flag if model should predict logits (True) or probabilities (False).
-    :type from_logits: `bool`
-    :param load_init: Load the initial weights if True.
-    :type load_init: `bool`
-    :param use_maxpool: If to use a classifier with maxpool or not
-    :type use_maxpool: `bool`
-    :return: PyTorchClassifier
+    class Model(torch.nn.Module):
+        """
+        Create model for pytorch.
+
+        The weights and biases are identical to the TensorFlow model in get_classifier_tf().
+        """
+
+        def __init__(self) -> None:
+            super().__init__()
+
+            self.conv = torch.nn.Conv2d(in_channels=1, out_channels=1, kernel_size=7)
+            self.relu = torch.nn.ReLU()
+            self.pool = torch.nn.MaxPool2d(4, 4)
+            self.fullyconnected = torch.nn.Linear(25, 10)
+
+            if load_init:
+                w_conv2d = np.load(
+                    os.path.join(
+                        os.path.dirname(os.path.dirname(__file__)),
+                        "utils/resources/models",
+                        "W_CONV2D_MNIST.npy",
+                    ),
+                )
+                b_conv2d = np.load(
+                    os.path.join(
+                        os.path.dirname(os.path.dirname(__file__)),
+                        "utils/resources/models",
+                        "B_CONV2D_MNIST.npy",
+                    ),
+                )
+                w_dense = np.load(
+                    os.path.join(
+                        os.path.dirname(os.path.dirname(__file__)),
+                        "utils/resources/models",
+                        "W_DENSE_MNIST.npy",
+                    ),
+                )
+                b_dense = np.load(
+                    os.path.join(
+                        os.path.dirname(os.path.dirname(__file__)),
+                        "utils/resources/models",
+                        "B_DENSE_MNIST.npy",
+                    ),
+                )
+
+                w_conv2d_pt = w_conv2d.reshape((1, 1, 7, 7))
+
+                self.conv.weight = torch.nn.Parameter(torch.Tensor(w_conv2d_pt))
+                self.conv.bias = torch.nn.Parameter(torch.Tensor(b_conv2d))
+                self.fullyconnected.weight = torch.nn.Parameter(torch.Tensor(np.transpose(w_dense)))
+                self.fullyconnected.bias = torch.nn.Parameter(torch.Tensor(b_dense))
+
+        def forward(self, x: int) -> torch.Tensor:
+            """
+            Forward function to evaluate the model
+            :param x: Input to the model
+            :return: Prediction of the model
+            """
+            x = self.conv(x)
+            x = self.relu(x)
+            x = self.pool(x)
+            x = x.reshape(-1, 25)
+            x = self.fullyconnected(x)
+            if not from_logits:
+                x = torch.nn.functional.softmax(x, dim=1)
+            return x
+
+    return Model
+
+
+def _without_maxpool(from_logits: bool, load_init: bool) -> Any:  # noqa ANN401
+    """Create model for pytorch without maxpool.
+
+    Args:
+        from_logits (bool): Flag if model should predict logits (True) or probabilities (False).
+        load_init (bool): Load the initial weights if True.
+
+    Returns:
+        Any: PyTorch classifier.
     """
-    import torch
-
-    from heart_library.estimators.classification.pytorch import JaticPyTorchClassifier
-    from art.estimators.classification.pytorch import PyTorchClassifier
 
     class Model(torch.nn.Module):
         """
@@ -215,11 +173,91 @@ def get_cifar10_image_classifier_pt(from_logits=False, is_jatic=True):
         Here the model does not use maxpooling. Needed for certification tests.
         """
 
-        def __init__(self):
-            super(Model, self).__init__()
+        def __init__(self) -> None:
+            super().__init__()
 
             self.conv = torch.nn.Conv2d(
-                in_channels=3, out_channels=16, kernel_size=(4, 4), dilation=(1, 1), padding=(0, 0), stride=(3, 3)
+                in_channels=1,
+                out_channels=16,
+                kernel_size=(4, 4),
+                dilation=(1, 1),
+                padding=(0, 0),
+                stride=(3, 3),
+            )
+
+            self.fullyconnected = torch.nn.Linear(in_features=1296, out_features=10)
+
+            self.relu = torch.nn.ReLU()
+
+            if load_init:
+                w_conv2d = np.load(
+                    os.path.join(
+                        os.path.dirname(os.path.dirname(__file__)),
+                        "utils/resources/models",
+                        "W_CONV2D_NO_MPOOL_MNIST.npy",
+                    ),
+                )
+                b_conv2d = np.load(
+                    os.path.join(
+                        os.path.dirname(os.path.dirname(__file__)),
+                        "utils/resources/models",
+                        "B_CONV2D_NO_MPOOL_MNIST.npy",
+                    ),
+                )
+                w_dense = np.load(
+                    os.path.join(
+                        os.path.dirname(os.path.dirname(__file__)),
+                        "utils/resources/models",
+                        "W_DENSE_NO_MPOOL_MNIST.npy",
+                    ),
+                )
+                b_dense = np.load(
+                    os.path.join(
+                        os.path.dirname(os.path.dirname(__file__)),
+                        "utils/resources/models",
+                        "B_DENSE_NO_MPOOL_MNIST.npy",
+                    ),
+                )
+
+                self.conv.weight = torch.nn.Parameter(torch.Tensor(w_conv2d))
+                self.conv.bias = torch.nn.Parameter(torch.Tensor(b_conv2d))
+                self.fullyconnected.weight = torch.nn.Parameter(torch.Tensor(w_dense))
+                self.fullyconnected.bias = torch.nn.Parameter(torch.Tensor(b_dense))
+
+        def forward(self, x: int) -> torch.Tensor:
+            """
+            Forward function to evaluate the model
+            :param x: Input to the model
+            :return: Prediction of the model
+            """
+            x = self.conv(x)
+            x = self.relu(x)
+            x = x.reshape(-1, 1296)
+            x = self.fullyconnected(x)
+            if not from_logits:
+                x = torch.nn.functional.softmax(x, dim=1)
+            return x
+
+    return Model
+
+
+def _load_cifar10_image_classifier_pt(from_logits=False):
+    class Model(torch.nn.Module):
+        """
+        Create model for pytorch.
+        Here the model does not use maxpooling. Needed for certification tests.
+        """
+
+        def __init__(self) -> None:
+            super().__init__()
+
+            self.conv = torch.nn.Conv2d(
+                in_channels=3,
+                out_channels=16,
+                kernel_size=(4, 4),
+                dilation=(1, 1),
+                padding=(0, 0),
+                stride=(3, 3),
             )
 
             self.fullyconnected = torch.nn.Linear(in_features=1600, out_features=10)
@@ -231,28 +269,28 @@ def get_cifar10_image_classifier_pt(from_logits=False, is_jatic=True):
                     os.path.dirname(os.path.dirname(__file__)),
                     "utils/resources/models",
                     "W_CONV2D_NO_MPOOL_CIFAR10.npy",
-                )
+                ),
             )
             b_conv2d = np.load(
                 os.path.join(
                     os.path.dirname(os.path.dirname(__file__)),
                     "utils/resources/models",
                     "B_CONV2D_NO_MPOOL_CIFAR10.npy",
-                )
+                ),
             )
             w_dense = np.load(
                 os.path.join(
                     os.path.dirname(os.path.dirname(__file__)),
                     "utils/resources/models",
                     "W_DENSE_NO_MPOOL_CIFAR10.npy",
-                )
+                ),
             )
             b_dense = np.load(
                 os.path.join(
                     os.path.dirname(os.path.dirname(__file__)),
                     "utils/resources/models",
                     "B_DENSE_NO_MPOOL_CIFAR10.npy",
-                )
+                ),
             )
 
             self.conv.weight = torch.nn.Parameter(torch.Tensor(w_conv2d))
@@ -260,7 +298,7 @@ def get_cifar10_image_classifier_pt(from_logits=False, is_jatic=True):
             self.fullyconnected.weight = torch.nn.Parameter(torch.Tensor(w_dense))
             self.fullyconnected.bias = torch.nn.Parameter(torch.Tensor(b_dense))
 
-        def forward(self, x):
+        def forward(self, x: int) -> torch.Tensor:
             """
             Forward function to evaluate the model
             :param x: Input to the model
@@ -274,15 +312,46 @@ def get_cifar10_image_classifier_pt(from_logits=False, is_jatic=True):
                 x = torch.nn.functional.softmax(x, dim=1)
             return x
 
+    return Model()
+
+
+def get_cifar10_image_classifier_pt(from_logits=False, is_jatic=True, is_certified=False):
+    """
+    Standard PyTorch classifier for unit testing.
+
+    :param from_logits: Flag if model should predict logits (True) or probabilities (False).
+    :type from_logits: `bool`
+    :param load_init: Load the initial weights if True.
+    :type load_init: `bool`
+    :param use_maxpool: If to use a classifier with maxpool or not
+    :type use_maxpool: `bool`
+    :return: PyTorchClassifier
+    """
+    import torch
+    from art.estimators.classification.pytorch import PyTorchClassifier
+
+    from heart_library.estimators.classification.certification.derandomized_smoothing import DRSJaticPyTorchClassifier
+    from heart_library.estimators.classification.pytorch import JaticPyTorchClassifier
+
     # Define the network
-    model = Model()
+    model = _load_cifar10_image_classifier_pt(from_logits=from_logits)
 
     # Define a loss function and optimizer
     loss_fn = torch.nn.CrossEntropyLoss(reduction="sum")
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-    
+
     if is_jatic:
-        jptc = JaticPyTorchClassifier(
+        if is_certified:
+            return DRSJaticPyTorchClassifier(
+                model=model,
+                loss=loss_fn,
+                optimizer=optimizer,
+                input_shape=(3, 32, 32),
+                nb_classes=10,
+                clip_values=(0, 1),
+                ablation_size=32,
+            )
+        return JaticPyTorchClassifier(
             model=model,
             loss=loss_fn,
             optimizer=optimizer,
@@ -290,20 +359,24 @@ def get_cifar10_image_classifier_pt(from_logits=False, is_jatic=True):
             nb_classes=10,
             clip_values=(0, 1),
         )
-    else:
-        jptc = PyTorchClassifier(
-            model=model,
-            loss=loss_fn,
-            optimizer=optimizer,
-            input_shape=(3, 32, 32),
-            nb_classes=10,
-            clip_values=(0, 1),
-        )
-
-    return jptc
+    return PyTorchClassifier(
+        model=model,
+        loss=loss_fn,
+        optimizer=optimizer,
+        input_shape=(3, 32, 32),
+        nb_classes=10,
+        clip_values=(0, 1),
+    )
 
 
-def master_seed(seed=1234, set_random=True, set_numpy=True, set_tensorflow=False, set_mxnet=False, set_torch=False):
+def master_seed(
+    seed: int = 1234,
+    set_random: bool = True,
+    set_numpy: bool = True,
+    set_tensorflow: bool = False,
+    set_mxnet: bool = False,
+    set_torch: bool = False,
+) -> None:
     """
     Set the seed for all random number generators used in the library. This ensures experiments reproducibility and
     stable testing.
@@ -326,49 +399,63 @@ def master_seed(seed=1234, set_random=True, set_numpy=True, set_tensorflow=False
     if not isinstance(seed, numbers.Integral):
         raise TypeError("The seed for random number generators has to be an integer.")
 
-    # Set Python seed
-    if set_random:
-        import random
+    for flag, func in [
+        (set_random, _set_python_seed),
+        (set_numpy, _set_numpy_seed),
+        (set_tensorflow, _set_tensorflow_seed),
+        (set_mxnet, _set_mxnet_seed),
+        (set_torch, _set_pytorch_seed),
+    ]:
+        if flag:
+            func(seed)
 
-        random.seed(seed)
 
-    # Set Numpy seed
-    if set_numpy:
-        np.random.seed(seed)
-        np.random.RandomState(seed)
+def _set_python_seed(seed: int) -> None:
+    import random
 
-    # Now try to set seed for all specific frameworks
-    if set_tensorflow:
-        try:
-            import tensorflow as tf
+    logger.info("Setting random seed for Python.")
+    random.seed(seed)
 
-            logger.info("Setting random seed for TensorFlow.")
-            if tf.__version__[0] == "2":
-                tf.random.set_seed(seed)
-            else:
-                tf.set_random_seed(seed)
-        except ImportError:
-            logger.info("Could not set random seed for TensorFlow.")
 
-    if set_mxnet:
-        try:
-            import mxnet as mx
+def _set_numpy_seed(seed: int) -> None:
+    logger.info("Setting random seed for Numpy.")
+    np.random.default_rng(seed)
+    np.random.RandomState(seed)
 
-            logger.info("Setting random seed for MXNet.")
-            mx.random.seed(seed)
-        except ImportError:
-            logger.info("Could not set random seed for MXNet.")
 
-    if set_torch:
-        try:
-            logger.info("Setting random seed for PyTorch.")
-            import torch
+def _set_tensorflow_seed(seed: int) -> None:
+    try:
+        import tensorflow as tf
 
-            torch.manual_seed(seed)
-            if torch.cuda.is_available():
-                torch.cuda.manual_seed_all(seed)
-        except ImportError:
-            logger.info("Could not set random seed for PyTorch.")
+        logger.info("Setting random seed for TensorFlow.")
+        if tf.__version__[0] == "2":
+            tf.random.set_seed(seed)
+        else:
+            tf.set_random_seed(seed)
+    except ImportError:
+        logger.info("Could not set random seed for TensorFlow.")
+
+
+def _set_mxnet_seed(seed: int) -> None:
+    try:
+        import mxnet as mx
+
+        logger.info("Setting random seed for MXNet.")
+        mx.random.seed(seed)
+    except ImportError:
+        logger.info("Could not set random seed for MXNet.")
+
+
+def _set_pytorch_seed(seed: int) -> None:
+    try:
+        logger.info("Setting random seed for PyTorch.")
+        import torch
+
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+    except ImportError:
+        logger.info("Could not set random seed for PyTorch.")
 
 
 def load_dataset(
@@ -401,7 +488,10 @@ def load_mnist(
         "mnist.npz",
         path=config.HEART_DATA_PATH,
         url="https://s3.amazonaws.com/img-datasets/mnist.npz",
+        verbose=True,
     )
+
+    print(path)
 
     dict_mnist = np.load(path)
     x_train = dict_mnist["x_train"]
@@ -423,7 +513,10 @@ def load_mnist(
 
 
 def get_file(
-    filename: str, url: Union[str, List[str]], path: Optional[str] = None, extract: bool = False, verbose: bool = False
+    filename: str,
+    url: Union[str, list[str]],
+    path: Optional[str] = None,
+    verbose: bool = False,
 ) -> str:
     """
     Downloads a file from a URL if it not already in the cache. The file at indicated by `url` is downloaded to the
@@ -433,116 +526,79 @@ def get_file(
     :param filename: Name of the file.
     :param url: Download URL.
     :param path: Folder to store the download. If not specified, `~/.art/data` is used instead.
-    :param extract: If true, tries to extract the archive.
     :param verbose: If true, print download progress bar.
     :return: Path to the downloaded file.
     """
-    if isinstance(url, str):
-        url_list = [url]
-    else:
-        url_list = url
 
-    if path is None:
-        path_ = os.path.expanduser(config.ART_DATA_PATH)
-    else:
-        path_ = os.path.expanduser(path)
-    if not os.access(path_, os.W_OK):
-        path_ = os.path.join("/tmp", ".art")
+    # Sanitize URL
+    urls = url if isinstance(url, list) else [url]
 
-    if not os.path.exists(path_):
-        os.makedirs(path_)
+    # Instantiate base path
+    base = os.path.expanduser(path) if path else os.path.expanduser("~/.art/data")
+    if not os.access(base, os.W_OK):
+        base = os.path.join(tempfile.gettempdir(), ".art")
+    os.makedirs(base, exist_ok=True)
 
-    if extract:
-        extract_path = os.path.join(path_, filename)
-        full_path = extract_path + ".tar.gz"
-    else:
-        full_path = os.path.join(path_, filename)
+    download_path = os.path.join(base, filename)
+    target = download_path
 
-    # Determine if dataset needs downloading
-    download = not os.path.exists(full_path)
+    if os.path.exists(target):
+        return target
 
-    if download:
-        logger.info("Downloading data from %s", url)
-        error_msg = "URL fetch failure on {}: {} -- {}"
-        try:
-            for url_i in url_list:
-                try:
-                    # The following two lines should prevent occasionally occurring
-                    # [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:847)
-                    import ssl
+    _download_file(urls, download_path, verbose)
 
-                    from six.moves.urllib.error import HTTPError, URLError
-                    from six.moves.urllib.request import urlretrieve
-
-                    ssl._create_default_https_context = ssl._create_unverified_context
-
-                    if verbose:
-                        with tqdm() as t_bar:
-                            last_block = [0]
-
-                            def progress_bar(blocks: int = 1, block_size: int = 1, total_size: Optional[int] = None):
-                                """
-                                :param blocks: Number of blocks transferred so far [default: 1].
-                                :param block_size: Size of each block (in tqdm units) [default: 1].
-                                :param total_size: Total size (in tqdm units). If [default: None] or -1, remains
-                                                   unchanged.
-                                """
-                                if total_size not in (None, -1):
-                                    t_bar.total = total_size
-                                displayed = t_bar.update((blocks - last_block[0]) * block_size)
-                                last_block[0] = blocks
-                                return displayed
-
-                            urlretrieve(url_i, full_path, reporthook=progress_bar)
-                    else:
-                        urlretrieve(url_i, full_path)
-
-                except HTTPError as exception:  # pragma: no cover
-                    raise Exception(
-                        error_msg.format(url_i, exception.code, exception.msg)  # type: ignore
-                    ) from HTTPError  # type: ignore
-                except URLError as exception:  # pragma: no cover
-                    raise Exception(
-                        error_msg.format(url_i, exception.errno, exception.reason)  # type: ignore
-                    ) from HTTPError  # type: ignore
-        except (Exception, KeyboardInterrupt):  # pragma: no cover
-            if os.path.exists(full_path):
-                os.remove(full_path)
-            raise
-
-    if extract:
-        if not os.path.exists(extract_path):
-            _extract(full_path, path_)
-        return extract_path
-
-    return full_path
+    return download_path
 
 
-def _extract(full_path: str, path: str) -> bool:
-    archive: Union[zipfile.ZipFile, tarfile.TarFile]
-    if full_path.endswith("tar"):  # pragma: no cover
-        if tarfile.is_tarfile(full_path):
-            archive = tarfile.open(full_path, "r:")
-    elif full_path.endswith("tar.gz"):  # pragma: no cover
-        if tarfile.is_tarfile(full_path):
-            archive = tarfile.open(full_path, "r:gz")
-    elif full_path.endswith("zip"):  # pragma: no cover
-        if zipfile.is_zipfile(full_path):
-            archive = zipfile.ZipFile(full_path)
-        else:
-            return False
-    else:
-        return False
+def _download_file(urls: list[str], download_path: str, verbose: bool) -> None:
+    import ssl
+
+    # Create SSL context that does not require verification
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+
+    # Instantiate urllib opener
+    opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=context))
+    urllib.request.install_opener(opener)
+
+    last_exception = None
+    for link in urls:
+        last_exception = _attempt_download(link, download_path, verbose)
+        if last_exception is None:
+            return  # Successfully Downloaded
+    if os.path.exists(download_path):
+        os.remove(download_path)
+    raise Exception("Failed to download file") from last_exception
+
+
+def _attempt_download(link: str, download_path: str, verbose: bool) -> Union[Exception, None]:
+    # Constrain download link to only http: or https:
+    if not link.startswith(("http:", "https:")):
+        raise ValueError(f"Invalid URL (must start with http or https): {link}")
+
     try:
-        archive.extractall(path)
-    except (tarfile.TarError, RuntimeError, KeyboardInterrupt):  # pragma: no cover
-        if os.path.exists(path):
-            if os.path.isfile(path):
-                os.remove(path)
-            else:
-                shutil.rmtree(path)
-        raise
-    return True
+        if verbose:
+            _download_with_progress(link, download_path)
+        else:
+            urlretrieve(link, download_path)  # noqa S310 (Constrained to http:/https:)
+        return None
+    except (HTTPError, URLError) as e:
+        return e
+
+
+def _download_with_progress(link: str, download_path: str) -> None:
+    with tqdm() as t:
+        # Initialize counter for tracking downloaded blocks in verbose mode
+        last_block = [0]
+
+        def hook(blocks, block_size, total):
+            if total not in (None, -1):
+                t.total = total
+            t.update((blocks - last_block[0]) * block_size)
+            last_block[0] = blocks
+
+        urlretrieve(link, download_path, reporthook=hook)  # noqa S310 (Constrained to http:/https:)
 
 
 def preprocess(
@@ -550,7 +606,7 @@ def preprocess(
     y: np.ndarray,
     nb_classes: int = 10,
     clip_values: Optional["CLIP_VALUES_TYPE"] = None,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Scales `x` to [0, 1] and converts `y` to class categorical confidences.
 
@@ -572,7 +628,7 @@ def preprocess(
     return normalized_x, categorical_y
 
 
-def to_categorical(labels: Union[np.ndarray, List[float]], nb_classes: Optional[int] = None) -> np.ndarray:
+def to_categorical(labels: Union[np.ndarray, list[float]], nb_classes: Optional[int] = None) -> np.ndarray:
     """
     Convert an array of labels to binary class matrix.
 

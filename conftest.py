@@ -22,7 +22,7 @@ import pytest
 import numpy as np
 
 from tests.utils import (
-    HEARTTestFixtureNotImplemented,
+    HEARTTestFixtureNotImplementedError,
     load_dataset,
     master_seed,
 )
@@ -76,7 +76,7 @@ def framework_agnostic(request, framework):
 @pytest.fixture
 def heart_warning(request):
     def _heart_warning(exception):
-        if type(exception) is HEARTTestFixtureNotImplemented:
+        if type(exception) is HEARTTestFixtureNotImplementedError:
             if request.node.get_closest_marker("framework_agnostic"):
                 if not request.node.get_closest_marker("parametrize"):
                     raise Exception(

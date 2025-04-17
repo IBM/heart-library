@@ -14,7 +14,7 @@ These attacks fool a computer vision model or an object detector and make it out
 For example, an object ‘airplane’ is recognized as a tree or not detected at all.
 In mathematical terms, we add a perturbation {math}`\delta` to the input {math}`x`, such that the model’s {math}`f`'s output disagrees with the original, correctly assigned output or class,
 
-$$ f(x+\delta) \neq f(x) \text{ [1,12].}$$
+$$ f(x+\delta) \neq f(x) \text{ [1,10].}$$
 
 Figure 1. depicts an example from [1], where the authors depict adversarial examples for different classes, here the numbers from one to two or three, respectively.
 
@@ -29,12 +29,12 @@ $$\min_\delta ||\delta|| f(x+\delta) \neq f(x) \text{ [1]}$$
 
 This attack formulation is untargeted, as we only require a wrong output to succeed.
 In the formulation, {math}`||\delta||`  measures the change that  {math}`\delta` adds to the sample.
-The reason to minimize this change it to avoid the trivial solution of simply computing an image with an instance of another class.
+The reason to minimize this change is to avoid the trivial solution of simply computing an image with an instance of another class.
 However, the exact perturbation depends on the chosen norm.
 In most works [1,3], mathematical norms measure the overall change to all pixels ({math}`L_\infty`), the squared distance ({math}`L_2`) or number of changed pixels ({math}`L_0`) [1].
-While these metrics integrate easily into optimization frameworks, they do not correspond to human perception [13,14].
-In addition, ({math}`L_p`) norms may also not correspond to practically implementable changes [3,12].
-Another, convenient solution is thus, as suggested by Lian et al [2], to constrain the perturbation to a specific area of the image: to craft an adversarial patch.
+While these metrics integrate easily into optimization frameworks, they do not correspond to human perception [11,12].
+In addition, ({math}`L_p`) norms may also not correspond to practically implementable changes [3,10].
+Another, convenient solution is thus, as suggested by Lian et al [5], to constrain the perturbation to a specific area of the image: to craft an adversarial patch.
 
 ```{figure} ../_static/AdvAirplanes.jpg
 :scale: 95 %
@@ -60,26 +60,15 @@ In this library, we focus on patches and explain how to use HEART to craft a pat
 Before Crafting a Patch
 -----------------------
 
-If the patch is crafted as part of a model evaluation, is important to first understand the exact threat model we evaluate [3,12].
+If the patch is crafted as part of a model evaluation, is important to first understand the exact threat model we evaluate [3,10].
 This translates to understanding what knowledge the attacker potentially has about the model and choosing the attack’s goal, and how this goal is evaluated.
-For the sake of patch attacks, where the kind of change induced in the sample is set, there are two main choices regarding what knowledge the attacker has about the model:
+For the sake of patch attacks, where the kind of change induced in the sample is set, there are two main choices regarding what knowledge the attacker has about the model: [white-box or black-box attacks](/explanations/white_vs_black_box)
 
-- **White-box**. Worst case, to assess worst case vulnerability. The attacker knows all details of the model, including the architecture and weights [12]. As such an access allows direct computation of the gradients for the attack, it is considered as a strong attacker: the perturbations are very specific to the model, and may be smaller than with less knowledge. However, white-box attacks can still fail despite the attacker's knowledge of the model [10].
+So far, we have mainly defined white-box and black-box in relation to the model. The same considerations could be made for the data. However, this is primarily relevant in cases where, for example, the representations of the data are subject to design like in Malware detection [10], and less relevant in the vision tasks discussed here [10].
 
-- **Black-box**. The attacker does not know the exact model, but they do now input/output formats and is thus able to, for example, craft examples on another model and transfer them to the target model. Alternatively, gradients can be approximated based on input/outputs pairs. While the more realistic threat, transferring examples or computing them without full knowledge of the model generally leads to worse performance of the adversarial examples [6,7].
+Another relevant decision concerns the attack type and goal. The attack goal describes what the attacker aims to achieve with the perturbation in terms of desired behavior of the classifier. These goals can be very task specific, and partially differ across object detection and image classification, several goals exist [3]. For more information on attack types and their respective goals, see [this explanation](/explanations/attack_types).
 
-So far, we have mainly defined white-box and black-box in relation to the model. The same considerations could be made for the data. However, this is primarily relevant in cases where, for example, the representations of the data are subject to design like in Malware detection [12], and less relevant in the vision tasks discussed here [12].
-Another relevant decision concerns the attack goal. The attack goal describes what the attacker aims to achieve with the perturbation in terms of desired behavior of the classifier. These goals can be very task specific, and partially differ across object detection and image classification, several goals exist [3].
-
-- **Misclassification**. The output of the classifier is, for the defined target, unequal to the correct prediction. If the correct output of the classifier is, for example, 'airplane', any other output class than 'airplane' is acceptable for the attacker, as long as it differs from the original, correct output. Such attacks are thus also called untargeted. In most cases, untargeted attacks shift the adversarial point to any or the closest of the neighboring classes.
-
-- **Classification as target**. The output of the classifier is equal to a specific target class or object. This is called targeted attack. As an example, consider a specific image with output 'airplane' that should be classified as 'boat' once the attacker's perturbation is present. Targeted attacks are generally harder as untargeted attacks, as they need to find a perturbation that shifts the point into a specific class, not any of the neighboring ones.
-
-- **Invisibility** (Object detection). A special case of the targeted attack on an object detector is to have the object disappear [15]. In other words, the object detector does not output the target object at all. As image classification models are forced to give some output, this attack goal is not implementable on classification.
-
-- **Denial of service** (Object Detection). Another attack goal on an object detector is to not output one bounding box per object, but many - potentially thousands of slightly differently placed (and tagged) bounding boxes [16]. Naturally, this renders the classifier unusable, as any follow-up systems must deal with a potential very large number of outputs. As before, such an attack is not implementable on image classification, as the number of outputs is fixed.
-
-We will now address the question on how to evaluate these goals numerically. First, however, we have to acknowledge that also benign accuracy (e.g., on clean, unperturbed data) is relevant to security and should not be missed in any (security) evaluation [12]. As reasoned by Biggio and Roli [12], ideally, the benign model's accuracy is plotted against attack performance measured by the introduced perturbation to an image. This perturbation, as discussed in the [background](sec-back) is measured using {math}`L_p` norms. The accuracy must be measured according to the desired goal. For untargeted attacks, the deviation from the ground truth is computed; for targeted attacks, we compute the match with the attack's target class. In the case of invisibility, we have to compare to a ground truth with the target object removed, and denial of service by for example counting the number of outputted objects. Specific attack goals and evaluation can be found in the <project:../reference_materials/attack_cards/index.rst>.
+We will now address the question on how to [evaluate](/explanations/evaluation_metrics). these goals numerically. First, however, we have to acknowledge that benign accuracy (e.g., on clean, unperturbed data) is also relevant to security and should not be missed in any (security) evaluation [10]. As reasoned by Biggio and Roli [10], ideally, the benign model's accuracy is plotted against attack performance measured by the introduced perturbation to an image. This perturbation, as discussed in the [background](sec-back) is measured using {math}`L_p` norms. The accuracy must be measured according to the desired goal. For untargeted attacks, the deviation from the ground truth is computed; for targeted attacks, we compute the match with the attack's target class. In the case of invisibility, we have to compare to a ground truth with the target object removed, and denial of service by for example counting the number of outputted objects. Specific attack goals and evaluation can be found in the <project:../reference_materials/attack_cards/index.rst>.
 
 
 (sec-craftPatch)=
@@ -98,7 +87,7 @@ Analogous to any other learning problem, the loss can be monitored during the le
 
 As training a neural network, training a patch can be tedious, and the patch may not converge.
 In theory, an attack should always be able to reduce the model's accuracy to zero with arbitrary attack strength (e.g., perturbation size, optimization length).
-Attacks may however fail for various reasons, including that the model does not provide enough information [11].
+Attacks may however fail for various reasons, including that the model does not provide enough information [9].
 In these cases, or generally if the attack does not perform well when tested on hold-out data, it is advised to increases the samples the attack is optimized on, to increase optimization time, or to add scaling and rotation operations available to implicitly increase the data and avoid overfitting.
 
 Optimizing attacks, as stated above can be tedious, but best practices should still be respected.
@@ -122,9 +111,10 @@ Applying these suggestions, monitoring and repeating this procedure for several 
 Evaluating Models on Patches
 ----------------------------
 After having seen the success of the patch on the model, one may be inclined to harden the model.
-However, abundant research from the adversarial example literature suggests that defending adversarial examples is hard [8-10].
-To give an example, Athalye et al. [10] showed that often, attacks do not perform worse against defended models because the models are more robust, but instead because the attacks fail on the hardened models as, for example, the gradients are not providing enough information for the attack to find a good perturbation {math}`\delta`.
-Should a defense be developed, we suggest reading the document by Carlini et al. [8] covering the list of common flaws in defense evaluation.
+However, abundant research from the adversarial example literature suggests that defending adversarial examples is hard [6-8].
+To give an example, Athalye et al. [8] showed that often, attacks do not perform worse against defended models because the models are more robust, but instead because the attacks fail on the hardened models as, for example, the gradients are not providing enough information for the attack to find a good perturbation {math}`\delta`.
+Should a defense be developed, we suggest reading the document by Carlini et al. [6] covering the list of common flaws in defense evaluation.
+
 We recap the here on a high level to outline possible problems in an evaluation.
 
 - **Train and test split** Keep train/test sets separate when evaluating defenses. As a best practice in general model training, this avoids overfitting and thus a wrong assessment of the capabilities of your defense.
@@ -137,7 +127,7 @@ We recap the here on a high level to outline possible problems in an evaluation.
 - **Randomness** Randomness is often a secret within a defense, but thus yields security-by-obscurity. If possible, it should be incorporated into an evaluation. An example is to repeatedly query the model to remove randomness added to the outputs.
 - **Simple baselines** It may be easier than expected to fool a model. It is thus good practice to also compare to performance when masking, blurring, or otherwise changing the area of the patch. This yields a baseline on how important the features under the patch are in general.
 - **Ablation studies** Perform ablation studies of all attack and defense hyperparameters like perturbation strength, thresholds, etc. This avoids overlooking settings which are performing better than the current setting, or inconsistent behavior of the defense when varying hyperparameters.
-- **Attack failure** Control for attack failure modes [11]. This includes, for example, gradients with insufficient information to derive a perturbation (gradient masking), but also entails problems as simple as bugs that are in the code used.
+- **Attack failure** Control for attack failure modes [9]. This includes, for example, gradients with insufficient information to derive a perturbation (gradient masking), but also entails problems as simple as bugs that are in the code used.
 
 While this list provides many useful starting points to find flawed model evaluations, it is not complete and may not contain the underlying problem in your specific case.
 
@@ -154,26 +144,20 @@ References
 
 [5] Lian, Jiawei, et al. Benchmarking adversarial patch against aerial detection. IEEE Transactions on Geoscience and Remote Sensing 60 (2022): 1-16.
 
-[6] Chen, Shang-Tse, et al. Shapeshifter: Robust physical adversarial attack on faster r-cnn object detector. Machine Learning and Knowledge Discovery in Databases: European Conference, ECML PKDD 2018, Dublin, Ireland, September 10–14, 2018, Proceedings, Part I 18. Springer International Publishing, 2019.
+[6] Carlini, Nicholas, et al. On evaluating adversarial robustness. arXiv preprint arXiv:1902.06705 (2019).
 
-[7] Lu, Jiajun, Hussein Sibai, and Evan Fabry. Adversarial examples that fool detectors. arXiv preprint arXiv:1712.02494(2017).
+[7] Tramer, Florian, et al. On adaptive attacks to adversarial example defenses. Advances in neural information processing systems 33 (2020): 1633-1645.
 
-[8] Carlini, Nicholas, et al. On evaluating adversarial robustness. arXiv preprint arXiv:1902.06705 (2019).
+[8] Athalye, Anish, Nicholas Carlini, and David Wagner. Obfuscated gradients give a false sense of security: Circumventing defenses to adversarial examples. International conference on machine learning. PMLR, 2018.
 
-[9] Tramer, Florian, et al. On adaptive attacks to adversarial example defenses. Advances in neural information processing systems 33 (2020): 1633-1645.
+[9] Pintor, Maura, et al. Indicators of attack failure: Debugging and improving optimization of adversarial examples. Advances in Neural Information Processing Systems 35 (2022): 23063-23076.
 
-[10] Athalye, Anish, Nicholas Carlini, and David Wagner. Obfuscated gradients give a false sense of security: Circumventing defenses to adversarial examples. International conference on machine learning. PMLR, 2018.
+[10] Biggio, Battista, and Fabio Roli. Wild patterns: Ten years after the rise of adversarial machine learning. Proceedings of the 2018 ACM SIGSAC Conference on Computer and Communications Security. 2018.
 
-[11] Pintor, Maura, et al. Indicators of attack failure: Debugging and improving optimization of adversarial examples. Advances in Neural Information Processing Systems 35 (2022): 23063-23076.
+[11] Zhao, Zhengyu, Zhuoran Liu, and Martha Larson. Towards large yet imperceptible adversarial image perturbations with perceptual color distance. Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2020.
 
-[12] Biggio, Battista, and Fabio Roli. Wild patterns: Ten years after the rise of adversarial machine learning. Proceedings of the 2018 ACM SIGSAC Conference on Computer and Communications Security. 2018.
+[12] Sharif, Mahmood, Lujo Bauer, and Michael K. Reiter. On the suitability of lp-norms for creating and preventing adversarial examples. Proceedings of the IEEE conference on computer vision and pattern recognition workshops. 2018.
 
-[13] Zhao, Zhengyu, Zhuoran Liu, and Martha Larson. Towards large yet imperceptible adversarial image perturbations with perceptual color distance. Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2020.
+[13] Hu, Shengnan, et al. "Cca: Exploring the possibility of contextual camouflage attack on object detection." 2020 25th International Conference on Pattern Recognition (ICPR). IEEE, 2021.
 
-[14] Sharif, Mahmood, Lujo Bauer, and Michael K. Reiter. On the suitability of lp-norms for creating and preventing adversarial examples. Proceedings of the IEEE conference on computer vision and pattern recognition workshops. 2018.
-
-[15] Hu, Shengnan, et al. "Cca: Exploring the possibility of contextual camouflage attack on object detection." 2020 25th International Conference on Pattern Recognition (ICPR). IEEE, 2021.
-
-[16] Shapira, Avishag, et al. "Phantom sponges: Exploiting non-maximum suppression to attack deep object detectors." Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision. 2023.
-
-[17] Liu, Chengji, et al. "Object detection based on YOLO network." 2018 IEEE 4th information technology and mechatronics engineering conference (ITOEC). IEEE, 2018.
+[14] Liu, Chengji, et al. "Object detection based on YOLO network." 2018 IEEE 4th information technology and mechatronics engineering conference (ITOEC). IEEE, 2018.

@@ -18,10 +18,10 @@
 
 import logging
 
-from tests.utils import HEARTTestException, get_cifar10_image_classifier_pt
-from art.utils import load_dataset
 import pytest
+from art.utils import load_dataset
 
+from tests.utils import HEARTTestError, get_cifar10_image_classifier_pt
 
 logger = logging.getLogger(__name__)
 
@@ -29,38 +29,43 @@ logger = logging.getLogger(__name__)
 @pytest.mark.required
 def test_laser_attack(heart_warning):
     try:
-        from heart_library.attacks.evasion import HeartLaserBeamAttack
-        from heart_library.attacks.attack import JaticAttack
         import maite.protocols.image_classification as ic
         import numpy as np
+
+        from heart_library.attacks.attack import JaticAttack
+        from heart_library.attacks.evasion import HeartLaserBeamAttack
         from heart_library.utils import process_inputs_for_art
 
         jptc = get_cifar10_image_classifier_pt()
-        
-        laser_attack = HeartLaserBeamAttack(estimator=jptc, iterations=5, random_initializations=10, 
-                                            max_laser_beam=(580, 3.14, 32, 32))
+
+        laser_attack = HeartLaserBeamAttack(
+            estimator=jptc,
+            iterations=5,
+            random_initializations=10,
+            max_laser_beam=(580, 3.14, 32, 32),
+        )
         attack = JaticAttack(laser_attack)
 
         assert isinstance(jptc, ic.Model)
         assert isinstance(attack, ic.Augmentation)
 
-        (x_train, _), (_, _), _, _ = load_dataset('cifar10')
+        (x_train, _), (_, _), _, _ = load_dataset("cifar10")
 
-        img = x_train[[0]].transpose(0, 3, 1, 2).astype('float32')
+        img = x_train[[0]].transpose(0, 3, 1, 2).astype("float32")
 
-        data = {'images': img[:1], 'labels': [3]}
+        data = {"images": img[:1], "labels": [3]}
 
         x_adv, _, _ = attack(data=data)
         x_adv = np.stack(x_adv)
 
         np.testing.assert_array_equal(x_adv[[0]].shape, img[[0]].shape)
-        
+
         x, y, _ = process_inputs_for_art(data)
         x_adv = laser_attack.generate(x, y)
         assert isinstance(x_adv, np.ndarray)
-        
-        with pytest.raises(ValueError):
+
+        with pytest.raises(ValueError, match="Unrecognized input dimension. Only tensors NHWC are acceptable."):
             laser_attack.generate(x.ravel())
 
-    except HEARTTestException as e:
+    except HEARTTestError as e:
         heart_warning(e)

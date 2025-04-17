@@ -1,0 +1,62 @@
+{
+  "builder_name": "parquet",
+  "citation": "",
+  "config_name": "mnist",
+  "dataset_name": "mnist",
+  "dataset_size": 20396682,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/mnist@77f3279092a1c1579b2250db8eafed0ad422088c/mnist/train-00000-of-00001.parquet": {
+      "num_bytes": 15561616,
+      "checksum": null
+    },
+    "hf://datasets/mnist@77f3279092a1c1579b2250db8eafed0ad422088c/mnist/test-00000-of-00001.parquet": {
+      "num_bytes": 2595890,
+      "checksum": null
+    }
+  },
+  "download_size": 18157506,
+  "features": {
+    "image": {
+      "_type": "Image"
+    },
+    "label": {
+      "names": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "_type": "ClassLabel"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 38554188,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 17478900,
+      "num_examples": 60000,
+      "dataset_name": "mnist"
+    },
+    "test": {
+      "name": "test",
+      "num_bytes": 2917782,
+      "num_examples": 10000,
+      "dataset_name": "mnist"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

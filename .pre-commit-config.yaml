@@ -19,10 +19,10 @@ repos:
       - id: ruff
         name: ruff-lint
         description: "execute ruff linting"
-        files: ^src/
+        files: ^src/|tests/
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
         name: ruff-format
         description: "execute ruff-format"
-        files: ^src
+        files: ^src/|tests/
         args: []

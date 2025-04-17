@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 112.69 32.14">
+  <defs>
+    <style>
+      .cls-1 {
+        mask: url(#mask);
+      }
+
+      .cls-2 {
+        fill: url(#linear-gradient-2);
+      }
+
+      .cls-3 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-4 {
+        fill: #fff;
+      }
+
+      .cls-5 {
+        font-family: IBMPlexSans-SemiBold, 'IBM Plex Sans';
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      .cls-6 {
+        letter-spacing: -.02em;
+      }
+
+      .cls-7 {
+        fill: #001e71;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="6.01" y1="25.51" x2="27.01" y2="25.51" gradientUnits="userSpaceOnUse">
+      <stop offset=".1" stop-color="#000" stop-opacity="0"/>
+      <stop offset=".75" stop-color="#000"/>
+    </linearGradient>
+    <mask id="mask" x="0" y=".01" width="32" height="32" maskUnits="userSpaceOnUse">
+      <g>
+        <path class="cls-4" d="M15.01,29.01c-4.96,0-9-4.04-9-9V7.63L15.01,3.13l11,5.5v-2.24L15.01.89,4.01,6.39v13.62c0,6.07,4.93,11,11,11s11-4.93,11-11h-2c0,4.96-4.04,9-9,9Z"/>
+        <rect class="cls-3" x="6.01" y="19.01" width="21" height="13"/>
+      </g>
+    </mask>
+    <linearGradient id="linear-gradient-2" x1="0" y1="32.01" x2="32.01" y2=".01" gradientUnits="userSpaceOnUse">
+      <stop offset=".2" stop-color="#9539ff"/>
+      <stop offset=".8" stop-color="#00b3ff"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <g class="cls-1">
+      <rect class="cls-2" x="0" y=".01" width="32" height="32"/>
+    </g>
+    <path class="cls-7" d="M26.78,15.27c-.8-.81-1.87-1.26-3-1.26-1.02,0-1.99.36-2.76,1.03-.77-.67-1.74-1.03-2.76-1.03-1.14,0-2.2.45-3,1.26-1.64,1.67-1.64,4.38,0,6.04l5.76,5.84h0s0,0,0,0l5.76-5.84c1.64-1.67,1.64-4.38,0-6.04ZM25.35,19.91l-4.34,4.4h0s0,0,0,0l-4.34-4.4c-.88-.89-.88-2.34,0-3.23.84-.85,2.31-.85,3.16,0l1.18,1.21h0s0,0,0,0l1.18-1.21c.84-.85,2.31-.85,3.16,0,.88.89.88,2.34,0,3.23Z"/>
+  </g>
+  <text class="cls-5" transform="translate(34.56 24.52)"><tspan x="0" y="0">HEA</tspan><tspan class="cls-6" x="47.78" y="0">R</tspan><tspan x="63.14" y="0">T</tspan></text>
+</svg>
