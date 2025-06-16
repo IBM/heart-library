@@ -1,0 +1,9 @@
+/* This CSS document modifies all usage of MyST glossary objects (globally)
+   This will ensure that any usage of a glossary will have terms that are bold and 1.25em font size
+   This CSS document is referenced by docs/source/conf.py within: html_css_files = ['global_glossary_format.css']
+*/
+
+dl.glossary dt {
+    font-size: 1.25em;
+    font-weight: bold;
+}

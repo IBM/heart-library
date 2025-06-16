@@ -1,5 +1,4 @@
-How to Simulate White Box Attacks
-============
+# How to Simulate White Box Attacks
 
 <!-- ```{article-info}
 :avatar: 
@@ -14,21 +13,23 @@ How to Simulate White Box Attacks
 <!-- ```{note}
 The companion Jupyter Notebook can be [found on GitHub here:]](https://github.com/IBM/heart-library).
 ``` -->
+
 ## Introduction
-This notebook provides a beginner friendly introduction to using adversarial attacks on image classification as part of Test & Evaluation of a small benchmark dataset (CIFAR-10). The first attack we will use is Projected Gradient Descent (PGD), a simple attack based on the model gradients warranted the input. We then visualize the attack and afterwards constrain the change applied to the image to a fraction of the input image using a patch attack. Computing the performance under these white-box attacks is a crucial step in T&E. 
+
+This notebook provides a beginner friendly introduction to using adversarial attacks on image classification as part of
+Test & Evaluation of a small benchmark dataset (CIFAR-10). The first attack we will use is Projected Gradient Descent
+(PGD), a simple attack based on the model gradients warranted the input. We then visualize the attack and afterwards
+constrain the change applied to the image to a fraction of the input image using a patch attack. Computing the
+performance under these white-box attacks is a crucial step in T&E.
 
 :::: {grid} 4
-:::{grid-item}
-**Intended Audience:** All T&E Users
+:::{grid-item} **Intended Audience:** All T&E Users
 :::
-:::{grid-item}
-**Requirements:** Basic Python and Torchvision / ML Skills
+:::{grid-item} **Requirements:** Basic Python and Torchvision / ML Skills
 :::
-:::{grid-item}
-**Notebook Runtime:** ~2 Minutes
+:::{grid-item} **Notebook Runtime:** ~2 Minutes
 :::
-:::{grid-item}
-**Reading time:** ~10 Minutes
+:::{grid-item} **Reading time:** ~10 Minutes
 :::
 ::::
 
@@ -36,12 +37,16 @@ This notebook provides a beginner friendly introduction to using adversarial att
 
 :::{grid-item}
 :columns: 8
-Before you begin, you will want to make sure that you download the how-to guide's companion Jupyter notebook.  This notebook allows you to follow along in your own environment and interact with the code as you learn.  The code snippets are also included in the documentation, but the notebook is provided for ease of use and to enable you to try things on your own.
+Before you begin, you will want to make sure that you download the how-to guide's companion
+Jupyter notebook. This notebook allows you to follow along in your own environment and interact with the code as you
+learn. The code snippets are also included in the documentation, but the notebook is provided for ease of use and to
+enable you to try things on your own.
 :::
 
 :::{grid-item}
 :child-align: center
 :columns: 4
+
 <!-- ```{button-link} #
 :color: primary
 :outline:
@@ -52,27 +57,33 @@ Download Companion Notebook {octicon}`download`
 :class: important
 
 The companion Jupyter notebook will be available in the code repository in the next HEART release.
-``` 
+```
+
 :::
 
 ::::
 
 ### Contents
+
 1. Imports and set-up
-2. Load data and model
-3. Projected Gradient Descent Attack
-4. Patch attack
-5. Conclusion
-6. Next Steps
+1. Load data and model
+1. Projected Gradient Descent Attack
+1. Patch attack
+1. Conclusion
+1. Next Steps
 
 ### Learning Objectives
+
 - How to define a custom model and use CIFAR 10
 - How to run an attack with JATIC
 - How to inspect images and understand whether they fool the model
 - How white box attacks (PGD, Patch attacks) work
 
 ## 1. Imports and Set-up
-We import all necessary libraries for this tutorial. In this order, we first import general libraries such as numpy, then load relevant methods from ART. We then load the corresponding HEART functionality and specific torch functions to support the model. Lastly, we use a command to plot within the notebook.
+
+We import all necessary libraries for this tutorial. In this order, we first import general libraries such as numpy,
+then load relevant methods from ART. We then load the corresponding HEART functionality and specific torch functions to
+support the model. Lastly, we use a command to plot within the notebook.
 
 ```python
 import numpy as np
@@ -100,9 +111,12 @@ from torchvision import transforms
 ```
 
 ## 2. Load CIFAR-10 Data and Model for Classification
-We load the data, importing only a small part to save compute for this small demonstration. We then define the model and wrap it as JATIC pytorch classifier.
 
-The data can be replaced as desired by the user - we first define the ten CIFAR labels, specify the subset used in this notebook (25 images), specify the image size (32 x 32 images) and then safe everything as a modified dataframe.
+We load the data, importing only a small part to save compute for this small demonstration. We then define the model and
+wrap it as JATIC pytorch classifier.
+
+The data can be replaced as desired by the user - we first define the ten CIFAR labels, specify the subset used in this
+notebook (25 images), specify the image size (32 x 32 images) and then safe everything as a modified dataframe.
 
 ```python
 labels = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
@@ -115,7 +129,9 @@ y_train = y_train[:100, :].astype('float32')
 y_test = y_test[:100, :].astype('float32')
 ```
 
-We then load a custom model which comes with the repository. Most important is that the model has the correct input shape and is trained to perform decently well on the data. At the bottom, we wrap the model into a JaticPyTorchClassifier.
+We then load a custom model which comes with the repository. Most important is that the model has the correct input
+shape and is trained to perform decently well on the data. At the bottom, we wrap the model into a
+JaticPyTorchClassifier.
 
 ```python
 path = '../../'
@@ -208,11 +224,16 @@ plt.show()
 :alt: Frog
 ```
 
-The above picture shows, in a resolution of 32 x 32 pixels, the image of a frog with the model's classification output above.
+The above picture shows, in a resolution of 32 x 32 pixels, the image of a frog with the model's classification output
+above.
 
 ## 3. Define and Run PGD Attack
 
-We are now ready to define the first attack, Projected Gradient Descent (PGD). We then apply the attack to the first batch in the training data, applying many iterations to ensure that the images fool the classifier. We first plot the result for two samples and then compute the benign and adversarial performance on a larger batch. From there we observe that while the initial performance is correct, the final classification is wrong (however we are computing the metric only on one sample).
+We are now ready to define the first attack, Projected Gradient Descent (PGD). We then apply the attack to the first
+batch in the training data, applying many iterations to ensure that the images fool the classifier. We first plot the
+result for two samples and then compute the benign and adversarial performance on a larger batch. From there we observe
+that while the initial performance is correct, the final classification is wrong (however we are computing the metric
+only on one sample).
 
 When rerunning this notebook, this part can be counted as completed if a correctly classified sample is misclassified.
 
@@ -230,14 +251,16 @@ _ = plt.title(f'adversarial classification: {labels[np.argmax(np.stack(pred_batc
 plt.show()
 ```
 
-```
+```text
 PGD - Batches:   0%|          | 0/1 [00:00<?, ?it/s]
 ```
 
 ```{image} /_static/how-to/wb-2.png
 :alt: cat
 ```
-This is the same picture as above, still 32 x 32 resolution, but with a perturbation added that changes the classification (as depicted above the image).
+
+This is the same picture as above, still 32 x 32 resolution, but with a perturbation added that changes the
+classification (as depicted above the image).
 
 ```python
 #define attack, wrap within JATIC counterpart
@@ -269,24 +292,28 @@ metric.update(adversarial_preds_batch, groundtruth_target_batch)
 print(metric.compute())
 ```
 
-```
+```text
 PGD - Batches:   0%|          | 0/1 [00:00<?, ?it/s]
 ```
 
 :::: {grid} 2
 :::{grid-item}
+
 ```{image} /_static/how-to/wb-3.png
 :alt: truck
 ```
+
 :::
 :::{grid-item}
+
 ```{image} /_static/how-to/wb-4.png
 :alt: cat
 ```
+
 :::
 ::::
 
-```
+```text
 PGD - Batches:   0%|          | 0/1 [00:00<?, ?it/s]
 ```
 
@@ -295,7 +322,11 @@ PGD - Batches:   0%|          | 0/1 [00:00<?, ?it/s]
 ```
 
 ## 4. Patch Attacks
-PGD applies perturbations to the entire image. This is not necessarily desired, so next we use an attack that applies a local perturbation, or a patch, to the image. Analogous to before, we define attack parameters (including patch size and placement) and optimize the patch. We first plot the patch by itself, before visualizing it on different samples. This visualization shows us that the patch is not effective on all samples.
+
+PGD applies perturbations to the entire image. This is not necessarily desired, so next we use an attack that applies a
+local perturbation, or a patch, to the image. Analogous to before, we define attack parameters (including patch size and
+placement) and optimize the patch. We first plot the patch by itself, before visualizing it on different samples. This
+visualization shows us that the patch is not effective on all samples.
 
 When rerunning this notebook, this part can be counted as completed if a correctly classified sample is misclassified.
 
@@ -323,10 +354,9 @@ plt.axis("off")
 plt.imshow(((patch) * patch_mask).transpose(1,2,0))
 _ = plt.title('Generated Adversarial Patch')
 plt.show()
-print('-------------')
 ```
 
-```
+```text
 Adversarial Patch PyTorch:   0%|          | 0/1000 [00:00<?, ?it/s]
 ```
 
@@ -336,10 +366,6 @@ Clipping input data to the valid range for imshow with RGB data ([0..1] for floa
 
 ```{image} /_static/how-to/wb-5.png
 :alt: patch
-```
-
-```python
--------------
 ```
 
 ```python
@@ -353,31 +379,41 @@ for i, patched_image in enumerate(patched_images[0:5]):
 
 :::: {grid} 3
 :::{grid-item}
+
 ```{image} /_static/how-to/wb-6.png
 :alt: cat
 ```
+
 :::
 :::{grid-item}
+
 ```{image} /_static/how-to/wb-7.png
 :alt: dog
 ```
+
 :::
 :::{grid-item}
+
 ```{image} /_static/how-to/wb-8.png
 :alt: truck
 ```
+
 :::
 ::::
 :::: {grid} 3
 :::{grid-item}
+
 ```{image} /_static/how-to/wb-9.png
 :alt: frog
 ```
+
 :::
 :::{grid-item}
+
 ```{image} /_static/how-to/wb-10.png
 :alt: automobile
 ```
+
 :::
 :::{grid-item}
 
@@ -386,11 +422,13 @@ for i, patched_image in enumerate(patched_images[0:5]):
 
 ## 5. Conclusion
 
-We have successfully attacked a model with adversarial example that are based on the model's gradients. In the next steps, we can attempt to defend the computed examples or decrease the knowledge the attacker has by running black box attacks which are not based on the model's gradients.
+We have successfully attacked a model with adversarial example that are based on the model's gradients. In the next
+steps, we can attempt to defend the computed examples or decrease the knowledge the attacker has by running black box
+attacks which are not based on the model's gradients.
 
 ## 6. Next Steps
 
 Check out other How-to Guides focusing on:
 
 - [Black-Box Attacks](black_box.md)
-- [Auto Attacks](auto_attacks.md)
+- [AutoAttack](auto_attacks.md)

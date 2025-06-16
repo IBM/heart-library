@@ -1,5 +1,4 @@
-Installation and Setup
-======================
+# Installation and Setup
 
 This presents HEART users with a guide to the initial installation and setup of the HEART library.
 
@@ -11,7 +10,7 @@ The installation and setup information can also be found on [GitHub](https://git
 
 To install the latest version of HEART from PyPI, run:
 
-```
+```bash
 pip install heart-library
 ```
 
@@ -19,7 +18,7 @@ pip install heart-library
 
 To install the latest version of HEART from the heart-library public GitHub, run:
 
-```
+```bash
 git clone https://github.com/IBM/heart-library.git
 cd heart-library
 pip install .
@@ -27,12 +26,16 @@ pip install .
 
 ## (Optional) Development Environment via Poetry
 
-It may be beneficial for developers to set up an environment from a reproducible source of truth. This environment is useful for developers that wish to work within a pull request or leverage the same development conditions used by HEART contributors. Please follow the instructions for installation via Poetry within the official HEART GitHub repository.
+It may be beneficial for developers to set up an environment from a reproducible source of truth. This environment is
+useful for developers that wish to work within a pull request or leverage the same development conditions used by HEART
+contributors. Please follow the instructions for installation via Poetry within the official HEART GitHub repository.
 
-```
+```bash
 conda env create -f environment.yml
 conda activate heart-env
 poetry install --all-extras --with dev
 ```
 
-If conda is not currently installed on your devices, instructions to do so can be found [here](https://docs.conda.io/projects/miniconda/en/latest/)
+If conda is not currently installed on your devices, please refer to the
+[official instructions published by Anaconda](https://docs.conda.io/projects/miniconda/en/latest/) to get started
+installing conda using a method that best fits your requirements.

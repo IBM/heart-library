@@ -27,9 +27,9 @@ requirements:
     - pillow >=11.0.0
     - scikit-learn >=0.22.2
     - six >=1.0.0
-    - setuptools >=75
+    - setuptools >=78.1.1
     - tqdm >=4.0.0
-    - transformers >=4.44.2,<4.49.0
+    - transformers >=4.0.0,<4.49.0
 
 test:
   imports:

@@ -1,19 +1,47 @@
 [tool.poetry]
 name = "heart-library"
-version = "0.6.0"
+version = "0.6.3"
 description = "Hardened Extension of the Adversarial Robustness Toolbox (HEART) supports assessment of adversarial AI vulnerabilities in Test & Evaluation workflows."
-readme = "README.md"
+authors = ["Jordan Fischer, Kieran Fraser, Stekunda Henry, Jackson Lee, Adam Lockwood, Arjun Sachar, Peter Swiek"]
 license = "MIT"
+readme = "README.md"
+homepage = "https://heart-library.readthedocs.io/en/latest/"
 repository = "https://github.com/IBM/heart-library"
 packages = [{include = "heart_library", from = "src" }]
 keywords = [
     "machine learning",
-    "adversarial ai",
-    "evasion",
+    "security",
+    "adversarial robustness",
+    "adversarial machine learning",
+    "AI test and evaluation",
+    "T&E",
+    "DoD",
+    "MAITE",
+    "JATIC",
+    "robust ML",
+    "black-box attacks",
+    "white-box attacks",
+    "perturbation",
+    "physical realizability",
+    "model evaluation",
+    "adversarial attacks",
+    "defensive AI",
+    "ART",
+    "Adversarial Robustness Toolbox"
 ]
-
-authors = ["Mark Baker, Jordan Fischer, Kieran Fraser, Jackson Lee, Adam Lockwood, Stekunda Henry"]
-
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Information Technology",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development :: Testing"
+]
 
 [build-system]
 requires = ["poetry-core"]
@@ -37,7 +65,7 @@ numpy = ">=1.18.5,<2"
 pillow = ">=11.0.0"
 scikit-learn = ">=0.22.2"
 six = ">=1.0.0"
-setuptools = ">=75"
+setuptools = ">=78.1.1"
 tqdm = ">=4.0.0"
 transformers = ">=4.0.0, <4.49.0"
 
@@ -176,9 +204,9 @@ script = [
 optional = true
 
 [tool.poetry.group.dev-pytorch.dependencies]
-pycocotools = "^2"
+pycocotools = ">=2"
 torch = ">2.3.1"
-torchmetrics = "^1"
+torchmetrics = ">=1"
 torchvision = ">=0.18.0"
 
 
@@ -194,13 +222,14 @@ yolov5 = { version = ">=7.0.13", markers = "python_version >= '3.10'" }
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-nbmake = "^1"
-pre-commit = "^3"
-prettytable = "^3"
-pytest = "^8"
-pytest-mock = "^3"
-pytest-cov = "^6"
-pyright = "^1"
+nbmake = ">=1"
+psutil = ">=7.0.0"
+pre-commit = ">=3"
+prettytable = ">=3"
+pytest = ">=8"
+pytest-mock = ">=3"
+pytest-cov = ">=6"
+pyright = ">=1"
 ruff = ">=0.8.0"
 
 

@@ -1,5 +1,4 @@
-Contributors
-============
+# Contributors
 
 The list of HEART contributors is coming soon.
 
@@ -8,7 +7,6 @@ The list of HEART contributors is coming soon.
 :img-top: /_static/how-to/wb.jpg
 :link: white-box
 :link-type: doc
-
 
 +++
 Project Manager - IBM
@@ -20,7 +18,6 @@ Project Manager - IBM
 :link: black-box
 :link-type: doc
 
-
 +++
 AI Architect - IBM
 
@@ -31,7 +28,6 @@ AI Architect - IBM
 :link: auto-attacks
 :link-type: doc
 
-
 +++
 Software Engineer - IBM
 
@@ -41,7 +37,6 @@ Software Engineer - IBM
 :img-top: /_static/how-to/aa.jpg
 :link: auto-attacks
 :link-type: doc
-
 
 +++
 Data Scientist - IBM

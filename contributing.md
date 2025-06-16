@@ -14,6 +14,7 @@ Thank you for your interest in contributing to HEART! This guide outlines how yo
 5. [Security Issues](#security-issues)
 6. [Communication](#communication)
 7. [License](#license)
+8. [Contributors](#contributors)
 
 ## Overview
 
@@ -77,6 +78,18 @@ Please note that the development team primarily works in a private GitLab reposi
 ## License
 
 By contributing to HEART, you agree that your contributions will be licensed under the [LICENSE](LICENSE.txt) in this repository.
+
+## Contributors
+
+In addition to current authors, the team recognizes the following list of contributors and advisors for their help in building HEART.
+
+- Mark Baker
+- Beat Buesser
+- Kathrin Grosse
+- Akash Jain
+- Joseph Poirier
+- Jae Ro
+- David Yu
 
 ---
 

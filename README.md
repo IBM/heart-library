@@ -1,17 +1,18 @@
-# Hardened Extension of the Adversarial Robustness Toolbox (HEART) 
+# Hardened Extension of the Adversarial Robustness Toolbox (HEART)
 
 ![Static Badge](https://img.shields.io/badge/python-3.9%20--%203.11-blue "Python 3.9 - 3.11 version support.")
 
-HEART is a Python extension library for Machine Learning Security that builds on the popular Adversarial Robustness algorithms within the [Adversarial Robustness Toolbox (ART)](https://github.com/Trusted-AI/adversarial-robustness-toolbox). The extension library allows the user to leverage core ART algorithms while providing additional benefits to AI Test & Evaluation (T&E) engineers. HEART documentation can be found [here](https://heart-library.readthedocs.io/). 
+HEART is a Python extension library for Machine Learning Security that builds on the popular Adversarial Robustness algorithms within the [Adversarial Robustness Toolbox (ART)](https://github.com/Trusted-AI/adversarial-robustness-toolbox). The extension library allows the user to leverage core ART algorithms while providing additional benefits to AI Test & Evaluation (T&E) engineers. HEART documentation can be found [here](https://heart-library.readthedocs.io/).
 
-- Support for T&E of models for Department of Defense use cases 
+- Support for T&E of models for Department of Defense use cases
 - Alignment to [MAITE](https://github.com/mit-ll-ai-technology/maite) protocols for seamless T&E workflows
-- Essential subset of adversarial robustness methods for targeted AI security coverage 
-- Quality assurance of model assessments in the form of metadata 
+- Essential subset of adversarial robustness methods for targeted AI security coverage
+- Quality assurance of model assessments in the form of metadata
 - In-depth support for users based on codified T&E expert experience in form of guides and examples
-- Front-end application for low-code users: HEART Gradio Application 
+- Front-end application for low-code users: HEART Gradio Application
 
-# Installation
+
+## Installation
 
 ### From Python Packaging Index (PyPI)
 
@@ -37,13 +38,13 @@ In some cases, it may be beneficial for developers to set up an environment from
 
 - [Poetry Installation Instructions](https://github.com/IBM/heart-library/blob/main/poetry_installation.md)
 
-# Getting Started With HEART
+## Getting Started With HEART
 
 IBM has published a catalog of notebooks designed to assist developers of all skill levels with the process of getting started utilizing HEART in their AI T&E workflows.  These Jupyter notebooks can be accessed within the official heart-library GitHub repository:
 
 - [HEART Jupyter Notebooks](https://github.com/IBM/heart-library/tree/main/notebooks)
 
-# HEART Modules
+## HEART Modules
 
 The HEART library is organized into three primary modules: attacks, estimators, and metrics.
 
@@ -58,3 +59,7 @@ The HEART library is organized into three primary modules: attacks, estimators, 
 ### heart_library.metrics
 
 > The HEART metrics module implements industry standard, commonly-used T&E metrics for model evaluation.
+
+## Acknowledgement
+
+This material is based upon work supported by the Chief Digital and Artificial Intelligence Office under Contract No. W519TC-23-9-2037. The views and conclusions contained herein are those of the author(s) and should not be interpreted as necessarily representing the official policies or endorsements, either expressed or implied, of the U.S. Government.

@@ -1,6 +1,7 @@
 # Example Notebooks
 
-HEART Library Notebooks can be found on [github](https://github.com/IBM/heart-library/tree/main/notebooks). Notebooks beginning with ‘get_started’ are for all T&E users and are a great place to start.
+HEART Library Notebooks can be found on [github](https://github.com/IBM/heart-library/tree/main/notebooks). Notebooks
+beginning with ‘get_started’ are for all T&E users and are a great place to start.
 
 ## `0_get_started_heart.ipynb`
 
@@ -12,7 +13,8 @@ HEART Library Notebooks can be found on [github](https://github.com/IBM/heart-li
 
 ## `1_get_started_pgd_attack.ipynb`
 
-> **Description:** This notebook quickly demonstrates the use of the Projected Gradient Descent attack in code as part of Test & Evaluation of small benchmark datasets (MNIST and CIFAR-10). Key features:
+> **Description:** This notebook quickly demonstrates the use of the Projected Gradient Descent attack in code as part
+> of Test & Evaluation of small benchmark datasets (MNIST and CIFAR-10). Key features:
 >
 > - Attacks are demonstrated using parallel and non-parallel mode.
 > - Extracting attack metadata to determine the best performing attacks.
@@ -23,7 +25,8 @@ HEART Library Notebooks can be found on [github](https://github.com/IBM/heart-li
 
 ## `2_get_started_auto_attack.ipynb`
 
-> **Description:** This notebook quickly demonstrates the use of AutoAttack in code as part of Test & Evaluation of small benchmark datasets (MNIST and CIFAR-10). Key features:
+> **Description:** This notebook quickly demonstrates the use of AutoAttack in code as part of Test & Evaluation of
+> small benchmark datasets (MNIST and CIFAR-10). Key features:
 >
 > - Attacks are demonstrated using parallel and non-parallel mode.
 > - Extracting attack metadata to determine the best performing attacks.
@@ -37,12 +40,12 @@ HEART Library Notebooks can be found on [github](https://github.com/IBM/heart-li
 > **Description:** This notebook walks through an advanced T&E example for an image classification task.
 >
 > 1. Define the T&E task
-> 2. Set up the dataset
-> 3. Load the classification model
-> 4. Scope relevant attacks
-> 5. Execute evaluation
-> 6. Draw conclusions on model vulnerabilities
-> 7. Next steps
+> 1. Set up the dataset
+> 1. Load the classification model
+> 1. Scope relevant attacks
+> 1. Execute evaluation
+> 1. Draw conclusions on model vulnerabilities
+> 1. Next steps
 >
 > **Intended Audience:** Advanced T&E Users
 
@@ -50,7 +53,8 @@ HEART Library Notebooks can be found on [github](https://github.com/IBM/heart-li
 
 ## `4_get_started_adversarial_patch.ipynb`
 
-> **Description:** This notebook demonstrates how to perform an adversarial patch attack on CIFAR-10 data and a simple classification model using HEART and MAITE
+> **Description:** This notebook demonstrates how to perform an adversarial patch attack on CIFAR-10 data and a simple
+> classification model using HEART and MAITE
 >
 > **Intended Audience:** All T&E Users
 
@@ -64,7 +68,9 @@ HEART Library Notebooks can be found on [github](https://github.com/IBM/heart-li
 
 ## `6_adversarial_patch_for_object_detection.ipynb`
 
-> **Description:** This notebook demonstrates how to perform adversarial patch attacks on object detection models using HEART and MAITE. For the purposes of this demonstration, DeTR will be the object detection model of choice and a variety of images from the COCO data set will be used for executing detection and attack.
+> **Description:** This notebook demonstrates how to perform adversarial patch attacks on object detection models using
+> HEART and MAITE. For the purposes of this demonstration, DeTR will be the object detection model of choice and a
+> variety of images from the COCO data set will be used for executing detection and attack.
 >
 > **Intended Audience:** Advanced T&E Users
 
@@ -82,6 +88,7 @@ HEART Library Notebooks can be found on [github](https://github.com/IBM/heart-li
 
 ## `9_get_started_maite_evaluate.ipynb`
 
-> **Description:** This notebook demonstrates how to execute evaluations using HEART and MAITE's `` `evaluate` `` function
+> **Description:** This notebook demonstrates how to execute evaluations using HEART and MAITE's `` `evaluate` ``
+> function
 >
 > **Intended Audience:** All T&E Users

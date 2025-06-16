@@ -1,5 +1,4 @@
-How to Simulate Black Box Attacks
-============
+# How to Simulate Black Box Attacks
 
 <!-- ```{article-info}
 :avatar: 
@@ -14,21 +13,25 @@ How to Simulate Black Box Attacks
 <!-- ```{note}
 The companion Jupyter Notebook can be [found on GitHub here:]](https://github.com/IBM/heart-library).
 ``` -->
+
 ## Introduction
-This notebook provides a beginner friendly introduction to using adversarial black-box attacks on image classification as part of Test & Evaluation of a small benchmark dataset (CIFAR-10). In contrast to white-box attacks that rely on gradients, black-box attacks approximate the needed gradients based on the output of the model. We apply HopSkipJump, that does not rely on computing the gradients of the model. As a more practical variant, we show how to use another black-box attack, the laser beam attack. The changes introduced are here in the shape of a laser beam. To conclude the notebook, we will show how to calculate clean and attack accuracy. Computing the performance under attack is a crucial step in T&E. 
+
+This notebook provides a beginner friendly introduction to using adversarial black-box attacks on image classification
+as part of Test & Evaluation of a small benchmark dataset (CIFAR-10). In contrast to white-box attacks that rely on
+gradients, black-box attacks approximate the needed gradients based on the output of the model. We apply HopSkipJump,
+that does not rely on computing the gradients of the model. As a more practical variant, we show how to use another
+black-box attack, the laser beam attack. The changes introduced are here in the shape of a laser beam. To conclude the
+notebook, we will show how to calculate clean and attack accuracy. Computing the performance under attack is a crucial
+step in T&E.
 
 :::: {grid} 4
-:::{grid-item}
-**Intended Audience:** All T&E Users
+:::{grid-item} **Intended Audience:** All T&E Users
 :::
-:::{grid-item}
-**Requirements:** Basic Python and Torchvision / ML Skills
+:::{grid-item} **Requirements:** Basic Python and Torchvision / ML Skills
 :::
-:::{grid-item}
-**Notebook Runtime:** ~2 Minutes
+:::{grid-item} **Notebook Runtime:** ~2 Minutes
 :::
-:::{grid-item}
-**Reading time:** ~10 Minutes
+:::{grid-item} **Reading time:** ~10 Minutes
 :::
 ::::
 
@@ -36,12 +39,16 @@ This notebook provides a beginner friendly introduction to using adversarial bla
 
 :::{grid-item}
 :columns: 8
-Before you begin, you will want to make sure that you download the how-to guide's companion Jupyter notebook.  This notebook allows you to follow along in your own environment and interact with the code as you learn.  The code snippets are also included in the documentation, but the notebook is provided for ease of use and to enable you to try things on your own.
+Before you begin, you will want to make sure that you download the how-to guide's companion
+Jupyter notebook. This notebook allows you to follow along in your own environment and interact with the code as you
+learn. The code snippets are also included in the documentation, but the notebook is provided for ease of use and to
+enable you to try things on your own.
 :::
 
 :::{grid-item}
 :child-align: center
 :columns: 4
+
 <!-- ```{button-link} #
 :color: primary
 :outline:
@@ -52,25 +59,31 @@ Download Companion Notebook {octicon}`download`
 :class: important
 
 The companion Jupyter notebook will be available in the code repository in the next HEART release.
-``` 
+```
+
 :::
 
 ::::
 
 ### Contents
+
 1. Imports and set-up
-2. Load data and model
-3. HopeSkipJump Attack
-4. Laserbeam attack
-5. Conclusion
-6. Next Steps
+1. Load data and model
+1. HopeSkipJump Attack
+1. Laserbeam attack
+1. Conclusion
+1. Next Steps
 
 ### Learning Objectives
+
 - How to define a custom model and use CIFAR 10
 - How black-box attacks (HopSkipJump, Laser Beam attack) work
 
 ## 1. Imports and Set-up
-We import all necessary libraries for this tutorial. In this order, we first import general libraries such as numpy, then load relevant methods from ART. We then load the corresponding HEART functionality and specific torch functions to support the model. Lastly, we use a command to plot within the notebook.
+
+We import all necessary libraries for this tutorial. In this order, we first import general libraries such as numpy,
+then load relevant methods from ART. We then load the corresponding HEART functionality and specific torch functions to
+support the model. Lastly, we use a command to plot within the notebook.
 
 ```python
 import numpy as np
@@ -99,9 +112,12 @@ from torchvision.models import resnet18, ResNet18_Weights
 ```
 
 ## 2. Load CIFAR-10 Data and Model for Classification
-We load the data, importing only a small part to save compute for this small demonstration. We then define the model and wrap it as JATIC pytorch classifier.
 
-The data can be replaced as desired by the user - we first define the ten CIFAR labels, specify the subset used in this notebook (25 images), specify the image size (32 x 32 images) and then safe everything as a modified dataframe.
+We load the data, importing only a small part to save compute for this small demonstration. We then define the model and
+wrap it as JATIC pytorch classifier.
+
+The data can be replaced as desired by the user - we first define the ten CIFAR labels, specify the subset used in this
+notebook (25 images), specify the image size (32 x 32 images) and then safe everything as a modified dataframe.
 
 ```python
 labels = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
@@ -120,7 +136,8 @@ data = data.map(lambda x: {"image": preprocess(x["img"]), "label": x["label"]}).
 to_image = lambda x: transforms.ToPILImage()(torch.Tensor(x))
 ```
 
-We then load a custom model which comes with the repository. Most important is that the model has the correct input shape and is trained to perform decently well on the data. At the bottom, we wrap the model into JaticPyTorchClassifier.
+We then load a custom model which comes with the repository. Most important is that the model has the correct input
+shape and is trained to perform decently well on the data. At the bottom, we wrap the model into JaticPyTorchClassifier.
 
 ```python
 path = '../../'
@@ -212,11 +229,15 @@ plt.show()
 :alt: Frog
 ```
 
-The above picture shows, in a resolution of 32 x 32 pixels, the image of a cat with the model's classification output above.
+The above picture shows, in a resolution of 32 x 32 pixels, the image of a cat with the model's classification output
+above.
 
 ## 3. Black Box or HopSkipJump Attack
 
-Although implicit in the code above, the previous two attacks rely on gradient information from the model. It may be desired from a more practical perspective that model internals are not known to the attacker. We thus run an additional attack that computes the perturbation purely on the output, not on the model's gradients. As before, we define the attack, run it, and plot the results with the classification outputs for inspection.
+Although implicit in the code above, the previous two attacks rely on gradient information from the model. It may be
+desired from a more practical perspective that model internals are not known to the attacker. We thus run an additional
+attack that computes the perturbation purely on the output, not on the model's gradients. As before, we define the
+attack, run it, and plot the results with the classification outputs for inspection.
 
 When rerunning this notebook, this part can be counted as completed if a correctly classified sample is misclassified.
 
@@ -247,28 +268,35 @@ for i in range(5):
     plt.show()
 ```
 
-```
+```text
 HopSkipJump:   0%|          | 0/25 [00:00<?, ?it/s]
 ```
 
 ```{image} /_static/how-to/bb-2.png
 :alt: cat
 ```
+
 ```{image} /_static/how-to/bb-3.png
 :alt: cat
 ```
+
 ```{image} /_static/how-to/bb-4.png
 :alt: cat
 ```
+
 ```{image} /_static/how-to/bb-5.png
 :alt: cat
 ```
+
 ```{image} /_static/how-to/bb-6.png
 :alt: cat
 ```
 
 ## 4. Practical black-box Laserbeam attack
-However, the previous black box attack applied, analogous to PGD, changes to the entire image. We thus finally consider a black box attack that applies perturbations in the form of laser beams. As before, we define the attack, compute the accuracy decrease (this time on a batch), and plot the resulting adversarial examples for inspection.
+
+However, the previous black box attack applied, analogous to PGD, changes to the entire image. We thus finally consider
+a black box attack that applies perturbations in the form of laser beams. As before, we define the attack, compute the
+accuracy decrease (this time on a batch), and plot the resulting adversarial examples for inspection.
 
 When rerunning this notebook, this part can be counted as completed if a correctly classified sample is misclassified.
 
@@ -307,14 +335,14 @@ for img in x_adv[:2]:
 :alt: patch
 ```
 
-
 ## 5. Conclusion
 
-We have successfully attacked a model with adversarial example that are based only on the model's in/output. In the next steps, we can test several attacks at once on a model or we can attempt to defend the computed examples.
+We have successfully attacked a model with adversarial example that are based only on the model's in/output. In the next
+steps, we can test several attacks at once on a model or we can attempt to defend the computed examples.
 
 ## 6. Next Steps
 
 Check out other How-to Guides focusing on:
 
 - [White-Box Attacks](white_box.md)
-- [Auto Attacks](auto_attacks.md)
+- [AutoAttack](auto_attacks.md)

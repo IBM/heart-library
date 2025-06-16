@@ -279,14 +279,15 @@ class JaticAttack:
         Returns:
             list[dict[str, Any]]: Updated metadata.
         """
+        new_meta = []
+
         if meta is not None and None not in meta and len(meta) > 0:
             for item in meta:
-                item.update({"patch": patch, "mask": mask})
+                new_item = {**item, "patch": patch, "mask": mask}
+                new_meta.append(new_item)
         else:
-            meta = []
-            for _ in range(len(adv_images)):
-                meta.append({"patch": patch, "mask": mask})
-        return meta
+            new_meta.extend([{"patch": patch, "mask": mask} for _ in range(len(adv_images))])
+        return new_meta
 
     def __output_for_evasion(
         self,

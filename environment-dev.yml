@@ -4,31 +4,36 @@ name: heart-conda-dev
 channels:
   - conda-forge
 dependencies:
-  # Optional Dependencies
-  # Ensure that datasets >=3.2.0 is used when installing via CICD micromamba
-  - datasets>=3.2.0
-  - gputil>=1.4.0
-  # Yolov5 cannot support huggingface_hub>=0.25.0
-  - huggingface_hub<0.25.0
-  - jupyter>=1.1.1
-  - matplotlib>=3.9
-  - pandas>=2.2.2
-  - pycocotools>=2.0.8
-  - pympler>=1.1
-  - pytorch>2.3.1
-  - timm>=1.0.9
-  - torchmetrics>=1.4.2
-  - torchvision>=0.18.0
-  # Dev
-  - pytest>=8.3
-  - pytest-cov>=6.0
-  # Pip Overrides (Fixes known issues or unavailable via conda-forge)
-  - pip
-  - pip:
-    # Unavailable via conda-forge
-    - opencv-python>=4.10.0.84
-    - memory-profiler>=0.61.0
-    # Yolov5 does not support python 3.9 due to AWS-CLI dependencies (boto3/botocore/urllib3)
-    # See https://github.com/fcakyon/yolov5-pip/discussions/256 for more information
-    # Uncomment the following yolov5 pin if required:
-    # yolov5>=7.0.13
+# HEART Required Dependencies
+# This is the set of install_requires dependencies defined in pyproject.toml
+- adversarial-robustness-toolbox >=1.19.1
+- datasets >=3.2.0
+- maite >=0.7.0
+- multiprocess >=0.70.0
+- numpy >=1.18.5, <2
+- pillow >=11.0.0
+- scikit-learn >=0.22.2
+- six >=1.0.0
+- setuptools >=78.1.1
+- tqdm >=4.0.0
+- transformers >=4.0.0, <4.49.0
+
+# HEART Minimal Optional Dependencies
+# This is the complete set of optional dependencies necessary for unit testing
+- timm >=1
+- pytorch >2.3.1
+- torchmetrics >=1
+- torchvision >=0.18.0
+- pycocotools >=2
+
+# HEART Dev Dependencies
+# This is the complete set of dev dependencies necessary for unit testing
+- pip >=25.0.1
+- psutil >=7.0.0
+- pytest >=8
+- pytest-mock >=3
+- pytest-cov >=6
+
+# Yolov5 Compatibility
+# Note: Yolov5 must be installed manually as it does not support Python <= 3.9
+- huggingface_hub <0.25.0

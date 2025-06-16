@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 project = 'HEART-library'
 copyright = '2024, IBM'
 author = 'IBM'
-release = '0.6.0'
+release = '0.6.3'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -22,8 +22,10 @@ extensions = ['sphinx.ext.autodoc','sphinx_charts.charts', 'sphinx_design', 'sph
     'sphinx.ext.napoleon','myst_parser', 'qiskit_sphinx_theme', 'sphinx_copybutton']
 
 myst_enable_extensions = ["colon_fence"]
+myst_heading_anchors = 3
 
 html_static_path = ['_static']
+html_css_files = ['global_glossary_format.css']
 templates_path = ['_templates']
 exclude_patterns = []
 
