@@ -6,12 +6,6 @@
 Remember to download the associated Jupyter notebook to follow along and try the code yourself.  It is located [here](#).
 ```  -->
 
-```{admonition} Coming Soon
-:class: important
-
-The companion Jupyter notebook will be available in the code repository in the next HEART release.
-```
-
 ## Introduction
 
 ::::{grid} 2

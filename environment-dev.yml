@@ -6,17 +6,17 @@ channels:
 dependencies:
 # HEART Required Dependencies
 # This is the set of install_requires dependencies defined in pyproject.toml
-- adversarial-robustness-toolbox >=1.19.1
-- datasets >=3.2.0
+- adversarial-robustness-toolbox >=1.20.1
+- datasets >=3.2.0,<3.4.0
 - maite >=0.7.0
 - multiprocess >=0.70.0
-- numpy >=1.18.5, <2
+- numpy >=1.24.2, <2
 - pillow >=11.0.0
-- scikit-learn >=0.22.2
+- scikit-learn >=1.5.2
 - six >=1.0.0
 - setuptools >=78.1.1
 - tqdm >=4.0.0
-- transformers >=4.0.0, <4.49.0
+- transformers >=4.0.0
 
 # HEART Minimal Optional Dependencies
 # This is the complete set of optional dependencies necessary for unit testing
@@ -25,6 +25,7 @@ dependencies:
 - torchmetrics >=1
 - torchvision >=0.18.0
 - pycocotools >=2
+- ultralytics >=8.3.16
 
 # HEART Dev Dependencies
 # This is the complete set of dev dependencies necessary for unit testing
@@ -34,6 +35,4 @@ dependencies:
 - pytest-mock >=3
 - pytest-cov >=6
 
-# Yolov5 Compatibility
-# Note: Yolov5 must be installed manually as it does not support Python <= 3.9
-- huggingface_hub <0.25.0
+

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "heart-library"
-version = "0.6.3"
+version = "0.7.0"
 description = "Hardened Extension of the Adversarial Robustness Toolbox (HEART) supports assessment of adversarial AI vulnerabilities in Test & Evaluation workflows."
 authors = ["Jordan Fischer, Kieran Fraser, Stekunda Henry, Jackson Lee, Adam Lockwood, Arjun Sachar, Peter Swiek"]
 license = "MIT"
@@ -44,7 +44,7 @@ classifiers = [
 ]
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=2"]
 build-backend = "poetry.core.masonry.api"
 
 
@@ -57,17 +57,17 @@ heart_library = ["py.typed"]
 [tool.poetry.dependencies]
 
 python = ">=3.9, <3.12"
-adversarial-robustness-toolbox = ">=1.19.1"
-datasets = ">=3.2.0"
-maite = ">=0.7.0"
+adversarial-robustness-toolbox = ">=1.20.1"
+datasets = ">=3.2.0, <3.4.0"
+maite = ">=0.8.1"
 multiprocess = ">=0.70.0"
-numpy = ">=1.18.5,<2"
+numpy = ">=1.24.2,<2"
 pillow = ">=11.0.0"
-scikit-learn = ">=0.22.2"
+scikit-learn = ">=1.5.2"
 six = ">=1.0.0"
 setuptools = ">=78.1.1"
 tqdm = ">=4.0.0"
-transformers = ">=4.0.0, <4.49.0"
+transformers = ">=4.0.0"
 
 
 # HEART Optional Dependencies ----------------------------------------------------[tool.poetry.dependencies (optional)]
@@ -79,7 +79,7 @@ matplotlib = { version = "^3", optional = true }
 memory-profiler = { version = ">=0.61.0", optional = true }
 myst-parser = { version = "^3", optional = true }
 opencv-python = { version = "^4", optional = true }
-pandas = { version = "^2", optional = true }
+pandas = { version = ">=2", optional = true }
 pycocotools = { version = "^2", optional = true }
 pympler = { version = "^1", optional = true }
 qiskit-sphinx-theme = { version = ">=2.0.0", optional = true }
@@ -89,13 +89,12 @@ sphinx-copybutton = { version = ">=0.5.2", optional = true }
 sphinx-design = { version = ">=0.6.1", optional = true }
 timm = { version = "^1", optional = true }
 torch = { version = ">2.3.1", optional = true }
-torchmetrics = { version = "^1", optional = true }
+torchmetrics = { version = ">=1", optional = true }
 torchvision = { version = ">=0.18.0", optional = true }
+eva-decord = { version = ">=0.6.1", optional = true }
+mlflow = { version = ">=2.19.0", optional = true }
+ultralytics = { version = ">=8.3.16", optional = true }
 
-# yolov5 with compatibility workarounds
-# https://github.com/fcakyon/yolov5-pip/discussions/256
-huggingface_hub = { version = "<0.25.0", optional = true }
-yolov5 = { version = ">=7.0.13", optional = true, markers = "python_version >= '3.10'" }
 
 
 # HEART Optional Dependency Groups ----------------------------------------------------------------[tool.poetry.extras]
@@ -117,8 +116,9 @@ all = [
     "timm",
     "transformers",
     "torchmetrics",
-    "yolov5",
-    "huggingface_hub",
+    "eva-decord",
+    "ultralytics",
+    "mlflow",
 ]
 
 
@@ -161,8 +161,18 @@ object_detection = [
     "torch",
     "opencv-python",
     "pycocotools",
-    "yolov5",
-    "huggingface_hub",
+    "ultralytics"
+]
+# Optional Video Dependencies
+
+video = [
+    "eva-decord",
+]
+
+# Optional Catalogue Dependencies
+
+mlflow = [
+    "mlflow",
 ]
 
 
@@ -209,13 +219,11 @@ torch = ">2.3.1"
 torchmetrics = ">=1"
 torchvision = ">=0.18.0"
 
+[tool.poetry.group.dev-yolo]
+optional = true
 
-[tool.poetry.group.dev-yolov5]           
-optional=true
-
-[tool.poetry.group.dev-yolov5.dependencies]
-huggingface_hub = "<0.25.0"
-yolov5 = { version = ">=7.0.13", markers = "python_version >= '3.10'" }
+[tool.poetry.group.dev-yolo.dependencies]
+ultralytics = ">=8.3.16"
 
 
 [tool.poetry.group.dev]

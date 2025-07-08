@@ -6,12 +6,6 @@
 Remember to download the associated Jupyter notebook to follow along and try the code yourself.  It is located [here](#).
 ```  -->
 
-```{admonition} Coming Soon
-:class: important
-
-The companion Jupyter notebook will be available in the code repository in the next HEART release.
-```
-
 ## Background
 
 ::::{grid} 2
@@ -25,13 +19,13 @@ surveillance, reconnaissance, and potentially even autonomous target identificat
 are responsible for identifying different objects within their field of view, ranging from vehicles and weapons to
 personnel, in complex and dynamic environments.
 
-The accuracy of these models is vital for mission success and safety. Any inaccuracies or vulnerabilities could lead to
-critical errors, such as misidentifying friendly forces as hostile or overlooking actual threats.
+The accuracy of these models is vital for mission success and safety. Any inaccuracies or vulnerabilities
+could lead to critical errors, such as misidentifying friendly forces as hostile or overlooking actual threats.
 
-While at a conference, Amelia attends a talk about “adversarial attacks” on ML models. An adversarial attack is a
-deliberate attempt to mislead machine learning models, causing them to produce incorrect outputs or behaviors. These
-attacks manipulate input data, often imperceptibly, to exploit vulnerabilities in models trained on clean, well-curated
-datasets.
+While at a conference, Amelia attends a talk about “adversarial attacks” on ML models.  An [adversarial attack](/explanations/attack_types)
+is a deliberate attempt to mislead machine learning models, causing them
+to produce incorrect outputs or behaviors. These attacks manipulate input data, often imperceptibly, to
+exploit vulnerabilities in models trained on clean, well-curated datasets.
 :::
 
 :::{grid-item}
@@ -47,8 +41,9 @@ datasets.
 ::::
 
 To illustrate, consider a drone object detection model that has been trained to identify tanks in battlefield scenarios.
-An adversarial attack might involve adding a nearly invisible sticker to a tank, causing the model to misclassify it as,
-say, a civilian car. This could have severe consequences in real-world defense applications, such as:
+An adversarial attack might involve adding a nearly invisible [sticker](/explanations/PatchDocumentation)
+to a tank, causing the model to misclassify it as, say, a civilian car. This could have severe consequences
+in real-world defense applications, such as:
 
 ::::{grid} 2
 
@@ -74,13 +69,12 @@ reliability and trustworthiness, ultimately contributing to safer and more effec
 
 :::{grid-item}
 :columns: 8
-During her research, Amelia finds the website for the Joint AI Test Infrastructure Capability
-(JATIC) program in the US Department of Defense. JATIC develops software products for AI Test & Evaluation (T&E) and AI
-Assurance.
+During her research, Amelia finds the website for the Joint AI Test Infrastructure Capability (JATIC) program
+in the US Department of Defense.  JATIC develops software products for AI Test & Evaluation (T&E) and AI Assurance.
 
-Upon reading more from JATIC, Amelia learns about the Hardened Extensions of the Adversarial Robustness Toolkit (HEART).
-HEART is an open-source software project developed by IBM Research, built upon the Adversarial Robustness Toolbox (ART),
-another IBM initiative.
+Upon reading more from JATIC, Amelia learns about the Hardened Extensions of the Adversarial Robustness
+Toolkit (HEART). HEART is an open-source software project developed by IBM Research, built upon the
+Adversarial Robustness Toolbox (ART), another IBM initiative.
 :::
 
 :::{grid-item}
@@ -100,8 +94,8 @@ another IBM initiative.
 ::::{grid} 2
 
 :::{grid-item-card} Advanced Attack Methods
-HEART supports a key subset of adversarial attack techniques compared to
-ART. These enable Amelia to simulate a more relevant and current array of threat scenarios and conduct thorough
+HEART supports a [key subset](/explanations/attack_types) of adversarial attack techniques compared to ART.
+These enable Amelia to simulate a more relevant and current array of threat scenarios and conduct thorough
 assessments of model vulnerabilities.
 :::
 
@@ -237,7 +231,7 @@ special wrapper for image data.
 def extract_predictions(predictions_, conf_thresh):
     # Get the predicted class
     predictions_class = [visdrone_labels[i] for i in list(predictions_.labels)]
-   
+
     if len(predictions_class) < 1:
         return [], [], []
     # Get the predicted bounding boxes
@@ -245,7 +239,7 @@ def extract_predictions(predictions_, conf_thresh):
 
     # Get the predicted prediction score
     predictions_score = list(predictions_.scores)
-    
+
 
     # Get a list of index with score greater than threshold
     threshold = conf_thresh
@@ -279,44 +273,44 @@ def plot_image_with_boxes(img, boxes, pred_cls, title):
     plt.axis("off")
     plt.title(title)
     plt.imshow(img, interpolation="nearest")
-    
-#wrapper for image datasets 
+
+#wrapper for image datasets
 class ImageDataset:
-    
+
     metadata = {"id": "example"}
-    
+
     def __init__(self, images, groundtruth, threshold=0.8):
         self.images = images
         self.groundtruth = groundtruth
         self.threshold = threshold
-        
+
     def __len__(self)->int:
         return len(self.images)
-    
+
     def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
         image = np.asarray(self.images[ind]["image"]).astype(np.float32)
-        
+
         filtered_detection = self.groundtruth[ind]
         filtered_detection.boxes = filtered_detection.boxes[filtered_detection.scores>self.threshold]
         filtered_detection.labels = filtered_detection.labels[filtered_detection.scores>self.threshold]
         filtered_detection.scores = filtered_detection.scores[filtered_detection.scores>self.threshold]
-        
+
         return (image, filtered_detection, None)
 
-# specific dataset class to craft a targeted adversarial patch 
+# specific dataset class to craft a targeted adversarial patch
 class TargetedImageDataset:
-    
+
     metadata = {"id": "example"}
-    
+
     def __init__(self, images, groundtruth, target_label, threshold=0.5):
         self.images = images
         self.groundtruth = groundtruth
         self.target_label = target_label
         self.threshold = threshold
-        
+
     def __len__(self)->int:
         return len(self.data)
-    
+
     def __getitem__(self, ind: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
         image = self.images.__getitem__(ind)["image"]
         targeted_detection = self.groundtruth[ind]
@@ -374,24 +368,24 @@ sample_data = sample_data.map(lambda x: {"image": preprocess(x["image"]), "label
 Amelia finishes by loading an object detector based on ResNet50, which she wraps as a JATIC classifier for further
 evaluation and inspect to classified images.
 
-<!-- ```{warning} 
-If you did not define methods for for use later with the drone data above, 
+<!-- ```{warning}
+If you did not define methods for for use later with the drone data above,
 you will need the following to run the code below:
-    
+
     from heart_library.estimators.object_detection import JaticPyTorchObjectDetector
-    
+
 ``` -->
 
 ```python
 MEAN = [0.485, 0.456, 0.406]
-STD = [0.229, 0.224, 0.225] 
+STD = [0.229, 0.224, 0.225]
 preprocessing=(MEAN, STD)
 
 detector = JaticPyTorchObjectDetector(model_type="detr_resnet50",
                                       device_type='cpu',
                                     input_shape=(3, 800, 800),
-                                    clip_values=(0, 1), 
-                                    attack_losses=("loss_ce",), 
+                                    clip_values=(0, 1),
+                                    attack_losses=("loss_ce",),
                                     preprocessing=(MEAN, STD))
 
 detections = detector(sample_data)
@@ -455,18 +449,20 @@ a drone flying over a street. Many of the same types of objects are detected inc
 
 ### Confirming Model Performance
 
-To confirm that the model is performing properlty, Amelia computes the average precision metric from HEART using Mean
-Average Precision (MAP). This metric combines the overlap and union of the predicted and ground truth bounding boxes to
-give an estimate of the goodness of the object detector, outputting a value between 0 (poor performance) and 1 (good
-performance). [Reference](https://jonathan-hui.medium.com/map-mean-average-precision-for-object-detection-45c121a31173)
+To confirm that the model is performing properlty, Amelia computes the relevant
+[evaluation metrics](/explanations/evaluation_metrics)
+from HEART using Mean Average Precision (MAP).  This metric combines the overlap and union of the predicted
+and ground truth bounding boxes to give an estimate of the goodness of the object detector, outputting a
+value between 0 (poor performance) and 1 (good performance).
+[Reference](https://jonathan-hui.medium.com/map-mean-average-precision-for-object-detection-45c121a31173)
 
-<!-- ```{warning} 
+<!-- ```{warning}
 
-If you did not define methods for for use later with the drone data above, 
+If you did not define methods for for use later with the drone data above,
 you will need the following to run the code below:
-    
+
     from heart_library.metrics import HeartMAPMetric
-    
+
 ``` -->
 
 ```python
@@ -484,7 +480,7 @@ data_with_detections = ImageDataset(sample_data, deepcopy(detections), threshold
 metric = HeartMAPMetric(**map_args)
 
 results, _, _ = evaluate(
-    model=detector, 
+    model=detector,
     dataset=data_with_detections,
     metric=metric,
 )

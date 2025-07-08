@@ -71,10 +71,9 @@ included in the documentation, but the notebook is provided for ease of use and 
 :child-align: center
 :columns: 4
 
-```{admonition} Coming Soon
-:class: important
-
-The companion Jupyter notebook will be available in the code repository in the next HEART release.
+```{note}
+The [Drone Tutorial Companion Notebook](https://github.com/IBM/heart-library/blob/main/notebooks/tutorials/drone_tutorial_companion_notebook.ipynb)
+can be downloaded via the HEART public GitHub.
 ```
 
 <!-- ```{button-link} #

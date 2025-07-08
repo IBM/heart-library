@@ -56,10 +56,9 @@ your own.
 Download Companion Notebook {octicon}`download`
 ``` -->
 
-```{admonition} Coming Soon
-:class: important
-
-The companion Jupyter notebook will be available in the code repository in the next HEART release.
+```{note}
+The [How to Simulate Black-Box Attacks for Image Classification Companion Notebook](https://github.com/IBM/heart-library/blob/main/notebooks/how_tos/image_classification/2_How_to_Simulate_Black-Box_Attacks_for_Image_Classification.ipynb)
+can be downloaded via the HEART public GitHub.
 ```
 
 :::

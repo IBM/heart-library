@@ -6,20 +6,14 @@
 Remember to download the associated Jupyter notebook to follow along and try the code yourself.  It is located [here](#).
 ```  -->
 
-```{admonition} Coming Soon
-:class: important
-
-The companion Jupyter notebook will be available in the code repository in the next HEART release.
-```
-
 ## Introduction
 
 ::::{grid} 2
 
 :::{grid-item}
 :columns: 6
-Welcome to Part 2 of the Drone Object Detection Tutorial for HEART. In Part 1, you were
-introduced to Amelia and her use case for HEART, the requirements she needs to meet to use HEART, and how to install
+Welcome to Part 2 of the Drone Object Detection Tutorial for HEART. In Part 1, you were introduced to
+Amelia and her use case for HEART, the requirements she needs to meet to use HEART, and how to install
 HEART and the relevant data set.
 
 :::
@@ -27,9 +21,9 @@ HEART and the relevant data set.
 :::{grid-item}
 :columns: 6
 
-In Part 2, you will following Amelia as she uses HEART to attack the drone object detection model with HEART. This will
-inform Amelia on what vulnerabilities may exist in the model. It will also set up Part 3 where Amelia will work to
-**defend** the model.
+In Part 2, you will following Amelia as she uses HEART to attack the drone object detection model with HEART.
+This will inform Amelia on what vulnerabilities may exist in the model. It will also set up Part 3 where
+Amelia will work to **defend** the model.
 
 :::
 
@@ -41,20 +35,22 @@ inform Amelia on what vulnerabilities may exist in the model. It will also set u
 
 ## Determining Threat Vectors
 
-As Amelia delves deeper into exploring HEART for their drone object detection project, they begin to identify potential
-threat vectors that could compromise the system's integrity. Amelia starts by thoroughly reviewing HEART's
-documentation, focusing on the various attack techniques available and considers several threat scenarios:
+As Amelia delves deeper into exploring HEART for their drone object detection project, they begin to identify
+potential threat vectors that could compromise the system's integrity. Amelia starts by thoroughly reviewing
+HEART's documentation, focusing on the various [attack techniques](/explanations/attack_types) available and
+considers several threat scenarios:
 
 ::::{grid} 3
 
 :::{grid-item-card} Image Perturbations
-An adversary could introduce nearly imperceptible perturbations into input images, attempting to mislead the model into
-misclassifying objects or overlooking threats.
+An adversary could introduce nearly imperceptible {term}`Perturbation` into input images, attempting to
+mislead the model into misclassifying objects or overlooking threats.
 :::
 
 :::{grid-item-card} Evasion Attacks
-Evasion attacks are a type of attack that involves manipulating input data to evade detection or classification by a
-machine learning model. This could enable adversaries to hide threats or impersonate friendly forces.
+Evasion attacks are a type of attack that involves manipulating input data to evade detection or
+classification by a machine learning model. This could enable adversaries to hide threats or impersonate
+friendly forces.
 :::
 
 :::{grid-item-card} Adaptive Attacks
@@ -76,10 +72,11 @@ attack method** which is a type of evasion attack that works through image pertu
 ```{admonition} Projected Gradient Descent (PGD) Attack Method
 :class: seealso
 
-Definition: A projected gradient descent (PGD) attack is a method used in adversarial machine learning to generate 
-adversarial examples that can fool deep learning models by iteratively perturbing the input data, guided by the model's 
-gradients, while keeping the perturbations within a defined constraint.  You can learn more about PGD attacks 
-[here](/reference_materials/attack_cards/projected_gradient_descent.md).
+Definition: A projected gradient descent (PGD) attack is a method used in adversarial machine learning to
+generate adversarial examples that can fool deep learning models by iteratively perturbing the input data,
+guided by the model's gradients, while keeping the perturbations within a defined constraint.  You can learn
+more about PGD attacks [here](/reference_materials/attack_cards/projected_gradient_descent.md) or 
+[here](/how_to_guides/image_classification/white_box).
 ```
 
 :::
@@ -102,16 +99,25 @@ good initial understanding of the model's adversarial robustness and vulnerabili
 
 ## Creating Adversarial Examples with HEART
 
-First, Amelia will define the projected gradient descent (PGD) attack in order to apply malicious pixel-level changes to
-the base image. She runs the PGD attack and then performs a MAITE evaluation which returns relevant **performance
-metrics** about the model's performance after the attack. At this point, Amelia can see how much the attack is
-malciously affected the performance of the model and how accurate the outputs are versus the non-attacked model. She
-also then creates image outputs of the attacked model in order to visually inspect the results. In doing so, Amelia can
-see if there are any obviously incorrectly classified objects or missed objects in the image. Finally, Amelia will
-compare the attacked model image outputs to the original outputs created in Part 1 of the tutorial. Here, she can do a
-side-by-side comparison of the original outputs and the attacked outputs so she can more easily see the differences.
+First, Amelia will define the projected gradient descent (PGD) attack in order to apply malicious pixel-level
+changes to the base image. She runs the PGD attack and then performs a MAITE evaluation which returns
+relevant [performance metrics](/explanations/evaluation_metrics) about the model's performance after the
+attack. At this point, Amelia can see how much the attack is maliciously affected the performance of the
+model and how accurate the outputs are versus the non-attacked model.  She also then creates image outputs of
+the attacked model in order to visually inspect the results. In doing so, Amelia can see if there are any
+obviously incorrectly classified objects or missed objects in the image.  Finally, Amelia will compare the
+attacked model image outputs to the original outputs created in Part 1 of the tutorial.  Here, she can do a
+side-by-side comparison of the original outputs and the attacked outputs so she can more easily see the
+differences.
 
 ### Preparing the Attack
+
+In the code block below, Amelia first sets up the map_args.  This sets parameters for how she is going to
+measure the performance of the attacked model.  Next, Amelia defines the parameters that control how the
+attack will be conducts in the "attack" section.  This shows, for example, the number of iterations that will
+be used and the size of the perturbation (how much change will be allowed to the image).  The final two lines
+of code Amelia uses are for configuration of the dataset and ensuring the data inputs are in the correct
+format she needs.
 
 In the code block below, Amelia first sets up the map_args. This sets paraemters for how she is going to measure the
 performance of the attacked model. Next, Amelia defines the parameters that control how the attack will be conducts in
@@ -131,12 +137,12 @@ map_args = {"box_format": "xyxy",
 
 attack = JaticAttack(
             ProjectedGradientDescent(
-                detector, 
-                max_iter=1, 
-                eps_step=0.01, 
-                eps=0.03, 
-                targeted=False, 
-                verbose=False), 
+                detector,
+                max_iter=1,
+                eps_step=0.01,
+                eps=0.03,
+                targeted=False,
+                verbose=False),
         norm=2)
 
 data_with_detections = ImageDataset(sample_data, deepcopy(detections), threshold=0.9)
@@ -152,14 +158,14 @@ the attack.
 metric = HeartMAPMetric(**map_args)
 
 results, _, _ = evaluate(
-    model=detector, 
+    model=detector,
     dataset=data_with_detections,
     metric=metric,
     augmentation=attack,
 )
 ```
 
-<!-- 
+<!--
 ```
 0%|          | 0/5 [00:00<?, ?it/s]
 

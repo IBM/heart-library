@@ -53,10 +53,9 @@ your own.
 Download Companion Notebook {octicon}`download`
 ``` -->
 
-```{admonition} Coming Soon
-:class: important
-
-The companion Jupyter notebook will be available in the code repository in the next HEART release.
+```{note}
+The [How to Simulate White-Box Attacks for Image Classification Companion Notebook](https://github.com/IBM/heart-library/blob/main/notebooks/how_tos/image_classification/1_How_to_Simulate_White-box_attacks_for_Image_Classification.ipynb)
+can be downloaded via the HEART public GitHub.
 ```
 
 :::

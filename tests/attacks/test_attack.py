@@ -16,6 +16,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import importlib
 import logging
 
 import pytest
@@ -227,6 +228,153 @@ def test_jatic_supported_obj_det_patch_attack(heart_warning):
             adv_output[0].labels,
             detections[0].labels,
         )
+
+    except HEARTTestError as e:
+        heart_warning(e)
+
+
+@pytest.mark.optional
+@pytest.mark.skipif(importlib.util.find_spec("decord") is None, reason="video dependencies not installed")
+def test_jatic_supported_video_attack(heart_warning):
+    try:
+        import maite.protocols.image_classification as ic
+        import numpy as np
+        from art.attacks.evasion import ProjectedGradientDescentPyTorch
+        from torch import tensor
+        from torch.nn import CrossEntropyLoss
+        from torch.nn.functional import softmax
+        from torchvision.models.video import R3D_18_Weights, r3d_18
+
+        from heart_library.attacks.attack import JaticAttack
+        from heart_library.estimators.classification import JaticPyTorchClassifier
+        from tests.utils import get_sample_video
+
+        num_frames = 4
+        start_frame = 20
+        # channels before frames for pgd
+        video_data = get_sample_video(start_frame=start_frame, end_frame=start_frame + num_frames, channels_first=True)
+        assert video_data.ndim == 5
+
+        weights = R3D_18_Weights.DEFAULT
+        model = r3d_18(weights=weights)
+        _ = model.eval()
+
+        jptc = JaticPyTorchClassifier(
+            model=model,
+            nb_classes=400,
+            input_shape=(3, num_frames, 112, 112),
+            loss=CrossEntropyLoss(),
+            clip_values=(0, 1),
+            device_type="cpu",
+        )
+
+        assert isinstance(jptc, ic.Model)
+
+        preds = jptc(video_data)
+        probs = softmax(tensor(np.asarray(preds)), dim=1)
+        label = probs[0].argmax().item()
+
+        assert label == 33
+
+        pgd_attack = ProjectedGradientDescentPyTorch(estimator=jptc, max_iter=1, eps=0.5, eps_step=0.1, targeted=False)
+        attack = JaticAttack(pgd_attack)
+
+        assert isinstance(attack, ic.Augmentation)
+
+        x_adv, _, _ = attack(data=video_data)
+        adv_preds = jptc(x_adv)
+        adv_probs = softmax(tensor(np.asarray(adv_preds)), dim=1)
+        adv_label = adv_probs[0].argmax().item()
+
+        assert adv_label != 33
+
+    except HEARTTestError as e:
+        heart_warning(e)
+
+
+@pytest.mark.optional
+@pytest.mark.skipif(importlib.util.find_spec("decord") is None, reason="video dependencies not installed")
+def test_jatic_supported_video_patch_attack(heart_warning):
+    try:
+        import maite.protocols.image_classification as ic
+        import numpy as np
+        from art.attacks.evasion.adversarial_patch.adversarial_patch_pytorch import AdversarialPatchPyTorch
+        from torch import permute, tensor
+        from torch.nn import CrossEntropyLoss, Module
+        from torch.nn.functional import softmax
+        from torchvision.models.video import R3D_18_Weights, r3d_18
+
+        from heart_library.attacks.attack import JaticAttack
+        from heart_library.estimators.classification import JaticPyTorchClassifier
+        from tests.utils import get_sample_video
+
+        num_frames = 4
+        start_frame = 20
+        # frames before channels for patches
+        video_data = get_sample_video(start_frame=start_frame, end_frame=start_frame + num_frames, channels_first=False)
+        assert video_data.ndim == 5
+
+        weights = R3D_18_Weights.DEFAULT
+        model = r3d_18(weights=weights)
+        _ = model.eval()
+
+        class MyModelWrapper(Module):
+            """Model wrapper for r3d18"""
+
+            def __init__(self, model):
+                super().__init__()
+                self.model = model
+
+            def forward(self, x):
+                arr = permute(x, (0, 2, 1, 3, 4))  # format to model NCFHW shape
+                return self.model.forward(arr)
+
+        model_ = MyModelWrapper(model)
+        jptc = JaticPyTorchClassifier(
+            model=model_,
+            nb_classes=400,
+            input_shape=(num_frames, 3, 112, 112),
+            loss=CrossEntropyLoss(),
+            clip_values=(0, 1),
+            device_type="cpu",
+        )
+
+        assert isinstance(jptc, ic.Model)
+
+        preds = jptc(video_data)
+        probs = softmax(tensor(np.asarray(preds)), dim=1)
+        label = probs[0].argmax().item()
+
+        assert label == 33
+        batch_size = 16
+        scale_min = 0.1
+        scale_max = 0.5
+        rotation_max = 0
+        learning_rate = 5000.0
+        max_iter = 5
+        patch_shape = (3, 75, 75)
+
+        patch_attack = AdversarialPatchPyTorch(
+            estimator=jptc,
+            rotation_max=rotation_max,
+            scale_min=scale_min,
+            scale_max=scale_max,
+            learning_rate=learning_rate,
+            max_iter=max_iter,
+            batch_size=batch_size,
+            patch_shape=patch_shape,
+            verbose=True,
+            targeted=False,
+        )
+        attack = JaticAttack(patch_attack)
+
+        assert isinstance(attack, ic.Augmentation)
+
+        x_adv, _, _ = attack(data=video_data, scale=0.75)
+        adv_preds = jptc(x_adv)
+        adv_probs = softmax(tensor(np.asarray(adv_preds)), dim=1)
+        adv_label = adv_probs[0].argmax().item()
+        assert adv_label != 33
 
     except HEARTTestError as e:
         heart_warning(e)

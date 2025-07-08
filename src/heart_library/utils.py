@@ -581,7 +581,10 @@ def __handle_sequence_targets(
     """Generate images, targets, metadata if data is in Sequence format.
 
     Args:
-        data (Any): Input data.
+        data (Any): Input data (images or videos). Video data must have
+            at least 5 dimensions (batch, channels, frames, height, width) or
+            (batch, frames, channels, height, width). Image data has no more
+            than 4 dimensions (batch, channels, height, width).
         images (NDArray[np.float32]): Initialized image list.
         targets (Optional[Any]): Initialized targets list.
         metadata (Any): Initialized metadata list.
@@ -595,7 +598,11 @@ def __handle_sequence_targets(
     # - should auto pad or resize? what if this occurs in other data formats?
     # a sequence of image batches
 
-    if data[0].ndim == 4:
+    if np.asarray(data).ndim == 5:  # video data
+        images = np.asarray(data)
+        targets = None
+        metadata = []
+    elif data[0].ndim == 4:
         images = np.vstack([np.asarray(batch) for batch in data])
         targets = None
         metadata = []
@@ -697,11 +704,16 @@ def __handle_ndarray_or_tensor(image_list: list[ArrayLike]) -> NDArray[np.float3
     """Convert ndarray or tensor images to NDArray format.
 
     Args:
-        image_list (list): List of ndarrays or tensors.
+        image_list (list): List of ndarrays or tensors. Video ndarrays or tensors must have
+            at least 5 dimensions (batch, channels, frames, height, width) or
+            (batch, frames, channels, height, width). Image ndarrays or tensors have no more
+            than 4 dimensions (batch, channels, height, width).
 
     Returns:
         NDArray[np.float32]: Images in NDArray format.
     """
+    if np.asarray(image_list).ndim == 5:  # video data
+        return np.asarray(image_list)
     if image_list[0].ndim == 3:
         return np.asarray(image_list).astype(np.float32)
     return np.concatenate([np.asarray(batch) for batch in image_list])
@@ -745,3 +757,39 @@ def __handle_dataset_targets(targets: Any) -> Any:  # noqa ANN401
     else:
         targets = np.asarray(targets)
     return targets
+
+
+def adjust_bboxes_resize(
+    bboxes: list[list[float]],
+    original_width: int,
+    original_height: int,
+    target_width: int = 640,
+    target_height: int = 640,
+) -> list[list[float]]:
+    """
+    Adjust bounding boxes for images resized to a fixed width and height (640x640).
+
+    Args:
+        bboxes (list of lists): Bounding boxes in [x, y, width, height] format.
+        original_width (int): Original width of the image.
+        original_height (int): Original height of the image.
+        target_width (int): Target width of the resized image.
+        target_height (int): Target height of the resized image.
+
+    Returns:
+        list of lists: Adjusted bounding boxes in [x_min, y_min, x_max, y_max] format.
+    """
+    # Compute scaling factors
+    scale_x = target_width / original_width
+    scale_y = target_height / original_height
+
+    adjusted_bboxes = []
+    for bbox in bboxes:
+        x, y, width, height = bbox
+        x_min = x * scale_x
+        y_min = y * scale_y
+        x_max = (x + width) * scale_x
+        y_max = (y + height) * scale_y
+        adjusted_bboxes.append([x_min, y_min, x_max, y_max])
+
+    return adjusted_bboxes

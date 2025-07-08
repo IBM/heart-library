@@ -1,0 +1,1 @@
+('loss_classifier', 'loss_box_reg', 'loss_objectness', 'loss_rpn_box_reg')

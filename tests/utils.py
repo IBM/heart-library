@@ -369,6 +369,61 @@ def get_cifar10_image_classifier_pt(from_logits=False, is_jatic=True, is_certifi
     )
 
 
+def preprocess_video(
+    video_reader: Any,  # noqa ANN401
+    start_frame: int = 20,
+    end_frame: int = 24,
+    channels_first: bool = True,
+) -> np.ndarray:
+    """
+    Preprocess a video for testing video classification.
+    :param video_reader: torchvision video reader used by HF hub
+    :param start_frames: starting frame of video
+    :param end_frames: ending frame of video
+    :param channels_first: boolean indicating if channels first before frames
+    :return preprocessed video as numpy array
+    """
+    from torchvision import transforms
+
+    resize = transforms.Compose(
+        [
+            transforms.ToPILImage(),
+            transforms.Resize((128, 171), interpolation=transforms.InterpolationMode.BILINEAR),
+            transforms.CenterCrop(112),
+            transforms.ToTensor(),
+        ],
+    )
+
+    frames = video_reader.get_batch(range(start_frame, end_frame))
+    frames = frames.asnumpy()
+    frames = frames / 255
+    resized_frames = np.asarray([resize(frame) for frame in frames])
+    if channels_first:
+        resized_frames = resized_frames.transpose(1, 0, 2, 3)  # should be in format ... C, F, H, W
+    return resized_frames
+
+
+def get_sample_video(start_frame: int = 0, end_frame: int = 4, channels_first: bool = True) -> np.ndarray:
+    """
+    Get a sample video from HF hub for testing.
+    :return sample video as np.ndarray
+    """
+    import numpy as np
+    from decord import VideoReader
+    from huggingface_hub import hf_hub_download
+
+    file_path = hf_hub_download(
+        repo_id="nielsr/video-demo",
+        filename="eating_spaghetti.mp4",
+        repo_type="dataset",
+    )
+    vr = VideoReader(file_path)
+    return np.expand_dims(
+        preprocess_video(vr, start_frame=start_frame, end_frame=end_frame, channels_first=channels_first),
+        axis=0,
+    )
+
+
 def master_seed(
     seed: int = 1234,
     set_random: bool = True,

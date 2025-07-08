@@ -14,8 +14,8 @@ HEART supports the following types of evasion attacks:
 - Hop skip jump
 - Laser
 - Query efficient Black Box
-- [Projected Gradient Descent](https://github.com/IBM/heart-library/blob/main/notebooks/1_get_started_pgd_attack.ipynb)
-- [Patch](https://github.com/IBM/heart-library/blob/main/notebooks/4_get_started_adversarial_patch.ipynb)
+- [Projected Gradient Descent](/reference_materials/attack_cards/projected_gradient_descent)
+- [Patch](/reference_materials/attack_cards/patch_attack)
 
 Evasion attacks may have different goals.
 

@@ -1,0 +1,15 @@
+artifact_uri: tests/catalogue/patches/367259943238983519/31fa085f78424d93b0a0865c6e529422/artifacts
+end_time: 1751536448997
+entry_point_name: ''
+experiment_id: '367259943238983519'
+lifecycle_stage: active
+run_id: 31fa085f78424d93b0a0865c6e529422
+run_name: gaudy-pug-845
+run_uuid: 31fa085f78424d93b0a0865c6e529422
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751536234873
+status: 3
+tags: []
+user_id: kieranfraser

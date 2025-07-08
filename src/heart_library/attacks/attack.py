@@ -24,6 +24,7 @@ from typing import Any, Optional, Union
 
 import numpy as np
 from art.attacks import EvasionAttack
+from maite.protocols import ArrayLike
 from numpy.typing import NDArray
 
 from heart_library.estimators.object_detection.pytorch import JaticPyTorchObjectDetectionOutput
@@ -144,6 +145,20 @@ class JaticAttack:
         self._norm = norm
         self.metadata = {"id": id if id is not None else str(uuid.uuid4())}
 
+    def reset_patch(self, patch: Union[ArrayLike, float]) -> None:
+        """
+        Reset the adversarial patch.
+
+        :param patch: ArrayLike or float - the patch value to use for resetting the patch
+        """
+        # check attack is a patch attack
+        if not hasattr(self._attack, "apply_patch"):
+            raise ValueError("Cannot apply 'reset_patch' on attack that is not an adversarial patch attack.")
+        if isinstance(patch, (np.ndarray, float)):
+            self._attack.reset_patch(np.asarray(patch))
+        else:
+            raise ValueError(f"The patch must be of type ArrayLike or float and not of type {type(patch)}.")
+
     def __call__(
         self,
         data: Union[
@@ -190,7 +205,9 @@ class JaticAttack:
             # check if adversarial patch attack
             # requires extra step of applying the patch
             if hasattr(self._attack, "apply_patch"):
-                patch, mask, adv_images = self.__check_for_d_patches(adv_output, x)
+                scale = kwargs.get("scale", 1.0)
+                image_mask = kwargs.get("mask", np.array([]))
+                patch, mask, adv_images = self.__check_for_d_patches(adv_output, x, scale, image_mask)
 
                 meta = self.__check_meta(meta, patch, mask, adv_images)
 
@@ -240,17 +257,24 @@ class JaticAttack:
         self,
         adv_output: NDArray[np.float32],
         x: NDArray[np.float32],
+        scale: np.float32,
+        image_mask: Optional[NDArray[np.float32]] = None,
     ) -> tuple[NDArray[np.float32], NDArray[np.float32], NDArray[np.float32]]:
         """Generate patch, mask, adv_images based on type of EvasionAttack.
 
         Args:
             adv_output (NDArray[np.float32]): Adversarial samples.
             x (NDArray[np.float32]): Input images.
+            scale (np.float32): scaling factor for applied patch
+            image_mask (NDArray[np.float32]): mask for patch applied to image
 
         Returns:
             tuple[NDArray[np.float32], NDArray[np.float32], NDArray[np.float32]]: Patch, mask, adversarial images.
         """
         from art.attacks.evasion import DPatch, RobustDPatch
+
+        if image_mask is None:
+            image_mask = np.array([])
 
         if isinstance(self._attack, (RobustDPatch, DPatch)):
             patch = adv_output
@@ -258,7 +282,10 @@ class JaticAttack:
             adv_images = self._attack.apply_patch(x=x)
         else:
             patch, mask = adv_output
-            adv_images = self._attack.apply_patch(x=x, scale=1)
+            if len(image_mask) > 0:
+                adv_images = self._attack.apply_patch(x=x, scale=scale, mask=image_mask)
+            else:
+                adv_images = self._attack.apply_patch(x=x, scale=scale)
         return patch, mask, adv_images
 
     def __check_meta(

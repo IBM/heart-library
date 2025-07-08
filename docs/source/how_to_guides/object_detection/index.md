@@ -4,9 +4,9 @@ Object Detection How-To Guides
 How-to guides will provide step-by-step walkthroughs for key parts of the HEART-library functionality.
 
 ::::::{grid} 3
-:::::{grid-item-card} How to Simulate White-Box Attacks
-:img-top: /_static/how-to/wb.jpg
-:link: white_box
+:::::{grid-item-card} How to Load Different Object Detectors
+:img-top: /_static/how-to/ld.jpg
+:link: load_detectors
 :link-type: doc
 
 +++
@@ -14,9 +14,9 @@ How-to guides will provide step-by-step walkthroughs for key parts of the HEART-
 
 :::::
 
-:::::{grid-item-card} How to Simulate Black-Box Attacks
-:img-top: /_static/how-to/bb.jpg
-:link: black_box
+:::::{grid-item-card} How To Simulate Patch Attacks
+:img-top: /_static/how-to/pa.jpg
+:link: patch_attack
 :link-type: doc
 
 +++
@@ -24,9 +24,9 @@ How-to guides will provide step-by-step walkthroughs for key parts of the HEART-
 
 :::::
 
-:::::{grid-item-card} How to Simulate AutoAttack
-:img-top: /_static/how-to/aa.jpg
-:link: auto_attacks
+:::::{grid-item-card} How To Apply JPEG Compression Defense
+:img-top: /_static/how-to/d.jpg
+:link: defend
 :link-type: doc
 
 +++
@@ -39,7 +39,7 @@ How-to guides will provide step-by-step walkthroughs for key parts of the HEART-
 :caption: 'Object Detection'
 :maxdepth: 2
 :hidden:
-Simulate White-Box Attacks <white_box.md>
-Simulate Black-Box Attacks <black_box.md>
-Simulate AutoAttack <auto_attacks.md>
+Load Object Detectors <load_detectors.md>
+Simulate Patch Attacks <patch_attack.md>
+Apply JPEG Compression Defense <defend.md>
 ```

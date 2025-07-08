@@ -22,10 +22,8 @@ attack configuration, which can be run in parallel. In this notebook, we learn h
 which attack from all is the most successful. Testing an ensemble of attacks for best performance is a crucial step in
 T&E.
 
-```{admonition} Coming Soon
-:class: warning
-
-Even when applying a defenses to harden a model, the model may still be successfully attacked!
+```{note}
+Even when applying defenses to harden a model, the model may still be successfully attacked!
 ```
 
 :::: {grid} 5
@@ -60,10 +58,9 @@ your own.
 Download Companion Notebook {octicon}`download`
 ``` -->
 
-```{admonition} Coming Soon
-:class: important
-
-The companion Jupyter notebook will be available in the code repository in the next HEART release.
+```{note}
+The [How to Create Defenses for Image Classification Companion Notebook](https://github.com/IBM/heart-library/blob/main/notebooks/how_tos/image_classification/4_How_to_Create_Defenses_for_Image_Classification.ipynb)
+can be downloaded via the HEART public GitHub.
 ```
 
 :::

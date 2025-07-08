@@ -51,10 +51,9 @@ your own.
 Download Companion Notebook {octicon}`download`
 ``` -->
 
-```{admonition} Coming Soon
-:class: important
-
-The companion Jupyter notebook will be available in the code repository in the next HEART release.
+```{note}
+The [How to Replace Datasets in Model Evaluation Companion Notebook](https://github.com/IBM/heart-library/blob/main/notebooks/how_tos/image_classification/5_How_to_Replace_Datasets_in_Model_Evaluation.ipynb)
+can be downloaded via the HEART public GitHub.
 ```
 
 :::

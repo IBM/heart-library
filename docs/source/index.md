@@ -25,9 +25,17 @@ Get Started with HEART {octicon}`arrow-right`
 :::
 
 :::{grid-item}
+:child-align: end
+:columns: 6
 
-```{image} _static/theme/SVG/Example-8.svg
-:alt: Description of the image
+```{image} _static/theme/4x/HEART-Hero-Cycle_2@4x.png
+:alt: HEART Hero Image
+:class: only-light
+```
+
+```{image} _static/theme/4x/HEART-Hero-Cycle_2-dark@4x.png
+:alt: HEART Hero Image
+:class: only-dark
 ```
 
 :::
@@ -43,13 +51,13 @@ Get Started with HEART {octicon}`arrow-right`
 :columns: 3
 
 ```{image} _static/theme/SVG/quick-start.svg
-:alt: Stylized icon depicting a rocket taking flight.
+:alt: Quick Start
 :class: only-light
-:target: quick-start/install_heart.html
+:target: quick_start/install_heart.html
 ```
 
 ```{image} _static/theme/SVG/quick-start-dark.svg
-:alt: Stylized icon depecting a rocket taking flight.
+:alt: Quick Start
 :class: only-dark
 :target: quick_start/install_heart.html
 ```
@@ -179,11 +187,12 @@ The explanations provide in-depth descriptions of relevant technical concepts
 :class: home-tile-link-list
 :columns: 12
 
+- [Attack Types](explanations/attack_types.md)
+- [Evaluation Metrics](explanations/evaluation_metrics.md)
 - [Overview - Creating Adversarial Patches](explanations/PatchDocumentation.md)
 
-<!-- ```{button-link} explanations/index.html
+```{button-link} explanations/index.html
 See all {octicon}`arrow-right`
-``` -->
 
 :::
 ::::
@@ -201,13 +210,13 @@ See all {octicon}`arrow-right`
 ```{image} _static/theme/SVG/reference.svg
 :alt: Stylized icon depicting a grouping of informational books.
 :class: only-light
-:target: references/index.html
+:target: reference_materials/index.html
 ```
 
 ```{image} _static/theme/SVG/reference-dark.svg
 :alt: Stylized icon depicting a grouping of informational books.
 :class: only-dark
-:target: references/index.html
+:target: reference_materials/index.html
 ```
 
 :::
@@ -239,13 +248,13 @@ See all {octicon}`arrow-right`
 ```{image} _static/theme/SVG/about.svg
 :alt: Stylized icon with a version of the HEART-library logo, a shield with a heart.
 :class: only-light
-:target: about/index.html
+:target: about/contributors.html
 ```
 
 ```{image} _static/theme/SVG/about-dark.svg
 :alt: Stylized icon with a version of the HEART-library logo, a shield with a heart.
 :class: only-dark
-:target: about/index.html
+:target: about/contributors.html
 ```
 
 :::

@@ -20,7 +20,6 @@
 import sys
 import uuid
 from collections.abc import Sequence
-from types import ModuleType
 from typing import Any, Optional, Union
 
 import numpy as np
@@ -213,16 +212,14 @@ COCO_FASTER_RCNN_LABELS = COCO_DETR_LABELS = [
     "hairbrush",
 ]
 SUPPORTED_DETECTORS: dict[str, str] = {
-    "yolov5s": "YOLOv5 model. Ref: https://github.com/ultralytics/yolov5",
-    "yolov5n": "YOLOv5 model. Ref: https://github.com/ultralytics/yolov5",
-    "yolov5m": "YOLOv5 model. Ref: https://github.com/ultralytics/yolov5",
-    "yolov5l": "YOLOv5 model. Ref: https://github.com/ultralytics/yolov5",
-    "yolov5x": "YOLOv5 model. Ref: https://github.com/ultralytics/yolov5",
-    "yolov5n6": "YOLOv5 model. Ref: https://github.com/ultralytics/yolov5",
-    "yolov5s6": "YOLOv5 model. Ref: https://github.com/ultralytics/yolov5",
-    "yolov5m6": "YOLOv5 model. Ref: https://github.com/ultralytics/yolov5",
-    "yolov5l6": "YOLOv5 model. Ref: https://github.com/ultralytics/yolov5",
-    "yolov5x6": "YOLOv5 model. Ref: https://github.com/ultralytics/yolov5",
+    "yolov3u": "YOLO3 model. Ref: https://github.com/ultralytics/ultralytics/blob/main/docs/en/models/yolov3.md",
+    "yolov5n": "YOLO5 model. Ref: https://github.com/ultralytics/ultralytics/blob/main/docs/en/models/yolov5.md",
+    "yolov6n": "YOLO6 model. Ref: https://github.com/ultralytics/ultralytics/blob/main/docs/en/models/yolov6.md",
+    "yolov8n": "YOLO8 model. Ref: https://github.com/ultralytics/ultralytics/blob/main/docs/en/models/yolov8.md",
+    "yolov9t": "YOLO9 model. Ref: https://github.com/ultralytics/ultralytics/blob/main/docs/en/models/yolov9.md",
+    "yolov10n": "YOLO10 model. Ref: https://github.com/ultralytics/ultralytics/blob/main/docs/en/models/yolov10.md",
+    "yolo11n": "YOLO11 model. Ref: https://github.com/ultralytics/ultralytics/blob/main/docs/en/models/yolov11.md",
+    "yolo12n": "YOLO12 model. Ref: https://github.com/ultralytics/ultralytics/blob/main/docs/en/models/yolov12.md",
     "fasterrcnn_resnet50_fpn": "Faster R-CNN model. Ref: \
 https://pytorch.org/vision/master/models/generated/torchvision.models\
 .detection.fasterrcnn_resnet50_fpn.html#\
@@ -380,8 +377,8 @@ class JaticPyTorchObjectDetector(PyTorchObjectDetector):
         Raises:
             ValueError: if model type is not one of "yolo", "detr", or "fastercnn".
             ValueError: if model type is custom specified.
-            Exception: if Yolov5 model was not successfully loaded.
-            ValueError: if python version < 3.10
+            Exception: if YOLO model was not successfully loaded.
+            ValueError: if python version < 3.10 when the model is yolov5
             ValueError: if model type is not one of "yolo", "detr", or "fastercnn".
         """
         self.metadata = {"id": metadata_id if metadata_id is not None else str(uuid.uuid4())}
@@ -425,7 +422,7 @@ class JaticPyTorchObjectDetector(PyTorchObjectDetector):
         """
         # YOLO
         if "yolo" in model_type:
-            self.__handle_yolo_model(model, model_type, device, loaded_model, **kwargs)
+            self.__handle_yolo_model(model, model_type, **kwargs)
         # DETR
         elif "detr" in model_type:
             self.__handle_detr_model(model, model_type, device, loaded_model, **kwargs)
@@ -491,8 +488,6 @@ class JaticPyTorchObjectDetector(PyTorchObjectDetector):
         self,
         model: str,
         model_type: str,
-        device: str,
-        loaded_model: Any,  # noqa: ANN401
         **kwargs: Any,  # noqa: ANN401
     ) -> None:
         """Load YOLO model.
@@ -504,122 +499,30 @@ class JaticPyTorchObjectDetector(PyTorchObjectDetector):
             loaded_model (Any): Empty initialization to be wrapped.
 
         Raises:
-            Exception: If YOLOv5 model was not successfully loaded.
-            ValueError: If python version < 3.10.
+            Exception: If YOLO model was not successfully loaded.
         """
-        self.__check_python_version()
-        yolov5, compute_loss = self.__import_yolov5()
-
-        class Yolo(torch.nn.Module):
-            """Wrapper for YOLO object detection models.
-
-            Args:
-                torch (torch.nn.Module): YOLO object detection models.
-            """
-
-            def __init__(self, model: Any, device: str) -> None:  # noqa: ANN401
-                """Yolo initialization.
-
-                Args:
-                    model (Any): Object detection model.
-                    device (str): The desired device of the parameters and buffers in this module.
-                """
-                super().__init__()
-                self.model = model
-                self.model.hyp = {
-                    "box": 0.05,
-                    "obj": 1.0,
-                    "cls": 0.5,
-                    "anchor_t": 4.0,
-                    "cls_pw": 1.0,
-                    "obj_pw": 1.0,
-                    "fl_gamma": 0.0,
-                }
-                self.model.model.model.to(device)  # Required when using GPU
-                self._compute_loss: Any = compute_loss(self.model.model.model)
-
-            def forward(
-                self,
-                x: torch.Tensor,
-                targets: Optional[torch.Tensor] = None,
-            ) -> Union[torch.Tensor, dict[str, torch.Tensor]]:
-                """Modified forward to facilitate computation of loss dict.
-
-                Args:
-                    x (torch.Tensor): Input tensor.
-                    targets (Optional[torch.Tensor], optional): Target values. Defaults to None.
-
-                Returns:
-                    Union[torch.Tensor, dict[str, torch.Tensor]]: Output tensor(s) produced by the network.
-                """
-                if self.training:
-                    outputs = self.model.model.model(x)
-                    loss, loss_items = self._compute_loss(outputs, targets)
-                    return {
-                        "loss_total": loss,
-                        "loss_box": loss_items[0],
-                        "loss_obj": loss_items[1],
-                        "loss_cls": loss_items[2],
-                    }
-                return self.model(x)
-
-        loaded_model = self.__load_yolo_model(model, model_type, device, yolov5, Yolo)
-        self._detector = PyTorchYolo(loaded_model, **kwargs)
-
-    def __check_python_version(self) -> None:
-        """Check if Python version is 3.10+.
-
-        Raises:
-            ValueError: If Python version < 3.10.
-        """
-        if sys.version_info < (3, 10):
-            raise ValueError("yolov5 models require python versions 3.10 and above.")
-
-    def __import_yolov5(self) -> tuple[Any, Any]:
-        """Safely import yolov5 modules.
-
-        Returns:
-            Tuple[yolov5 module, ComputeLoss class]
-
-        Raises:
-            ImportError: If yolov5 is not installed.
-        """
-        try:
-            import yolov5
-            from yolov5.utils.loss import ComputeLoss
-
-            return yolov5, ComputeLoss
-        except ImportError as e:
-            raise ImportError("The 'yolov5' package is required but not installed.") from e
-
-    def __load_yolo_model(
-        self,
-        model: str,
-        model_type: str,
-        device: str,
-        yolov5: ModuleType,  # More specific than `Any`
-        yolo: type[torch.nn.Module],
-    ) -> torch.nn.Module:
-        """Load the YOLO model with appropriate weights.
-
-        Args:
-            model (str): Path to model or empty string.
-            model_type (str): Model type to load if path not given.
-            device (str): Device string.
-            yolov5 (module): Imported yolov5 module.
-            Yolo (class): Wrapped Yolo class.
-
-        Returns:
-            Any: Loaded YOLO model.
-
-        Raises:
-            Exception: If model failed to load.
-        """
-        try:
+        yolo_module = self.__import_yolo()
+        # Handle weights path extension based on model_type
+        if model_type == "yolo6n":
+            weights_path = f"{model_type}.yml" if model == "" else model
+        else:
             weights_path = f"{model_type}.pt" if model == "" else model
-            return yolo(yolov5.load(weights_path), device)
-        except (NotImplementedError, FileNotFoundError) as e:
-            raise Exception("Yolov5 model was not successfully loaded.") from e
+        raw_model = yolo_module(weights_path, task="detect")
+        self._detector = PyTorchYolo(raw_model.model, is_ultralytics=True, model_name=model_type, **kwargs)
+
+    def __import_yolo(self) -> type:
+        """Safely import YOLO modules.
+        Returns:
+            YOLO module
+        Raises:
+            ImportError: If YOLO is not installed.
+        """
+        try:
+            from ultralytics import YOLO
+
+            return YOLO
+        except ImportError as e:
+            raise ImportError("The 'YOLO' package is required but not installed.") from e
 
     def __handle_detr_model(
         self,

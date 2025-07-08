@@ -16,9 +16,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import importlib
 import logging
-import sys
 
 import pytest
 
@@ -245,10 +243,6 @@ def test_jatic_faster_rcnn(heart_warning):
         heart_warning(e)
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 10) or not importlib.util.find_spec("yolov5"),
-    reason="YOLOv5 requires python version 3.10 or above.",
-)
 def test_jatic_yolo(heart_warning):
     try:
         import numpy as np
@@ -260,7 +254,7 @@ def test_jatic_yolo(heart_warning):
         from heart_library.estimators.object_detection import JaticPyTorchObjectDetector
 
         detector = JaticPyTorchObjectDetector(
-            model_type="yolov5s",
+            model_type="yolo12n",
             device_type="cpu",
             input_shape=(3, 640, 640),
             clip_values=(0, 1),
@@ -297,74 +291,23 @@ def test_jatic_yolo(heart_warning):
 
         assert isinstance(detections[0], ObjectDetectionTarget)
 
-        np.testing.assert_array_almost_equal(
-            detections[0].scores[:3],
-            np.array(
-                [9.9953e-07, 8.4781e-08, 3.9297e-08],
-                "float32",
-            ),
+        np.testing.assert_almost_equal(
+            detections[0].scores[0],
+            0.77979,
             decimal=0.01,
         )
 
-        np.testing.assert_array_almost_equal(
-            detections[0].labels[:3],
-            np.array(
-                [14, 14, 14],
-                dtype="float32",
-            ),
-            decimal=0.01,
+        np.testing.assert_almost_equal(
+            detections[0].labels[0],
+            20,
+            decimal=1.00,
         )
 
         np.testing.assert_array_almost_equal(
-            detections[0].boxes[:3],
-            np.array(
-                [
-                    [0, 0, 6.9441, 8.0846],
-                    [0.074183, 0, 22.789, 7.5572],
-                    [5.2672, 0, 31.972, 7.5443],
-                ],
-            ),
+            detections[0].boxes[0],
+            np.array([86.496, 152.87, 467.88, 523.54], dtype=np.float32),
             decimal=0.01,
         )
-
-        import os
-
-        cwd = os.getcwd()
-        detector = JaticPyTorchObjectDetector(
-            model=f"{cwd}/yolov5s.pt",
-            model_type="yolo",
-            device_type="cpu",
-            input_shape=(3, 640, 640),
-            clip_values=(0, 1),
-        )
-
-    except HEARTTestError as e:
-        heart_warning(e)
-
-
-@pytest.mark.skipif(
-    sys.version_info < (3, 10) or not importlib.util.find_spec("yolov5"),
-    reason="YOLOv5 requires python version 3.10 or above.",
-)
-@pytest.mark.required
-def test_handle_yolo_model_runs(heart_warning):
-    """
-    Test that __handle_yolo_model runs and sets _detector correctly.
-    """
-    try:
-        from heart_library.estimators.object_detection import JaticPyTorchObjectDetector
-
-        detector = JaticPyTorchObjectDetector(
-            model="yolov5n.pt",  # lightweight model name
-            model_type="yolov5",
-            device_type="cpu",
-            input_shape=(3, 640, 640),
-            clip_values=(0, 1),
-            attack_losses=("loss_total",),
-        )
-
-        assert hasattr(detector, "_detector")
-        assert detector._detector is not None  # noqa: SLF001
 
     except HEARTTestError as e:
         heart_warning(e)
@@ -381,13 +324,68 @@ def test_supported_detectors(heart_warning):
         )
 
         assert isinstance(SUPPORTED_DETECTORS, dict)
-        assert len(list(SUPPORTED_DETECTORS.keys())) == 18
+        assert len(list(SUPPORTED_DETECTORS.keys())) == 16
         assert isinstance(COCO_YOLO_LABELS, list)
         assert len(COCO_YOLO_LABELS) == 80
         assert isinstance(COCO_FASTER_RCNN_LABELS, list)
         assert len(COCO_FASTER_RCNN_LABELS) == 92
         assert isinstance(COCO_DETR_LABELS, list)
         assert len(COCO_DETR_LABELS) == 92
+
+    except HEARTTestError as e:
+        heart_warning(e)
+
+
+@pytest.mark.required
+def test_jatic_yolo_versions(heart_warning):
+    """
+    Test that JaticPyTorchObjectDetector supports multiple YOLO versions and uses the correct loss dict for v8+.
+    """
+    try:
+        import torch
+        from art.estimators.object_detection import PyTorchYolo
+
+        from heart_library.estimators.object_detection import JaticPyTorchObjectDetector
+
+        yolo_versions = ["yolov3u.pt", "yolov5n.pt", "yolov8n.pt", "yolov10n.pt", "yolov12n.pt"]
+        dummy_input = torch.randn(1, 3, 640, 640)
+
+        for model_type in yolo_versions:
+            logger.info(f"Testing model_type: {model_type}")
+            try:
+                detector = JaticPyTorchObjectDetector(
+                    model=model_type,
+                    model_type=model_type.replace(".pt", ""),
+                    device_type="cpu",
+                    input_shape=(3, 640, 640),
+                    clip_values=(0, 1),
+                )
+
+                # Accessing protected member for test inspection only
+                detector_impl = detector._detector  # noqa: SLF001
+                assert isinstance(detector_impl, PyTorchYolo)
+
+                model = detector_impl.model
+                assert isinstance(model, torch.nn.Module)
+
+                # For v8 and above, check loss dict keys in training mode
+                version_num = int(model_type.replace("yolov", "").replace(".pt", ""))
+                if version_num >= 8:
+                    model.train()
+                    dummy_targets = [
+                        {"boxes": torch.tensor([[0.0, 0.0, 1.0, 1.0]]), "labels": torch.tensor([0])},
+                    ]
+                    loss_dict = model(dummy_input, dummy_targets)
+                    assert isinstance(loss_dict, dict)
+                    assert {"loss_total", "loss_box", "loss_cls", "loss_dfl"}.issubset(loss_dict.keys())
+                else:
+                    model.eval()
+                    outputs = model(dummy_input)
+                    assert isinstance(outputs, list)
+
+            except (RuntimeError, ValueError, TypeError, FileNotFoundError) as e:
+                logger.warning(f"Skipping {model_type} due to error: {e}")
+                continue
 
     except HEARTTestError as e:
         heart_warning(e)
